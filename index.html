@@ -286,6 +286,21 @@ body.land .go{min-height:48px}body.land #sel .dock .go{height:auto;min-height:44
 #nav button{overflow:hidden;white-space:nowrap}
 body.land .pages .row button,body.land .row button,body.pc .row button{height:auto;min-height:38px}
 :root{color-scheme:dark}
+/* 스킬 단추 그림 */
+.sk .ic{position:absolute;left:50%;top:50%;width:78%;height:78%;transform:translate(-50%,-50%);opacity:.34;pointer-events:none;z-index:0;filter:drop-shadow(0 0 6px currentColor)}
+.sk .ic.u{opacity:.42}.sk>small,.sk{isolation:isolate}
+/* 겉모습 손질: 깊이감 · 누름 반응 · 구분선 */
+.row button,.ghost,.tool,.chip,.ch,.slot,.pl,.bcard,details.og{background-image:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0) 60%);box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 6px 14px -10px rgba(0,0,0,.8)}
+.row button,.ghost,.tool,.go,.chip,.ch .pick,#nav button,.sk{transition:transform .08s ease,filter .12s ease,background-color .15s ease,border-color .15s ease}
+.row button:active,.ghost:active,.tool:active,.go:active,.chip:active,.bcard:active{transform:scale(.97);filter:brightness(1.15)}
+.row button[aria-pressed="true"]{background-image:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 70%);box-shadow:0 0 0 1px rgba(127,233,255,.35),0 8px 18px -8px rgba(127,233,255,.55)}
+.go{box-shadow:0 10px 24px -10px rgba(227,195,119,.7),0 1px 0 rgba(255,255,255,.5) inset}
+.pages h2,.wrap h2{display:flex;align-items:center;gap:8px}.pages h2::after,.wrap h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.ch{border-left:3px solid var(--g,var(--line))}
+.overlay .wrap>.brand h1{text-shadow:0 0 22px rgba(127,233,255,.25)}
+#nav button i{transition:transform .15s ease}#nav button[aria-selected="true"] i{transform:translateY(-1px) scale(1.12)}
+.pl{transition:border-color .15s ease}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>

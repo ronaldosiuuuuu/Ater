@@ -52,13 +52,24 @@ const BOSSES=[
  ['b_fdragon','서리 용',1350,1.8,.8,'#9fd8f0','claws',[['냉기 숨결',10,'arc',10,150,{tele:2,hits:5,fx:{slow:[.4,3]}}],['꼬리 후리기',14,'circle',7,120,{tele:1.5,fx:{knock:5}}],['얼음 창',6,'proj',15,70]]],
  ['b_eye','심연의 눈',1300,1.5,.7,'#b04ad8','wand',[['응시',12,'line',16,140,{tele:2}],['공허 폭발',9,'spot',6,100,{tele:1.5,reach:12}],['침묵의 파동',22,'circle',9,50,{tele:1.5,fx:{silence:2.5}}]]],
  ['b_guardian','고대 수호자',1550,1.9,.7,'#b8a070','fists',[['땅 울림',22,'circle',10,160,{tele:3}],['빛줄기',10,'line',14,120,{tele:1.5}],['고대 방벽',40,'none',0,0,{shield:[300,10]}],['짓누르기',5,'arc',5,80,{fx:{knock:3}}]]]
+,
+ /* 아래는 구글 시트(바코드RPG 기획 · '가횟 0'의 Monsters)에 이름과 체력이 있는 보스·정예다. 시트에는 스킬이 없어 스킬은 시험장에서 만들었다. 아홉째 칸 = 시트의 체력 */
+ ['s_urkan','우르칸',900,1.3,.9,'#8a6a4a','claws',[['할퀴기',4,'arc',4,55],['덮치기',9,'circle',4,80,{move:['leap',6],fx:{stun:.6}}],['포효',20,'circle',8,30,{tele:1.2,fx:{slow:[.4,3]}}]],24000],
+ ['s_lion','사자',700,1,1.15,'#d8a84a','claws',[['물어뜯기',3.5,'arc',3,45],['도약',7,'circle',3,60,{move:['leap',7]}],['사자후',18,'circle',7,20,{fx:{silence:1.5}}]],4600],
+ ['s_behemoth','베히모스',1500,2,.7,'#5a7a4a','fists',[['짓밟기',6,'circle',6,110,{tele:1.2,fx:{air:2}}],['돌진',12,'line',10,120,{tele:1,move:['dash',10],fx:{knock:4}}],['대지 가르기',24,'line',14,160,{tele:2.2}],['뿔 치받기',5,'arc',5,80,{fx:{knock:3}}]],120000],
+ ['s_centaur','켄타우르스',950,1.2,1.2,'#a07a5a','spear',[['창 찌르기',4,'line',6,60],['질주',8,'line',9,80,{move:['dash',9],fx:{knock:2}}],['화살비',14,'spot',5,70,{tele:1.3,reach:12}]],32000],
+ ['s_scorpion','스콜피온',1400,1.6,.9,'#c8a04a','claws',[['집게',4,'arc',4.5,70,{fx:{root:.6}}],['독침',7,'proj',13,90,{fx:{slow:[.4,3]}}],['모래 폭풍',22,'circle',9,90,{tele:2,hits:3,fx:{blind:2}}],['파고들기',15,'circle',4,100,{move:['blink',8],fx:{air:2}}]],480000],
+ ['s_cactus','기형선인장',1100,1.4,.5,'#5fae5a','fists',[['가시 발사',3,'proj',14,60,{n:5}],['가시 폭발',12,'circle',7,110,{tele:1.5}],['뿌리 뻗기',10,'spot',3,50,{tele:1,reach:12,fx:{root:1.5}}]],250000],
+ ['s_sphinx','스핑크스',1600,1.7,.8,'#e0c06a','wand',[['수수께끼',16,'circle',9,60,{tele:2,fx:{silence:2.5}}],['석화의 눈',12,'line',14,120,{tele:1.5,fx:{stun:1.2}}],['모래 기둥',7,'spot',3.5,90,{tele:1,reach:12,fx:{air:3}}],['앞발 내려치기',5,'arc',5,80]],720000],
+ ['s_pyrite','파이라이트',1200,1.3,.85,'#d8c85a','mace',[['황철 강타',5,'arc',4.5,80,{fx:{stun:.5}}],['파편 사격',6,'proj',13,75,{n:3}],['광맥 폭발',18,'circle',8,130,{tele:2}],['금속 외피',30,'none',0,0,{shield:[200,8],resist:[.2,8]}]],40635],
+ ['s_dynamis','듀나미스',1900,1.8,.8,'#b08ad8','wand',[['힘의 파동',6,'circle',7,90,{fx:{knock:4}}],['중력 붕괴',20,'spot',6,150,{tele:2,reach:12,fx:{pull:4}}],['유적의 빛',10,'line',16,130,{tele:1.5}],['모래 병사',35,'none',0,0,{summon:['m_skel',3]}],['궤멸',45,'circle',11,200,{tele:3.5}]],406350]
 ];
-for(const [key,name,hp,rad,spd,col,w,L] of BOSSES){ defMon(key,{name:'보스, '+name,col,rad,made:true,range:L.some(q=>q[2]==='proj')?7:2.6,speedMod:()=>spd,skills:foeSkills(L,true),note:'시험장에서 만든 보스다. 카드에 없다. 체력 '+hp+'(한 사람 몫).'}); MONS.push(key); MONHP[key]={fit:hp,card:hp};
+for(const [key,name,hp,rad,spd,col,w,L,sheet] of BOSSES){ defMon(key,{name:'보스, '+name,col,rad,made:true,range:L.some(q=>q[2]==='proj')?7:2.6,speedMod:()=>spd,skills:foeSkills(L,true),note:'시험장에서 만든 보스다. 카드에 없다. 체력 '+hp+'(한 사람 몫).'}); MONS.push(key); MONHP[key]={fit:hp,card:sheet||hp}; if(sheet) CH[key].note='구글 시트에 이름과 체력('+sheet.toLocaleString()+')이 있는 보스다. 시트에 스킬이 없어 스킬은 시험장에서 만들었다. 시험장 맞춤 체력 '+hp+'(한 사람 몫).';
   CH[key].hud=e=>(e.busy>now?'시전 중 · ':'')+Object.entries(CH[key].skills).slice(1).map(x=>x[1].name+' '+Math.ceil(e.cd[x[0]])+'s').join(' · '); LOOK[key]={el:'arcane',w,hair:col,acc:['horns']};
   BRAIN[key]=(e,t,d)=>{ e.ai.want=CH[key].range>3?5:2.4; for(const s of ['x2','x1','aw','n2','n1']){ const k=CH[key].skills[s]; if(k&&d<=k.r+(t.rad||0)+.5&&go(e,s)) return true; } };
   CARDTEXT[key]="' "+name+" '\n(시험장 제작 보스)\nHP : "+hp+' (한 사람 몫)\n\n'+L.map(q=>"'"+q[0]+"' ("+q[1]+'s)'+(q[5]&&q[5].tele?' · 캐스팅 '+q[5].tele+'초':'')+(q[4]?' · '+q[4]+' 피해':'')).join('\n'); }
 /* 등반에서 보스가 나오는 순서(약한 것부터) */
-const TBOSS=['korhen','b_gobking','golem','b_skull','b_swamp','ggolem','b_fgiant','b_shadow','b_paladin','b_storm','hydra','b_fdragon','b_eye','b_guardian'];
+const TBOSS=['s_lion','korhen','s_urkan','b_gobking','s_centaur','golem','b_skull','b_swamp','s_cactus','s_pyrite','ggolem','b_fgiant','b_shadow','s_scorpion','b_paladin','b_storm','s_behemoth','hydra','s_sphinx','b_fdragon','b_eye','s_dynamis','b_guardian'];
 
 /* 저장해 둔 보스가 여기서 만든 보스였다면, 이제 화면을 다시 맞춘다 */
 modeNote(); drawSum(); drawSel();
