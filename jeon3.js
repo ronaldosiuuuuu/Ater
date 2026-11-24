@@ -51,7 +51,9 @@ ganaan:{name:'소모라의 왕, 가나안',cls:'척후병',grade:'전설',range:
   chk(e){ e.r.sin=Math.max(0,Math.min(100,e.r.sin)); if(e.r.sin>=100){ e.r.sin=0; add(e,'silence',3,0,{self:true}); proc(e,'원죄','죄악 초기화 · 침묵 3초'); } },
   onHurt(e,src){ if(e.r.king>now&&src!==e){ e.r.sin=Math.max(0,e.r.sin-10); add(e,'haste',1,.2); } },
   altBasic(e){ if(e.cd.b>0) return true; const K=e.r.king>now; e.shotT=now; shotSnd(e); if(e.r.cr>now){ e.cd.b=K?.25:.5; e.hp=Math.max(1,e.hp-9); say(e,'-9','#c98a8a'); e.r.sin-=5; CH.ganaan.chk(e); return true; }
-    const t=tgt(e,6.5); if(!t) return true; e.cd.b=K?.25:.5; fx.push({k:'seg',x0:e.x,y0:e.y,x1:t.x,y1:t.y,w:.5,t0:now,team:e.team,lab:'원죄',src:e,v:'tracer'}); const c=e.r.cold,d=e.r.dark; e.r.cold=false; e.r.dark=false;
+    /* 바라보는 쪽으로 아주 좁은 부채꼴(좌우 6도, 6.5칸). 그 안에서 가장 가까운 적 하나가 맞는다. 아무도 없으면 헛쏜다 */
+    const RG=6.5,HALF=6*Math.PI/180,a0=Math.atan2(e.aim.y,e.aim.x),t=foes(e).filter(x=>{ const d=dist(e,x); if(d>RG+(x.rad||R)||!zok(e,x)) return false; if(d<.7) return true; let da=Math.atan2(x.y-e.y,x.x-e.x)-a0; da=Math.atan2(Math.sin(da),Math.cos(da)); return Math.abs(da)<=HALF+Math.atan2((x.rad||R),d); }).sort((p,q)=>dist(e,p)-dist(e,q))[0];
+    e.cd.b=K?.25:.5; fx.push({k:'arc',x:e.x,y:e.y,a:a0,r:RG,half:HALF,t0:now,team:e.team,thin:true,src:e,lab:'원죄'}); fx.push({k:'seg',x0:e.x,y0:e.y,x1:t?t.x:e.x+Math.cos(a0)*RG,y1:t?t.y:e.y+Math.sin(a0)*RG,w:.5,t0:now,team:e.team,lab:'원죄',src:e,v:'tracer'}); if(!t){ e.r.sin+=5; CH.ganaan.chk(e); return true; } const c=e.r.cold,d=e.r.dark; e.r.cold=false; e.r.dark=false;
     strike(e,t,9+(d?12:0),'원죄',{basic:true,blind:d?1:0,knock:0,post:x=>{ if(c){ add(x,'slow',3,.2,{by:e}); dot(e,x,18,3,'냉혈'); } }}); if(K) heal(e,3,true); e.r.sin+=5; CH.ganaan.chk(e); return true; },
   skills:{
    crouch:CROUCH,
@@ -59,7 +61,7 @@ ganaan:{name:'소모라의 왕, 가나안',cls:'척후병',grade:'전설',range:
    n2:{name:'암광',cd:8,ai:(e,d)=>d<=8,cast(e){ e.r.sin-=20; e.r.dark=true; CH.ganaan.chk(e); }},
    aw:{name:'죄악의 왕',cd:45,ai:(e,d)=>d<=9,can:e=>e.r.sin===0,need:'죄악 0',cast(e){ e.r.king=now+12; }},
    ult:{name:'인세의 지옥',cd:0,r:5,can:e=>e.r.sin>=95,need:'죄악 95 이상',cast(e){ S.focus(e,2); after(2,()=>{ if(e.dead) return; e.r.sin=0; S.circle(e,5,30,'인세의 지옥',{v:'burst',post:t=>{ add(t,'slow',3,.66,{by:e}); add(t,'dealdown',3,.66,{by:e}); }}); for(const k in e.cd) if(k!=='ult') e.cd[k]=0; heal(e,30); }); }}
-  },note:'기본기 단추가 총이다(6.5칸 안의 적, 0.5초. 시험장 조정 2026-11: 카드의 8칸에서 줄였다). 웅크리기 단추를 누른 뒤 1.2초 안에 쏘면 자신을 쏴 체력 9와 죄악 5를 잃는다.'},
+  },note:'기본기 단추가 총이다(0.5초). 시험장 조정 2026-11: 카드의 지정형 8칸을, 바라보는 쪽으로 좌우 6도 · 6.5칸의 아주 좁은 부채꼴로 바꿨다. 그 안에서 가장 가까운 적 하나가 맞고, 빗나가도 죄악 5는 쌓인다. 웅크리기 단추를 누른 뒤 1.2초 안에 쏘면 자신을 쏴 체력 9와 죄악 5를 잃는다.'},
 reitia:{name:'아득한 소망, 레이티아',cls:'지원가',grade:'전설',range:6,
   init:e=>{e.r={pcd:0,g:0,ryu:0,sky:0,skz:0,sacc:0}}, hud:e=>'중력 제어 '+e.r.g+'/21'+(e.r.ryu>now?' · 류운':'')+(e.r.sky>now?' · 극천':''),
   nak(e,t,d){ rm(t,'nakun'); add(t,'nakun',d,0,{by:e}); add(t,'slow',d,.2,{by:e}); e.r.g++; },
