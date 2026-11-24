@@ -589,7 +589,7 @@ const NET={host:false,client:false}; let UID=0;
 const HOOKS={}; const on=(ev,fn)=>{ (HOOKS[ev]=HOOKS[ev]||[]).push(fn); };
 function fire(ev,a,b,c,d,e2){ if(benching) return; const L=HOOKS[ev]; if(L) for(const f of L){ try{ f(a,b,c,d,e2); }catch(x){ console.error('hook '+ev,x); } } }
 /* 설정: SETTINGS에 한 줄 더하면 설정 화면(고르는 화면·멈춤 화면)에 단추 줄이 생기고 기기에 기억된다. 값은 OPT.이름으로 읽는다. */
-const OPT={mon:'golem',monhp:'fit',myth:0,guide:1,ui:1,lefty:0,log:'auto',rg:'고화,서사,전설,히든',raid:'hero',imp:1,fst:1,els:1,ori:'auto',full:1,q:'auto',shake:1,stop:1,edge:1,tele:1,nums:1,vib:1,fps:0,map:'basic'};
+const OPT={cap:60,mon:'golem',monhp:'fit',myth:0,guide:1,ui:1,lefty:0,log:'auto',rg:'고화,서사,전설,히든',raid:'hero',imp:1,fst:1,els:1,ori:'auto',full:1,q:'auto',shake:1,stop:1,edge:1,tele:1,nums:1,vib:1,fps:0,map:'basic'};
 const SETTINGS=[
  {k:'ori',name:'화면 방향',opts:[['auto','자동'],['land','가로 고정'],['port','세로 고정']],note:'자동은 기기를 돌리는 대로 따른다. 고정은 전체 화면이 되는 휴대폰에서만 듣는다. 경기장은 판을 시작할 때의 화면 방향을 따라 눕거나 선다.',apply:()=>goOri()},
  {k:'full',name:'전체 화면 (휴대폰)',opts:[[1,'켬'],[0,'끔']]},
@@ -597,7 +597,8 @@ const SETTINGS=[
  {k:'lefty',name:'손 배치',opts:[[0,'오른손 (스틱 왼쪽)'],[1,'왼손 (스틱 오른쪽)']],apply:()=>uiApply()},
  {k:'fst',name:'이동 스틱',opts:[[1,'떠다님'],[0,'제자리']],note:'떠다님: 화면 왼쪽 아무 데나 누르면 그 자리가 스틱이 된다.',apply:()=>document.body.classList.toggle('fst',!!OPT.fst)},
  {k:'els',name:'속성 타격음·궁극기 경고음',opts:[[1,'켬'],[0,'끔']]},
- {k:'q',name:'그림 품질',opts:[['auto','자동'],['high','높음'],['low','낮음']],note:'자동은 버벅이면 해상도를 스스로 낮춘다. 낮음은 빛 번짐을 끄고 입자를 줄인다.',apply:()=>{ qAuto=1; if(running) fit(); }},
+ {k:'cap',name:'장면 수',opts:[[60,'매끄럽게 (60)'],[30,'절전 (30)']],note:'절전은 초당 30장면만 그린다. 배터리와 발열이 줄고, 느린 기기에서 끊김이 덜하다.'},
+ {k:'q',name:'그림 품질',opts:[['auto','자동'],['high','높음'],['low','낮음']],note:'자동은 버벅이면 해상도를 스스로 낮춘다. 낮음은 입자와 꾸밈을 줄인다. 휴대폰에서 빛 번짐은 높음일 때만 켜진다.',apply:()=>{ qAuto=1; if(running) fit(); }},
  {k:'tele',name:'스킬 윤곽선',opts:[[0,'끔'],[1,'상대 것만'],[2,'모두']],note:'스킬이 실제로 맞는 범위에 또렷한 선을 덧그린다.'},
  {k:'imp',name:'타격 이펙트',opts:[[1,'켬'],[0,'끔']],note:'맞는 자리의 베임·불꽃·충격 고리, 투사체 꼬리, 스킬이 터지는 순간의 번쩍임, 착지 먼지, 쓰러질 때의 빛기둥.'},
  {k:'guide',name:'연습 길잡이',opts:[[1,'처음 잡는 캐릭터만'],[2,'늘 보이기'],[0,'끔']],note:'연습에서 그 캐릭터의 단추를 하나씩 눌러 보게 하는 할 일 목록.'},
@@ -977,7 +978,7 @@ function step(dt){ now+=dt; if(TN()>1){ const f=foes(me)[0]; if(f&&f!==foe){ foe
 /* ───── 그리기 ───── */
 const cv=$('cv'),g=cv.getContext('2d'); const noGlow=()=>OPT.q==='low'||qAuto<.8;
 /* 낮은 품질에서는 빛 번짐(shadowBlur)을 통째로 끈다. 휴대폰에서 가장 무거운 그리기다. */
-{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'shadowBlur'); if(d&&d.set) Object.defineProperty(g,'shadowBlur',{configurable:true,get(){ return d.get.call(g); },set(v){ d.set.call(g,noGlow()?0:v); }}); } let cell=20,VW=13,VH=19,dpr=1,TOPC=0,BCX=6.5,BHW=6.5; /* TOPC = 가로 화면에서 체력 줄이 덮는 높이(칸). BCX·BHW = 아래 가운데 표시(패시브·점수)의 중심과 반폭: 가로 화면에서는 스틱과 단추 사이. */ const cam={x:0,y:0};
+{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'shadowBlur'); if(d&&d.set) Object.defineProperty(g,'shadowBlur',{configurable:true,get(){ return d.get.call(g); },set(v){ d.set.call(g,noGlow()||(!PC&&OPT.q!=='high')?0:v); }   /* 빛 번짐(그림자)은 휴대폰에서 가장 무겁다. 휴대폰은 '높음'일 때만 켠다 */}); } let cell=20,VW=13,VH=19,dpr=1,TOPC=0,BCX=6.5,BHW=6.5; /* TOPC = 가로 화면에서 체력 줄이 덮는 높이(칸). BCX·BHW = 아래 가운데 표시(패시브·점수)의 중심과 반폭: 가로 화면에서는 스틱과 단추 사이. */ const cam={x:0,y:0};
 function fit(){ const st=$('stage'),w=st.clientWidth,h=st.clientHeight; const land=document.body.classList.contains('land'); cell=land?Math.max(8,Math.floor(h/13)):Math.max(8,Math.floor(w/(PC?Math.max(13,Math.min(26,w/42)):13))); TOPC=land?54/cell:0; if(land){ const a=160*OPT.ui,b=294*OPT.ui,l=OPT.lefty?b:a,r=w-(OPT.lefty?a:b); BCX=(l+r)/2/cell; BHW=Math.max(3,(r-l)/2/cell); } else { BCX=w/cell/2; BHW=BCX; } VW=w/cell; VH=h/cell; dpr=Math.max(1,Math.min(OPT.q==='high'?3:OPT.q==='low'?1.25:2,window.devicePixelRatio||1)*(OPT.q==='auto'?qAuto:1));
   cv.style.width=w+'px'; cv.style.height=h+'px'; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
 const TC=['143,233,255','255,125,140'],GLYPH={전사:'전',수호자:'수',마법사:'마',암살자:'암',지원가:'지',척후병:'척'};
@@ -1062,8 +1063,8 @@ function hud(){ for(const [id,e] of [['hb-me',me],['hb-foe',foe]]){ const b=$(id
     const k=s==='b'?null:me.c.skills[s]; if(s!=='b'&&!k) return; const fr=practice&&pFree&&s==='ult',used=s==='ult'&&me.ultUsed&&!fr,cd=me.cd[s],ok=fr||(!used&&(!k||!k.can||k.can(me))); if(used){ const n=b.querySelector('.need'); if(n.textContent!=='한 번 씀') n.textContent='한 번 씀'; }
     const usable=canUse(me)||(k&&k.whileChant&&canAct(me))||(s==='b'&&canAct(me)&&me.chant<=now);
     b.classList.toggle('cool',cd>0.05); b.classList.toggle('off',!ok||!usable); b.classList.toggle('ready',s==='ult'&&ok&&cd<=0); if(cd>0.05) setT(b.querySelector('.cd'),cd>=10?String(Math.ceil(cd)):cd.toFixed(1)); }); }
-let qT=0; function loop(t){ if(!running) return; const raw=t-last; let dt=Math.max(0,Math.min(.05,raw/1000)); /* 첫 장면에서 시각이 거꾸로 잡혀 시간이 0 아래로 가던 것을 막는다 */ last=t; if(performance.now()<slowUntil) dt*=.25; if(performance.now()<stopUntil) dt*=.04;
-  if(raw>0&&raw<200&&!paused){ fpsA=fpsA*.94+raw*.06; qT+=raw; if(qT>2500){ qT=0; if(OPT.q==='auto'&&fpsA>24&&qAuto>.55){ qAuto=Math.max(.5,qAuto-.15); fpsA=17; fit(); } } } if(NET.client){ try{ NET.frame(dt); draw(); }catch(x){ console.error(x); } requestAnimationFrame(loop); return; }
+let qT=0; function loop(t){ if(!running) return; if(OPT.cap===30&&t-last<28){ requestAnimationFrame(loop); return; } const raw=t-last; let dt=Math.max(0,Math.min(.05,raw/1000)); /* 첫 장면에서 시각이 거꾸로 잡혀 시간이 0 아래로 가던 것을 막는다 */ last=t; if(performance.now()<slowUntil) dt*=.25; if(performance.now()<stopUntil) dt*=.04;
+  if(raw>0&&raw<200&&!paused){ fpsA=fpsA*.94+raw*.06; qT+=raw; if(qT>2500){ qT=0; if(OPT.q==='auto'&&fpsA>20&&qAuto>.55){ qAuto=Math.max(.5,qAuto-.2); fpsA=17; fit(); } } } if(NET.client){ try{ NET.frame(dt); draw(); }catch(x){ console.error(x); } requestAnimationFrame(loop); return; }
   if(paused){ requestAnimationFrame(loop); return; } /* 한 장면에서 오류가 나도 판이 통째로 멈추지 않게 한다. 오류는 화면 왼쪽 기록에 한 번 띄운다. */
   try{ if(!over) step(dt); else { now+=dt; floats=floats.filter(f=>now-f.t0<.9); } draw(); }catch(x){ console.error(x); if(loop.err!==x.message){ loop.err=x.message; try{ g.setTransform(dpr*cell,0,0,dpr*cell,0,0); msg('오류: '+x.message,1,true); }catch(y){} } }
   requestAnimationFrame(loop); }
