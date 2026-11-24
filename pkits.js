@@ -90,8 +90,8 @@ const sHas=e=>e.r&&e.r.pk_star_hope!==undefined;
 const sEnh=e=>{ const on=!!e.r.pk_star_enh; if(on){ e.r.pk_star_enh=false; e.r.pk_star_hope=e.r.pk_star_despair=e.r.pk_star_grief=0; } return on; };
 on('cast',(e,slot)=>{ if(slot==='b'||slot==='jump') return; for(const o of ents){ if(o.dead||!sHas(o)) continue; if(o===e||o.team!==e.team) sAdd(o,'despair',1,true); } });
 defKit(ST,{name:'천변만화의 별',kind:'권능',tier:8,col:'#c9a0ff',
-  init(e){ e.r.pk_star_hope=0; e.r.pk_star_despair=0; e.r.pk_star_grief=0; e.r.pk_star_king=0; e.r.pk_star_goblin=0; e.r.pk_star_shot=0; e.r.pk_star_enh=false; e.r.pk_star_a=0; e.r.pk_star_b=0; e.r.pk_star_ke=false; e.r.pk_star_ge=false; e.r.pk_star_se=false; e.r.pk_star_cnt=0; e.r.pk_star_arm=false; e.r.pk_star_bul=0; },
-  hud:e=>'희망 '+e.r.pk_star_hope+' · 절망 '+e.r.pk_star_despair+' · 비탄 '+e.r.pk_star_grief+(e.r.pk_star_king>now?' · 몽환의 왕':'')+(e.r.pk_star_goblin>now?' · 이매망량의 왕':'')+(e.r.pk_star_shot>now?' · 마탄의 사수':''),
+  init(e){ e.r.pk_star_hope=0; e.r.pk_star_despair=0; e.r.pk_star_grief=0; e.r.pk_star_king=0; e.r.pk_star_goblin=0; e.r.pk_star_shot=0; e.r.pk_star_enh=false; e.r.pk_star_a=0; e.r.pk_star_b=0; e.r.pk_star_ke=false; e.r.pk_star_ge=false; e.r.pk_star_se=false; e.r.pk_star_cnt=0; e.r.pk_star_arm=false; e.r.pk_star_bul=0; e.r.pk_star_lord=false; },
+  hud:e=>(e.r.pk_star_lord?'미몽의 군주 · ':'')+'희망 '+e.r.pk_star_hope+' · 절망 '+e.r.pk_star_despair+' · 비탄 '+e.r.pk_star_grief+(e.r.pk_star_king>now?' · 몽환의 왕':'')+(e.r.pk_star_goblin>now?' · 이매망량의 왕':'')+(e.r.pk_star_shot>now?' · 마탄의 사수':''),
   tick(e,dt){ e.r.pk_star_a+=dt; if(e.r.pk_star_a>=1){ e.r.pk_star_a-=1; sAdd(e,'grief',1); } e.r.pk_star_b+=dt; if(e.r.pk_star_b>=5){ e.r.pk_star_b-=5; if(e.r.pk_star_hope>=50) heal(e,5,true); if(e.r.pk_star_despair>=50&&e.hp>1) e.hp=Math.max(1,e.hp-5); } },
   speedMod:e=>e.r.pk_star_goblin>now?1.1:1,
   modTake(e,src,amt,l,o){ if(src!==e&&e.r.pk_star_king>now&&!(o&&o.fixed)&&Math.random()<(e.r.pk_star_ke?.12:.05)){ say(e,'회피','#ffe9a0'); return 0; } return amt; },
@@ -109,21 +109,32 @@ defKit(ST,{name:'천변만화의 별',kind:'권능',tier:8,col:'#c9a0ff',
    x1:{name:'깨어진 환상',kind:'초월 스킬',cd:60,r:9,can:e=>e.r.pk_star_king>now||e.r.pk_star_goblin>now||e.r.pk_star_shot>now,need:'몽환의 왕 · 이매망량의 왕 · 마탄의 사수 가운데 하나',cast(e){ const k=e.r.pk_star_king>now,g=e.r.pk_star_goblin>now,s=e.r.pk_star_shot>now; e.r.pk_star_king=e.r.pk_star_goblin=e.r.pk_star_shot=0; e.r.pk_star_bul=0; e.r.pk_star_arm=false;
       const hit=S.circle(e,9,50,'깨어진 환상',{knock:0,v:'nova',silence:g?2:0});
       if(k){ sAdd(e,'despair',20); sAdd(e,'grief',20); add(e,'invuln',1); } if(g){ sAdd(e,'hope',20); sAdd(e,'grief',20); } if(s){ sAdd(e,'hope',20); sAdd(e,'despair',20); hit.forEach(t=>{ if(!t.dead) damage(e,t,missing(t)*.13,'깨어진 환상 (마탄)',{amp:true}); }); }
-      cdCut(e,q=>q.kit&&CH[q.kit]&&CH[q.kit].kname==='여섯 세계의 자리',.1); }}
+      cdCut(e,q=>q.kit&&CH[q.kit]&&CH[q.kit].kname==='여섯 세계의 자리',.1); }},
+   x2:{name:'헛된 꿈',kind:'기원',cd:.5,r:99,can:e=>e.r.pk_star_king>now&&!e.r.pk_star_lord,need:"'몽환의 왕' 상태 · 한 판에 한 번",cast(e){ e.r.pk_star_lord=true; proc(e,'헛된 꿈','미몽의 군주'); say(e,'【미몽의 군주】','#f6e2ae'); }}
   },
-  note:"2026년 4월 카드 < 8 / 9 >이다. 기원 '헛된 꿈'(미몽의 군주로 우화)은 빠졌다. '절망'은 나와 적이 스킬·권능을 쓸 때마다 1(기본 공격·점프는 세지 않는다), '희망'은 타격·피격마다 1, '비탄'은 매초 1이고 희망·절망을 얻을 때마다 33%로 1 더 얻는다. 호접지몽으로 강화된 꿈을 쓰면 그때 세 수치를 모두 잃는다. 불완전한 꿈의 보호막은 20초 동안 남는다. 강화된 불필요한 꿈의 끌어당김은 도약이 끝난 내 뒤로 옮겨 놓는 것으로 처리했다. 마탄은 4회 적중 뒤 다음에 쓰는 스킬 하나(2.5초 안의 적중)에 실리고, 강화 중에는 모든 스킬에 실린다. 깨어진 환상은 그때 켜져 있던 상태를 모두 풀고 각각의 효과를 준다. '여섯 세계의 자리'의 재사용 대기시간 10% 감소는 그 무기의 스킬을 함께 갖고 있을 때만 듣는다. 대전표(자동 대전)에서는 적의 시전으로 얻는 절망이 세어지지 않는다."});
+  note:"2026년 4월 카드 < 8 / 9 >이다. 기원 '헛된 꿈'은 '몽환의 왕' 상태에서 한 판에 한 번 쓸 수 있고, 쓰면 '미몽의 군주'로 우화한다(e.r.pk_star_lord). 카드에는 우화의 효과가 '헛된 것들의 장례를 사용할 수 있다'뿐이라 수치 변화는 없고 상태 줄에 표시만 된다. 시험장에서는 '헛된 것들의 장례'를 장비로 따로 낄 수 있어 우화 여부로 막지 않는다. '절망'은 나와 적이 스킬·권능을 쓸 때마다 1(기본 공격·점프는 세지 않는다), '희망'은 타격·피격마다 1, '비탄'은 매초 1이고 희망·절망을 얻을 때마다 33%로 1 더 얻는다. 호접지몽으로 강화된 꿈을 쓰면 그때 세 수치를 모두 잃는다. 불완전한 꿈의 보호막은 20초 동안 남는다. 강화된 불필요한 꿈의 끌어당김은 도약이 끝난 내 뒤로 옮겨 놓는 것으로 처리했다. 마탄은 4회 적중 뒤 다음에 쓰는 스킬 하나(2.5초 안의 적중)에 실리고, 강화 중에는 모든 스킬에 실린다. 깨어진 환상은 그때 켜져 있던 상태를 모두 풀고 각각의 효과를 준다. '여섯 세계의 자리'의 재사용 대기시간 10% 감소는 그 무기의 스킬을 함께 갖고 있을 때만 듣는다. 대전표(자동 대전)에서는 적의 시전으로 얻는 절망이 세어지지 않는다."});
 
 /* ───────── 역설 - 전지무능 ───────── */
 const P='pk_paradox';
+/* 5단계 이하의 권능인가: 권능 키트의 스킬이면 그 키트의 단계로, 키트가 아닌데 종류에 '권능'이 적힌 스킬은 단계를 몰라 5단계 이하로 본다 */
+const pkpIsPower=k=>{ const kt=k.kit&&CH[k.kit]; if(kt) return kt.kind==='권능'&&(kt.tier==null||kt.tier<=5); return typeof k.kind==='string'&&k.kind.indexOf('권능')>=0; };
+const pkpSlot=e=>Object.keys(e.c.skills).find(s=>e.c.skills[s].name==='역설 - 전지무능');
+CASTGATE.push((c,slot,k)=>{ if(!pkpIsPower(k)) return false; const z=zones.find(q=>q.pkp&&q.until>now&&!q.owner.dead&&q.owner.team!==c.team&&Math.hypot(c.x-q.x,c.y-q.y)<=q.r); if(!z) return false;
+  const o=z.owner; (o.r.pk_paradox_got=o.r.pk_paradox_got||[]).push(k); say(c,'취소','#f3e7c0'); proc(o,'역설 : '+k.name,'얻음'); return true; });
 defKit(P,{name:'역설 - 전지무능',kind:'권능',tier:6,col:'#f3e7c0',
-  init(e){ e.r.pk_paradox_still=0; },
-  hud:e=>e.r.pk_paradox_still>=3?'시전 가능':'가만히 '+Math.min(3,e.r.pk_paradox_still||0).toFixed(1)+'/3s',
+  init(e){ e.r.pk_paradox_still=0; e.r.pk_paradox_got=[]; e.r.pk_paradox_cd=0; e.r.pk_paradox_re=0; },
+  hud:e=>(e.r.pk_paradox_got&&e.r.pk_paradox_got.length?'역설 : '+e.r.pk_paradox_got.map(k=>k.name).join(', ')+' · ':'')+(e.r.pk_paradox_cd>now?'경계 '+Math.ceil(e.r.pk_paradox_cd-now)+'s':e.r.pk_paradox_still>=3?'시전 가능':'가만히 '+Math.min(3,e.r.pk_paradox_still||0).toFixed(1)+'/3s'),
   tick(e,dt){ if(e.mv.x||e.mv.y||e.dash) e.r.pk_paradox_still=0; else e.r.pk_paradox_still=(e.r.pk_paradox_still||0)+dt; },
+  modDeal:(e,t,amt)=>e.r.pk_paradox_re>now?amt*.7:amt,
   skills:{
-   n1:{name:'역설 - 전지무능',kind:'권능',cd:180,r:10,can:e=>e.r.pk_paradox_still>=3,need:'3초간 움직이지 않음',cast(e){ S.focus(e,1.5); after(1.5,()=>{ if(e.dead) return; proc(e,'역설의 경계','5초');
-      zone(e,{x:e.x,y:e.y,r:10,dur:5,every:.25,label:'역설의 경계',tick:(z,inn)=>inn.forEach(t=>{ const s=has(t,'silence'); if(s&&s.pkp===e) s.until=now+.4; else add(t,'silence',.4,0,{by:e,pkp:e,self:true}); })}); }); }}
+   n1:{name:'역설 - 전지무능',kind:'권능',cd:180,r:10,can:e=>(e.r.pk_paradox_got&&e.r.pk_paradox_got.length>0)||(e.r.pk_paradox_still>=3&&!(e.r.pk_paradox_cd>now)),need:'3초간 움직이지 않음 · 역설이 있으면 되쓰기',
+    ai:e=>!!(e.r.pk_paradox_got&&e.r.pk_paradox_got.length)||true,
+    cast(e){ const sl=pkpSlot(e); if(sl) e.cd[sl]=.5;   /* 단추의 대기시간은 따로 센다(pk_paradox_cd): 경계를 펼친 뒤에도 얻은 역설을 이 단추로 되써야 하기 때문 */
+      const got=e.r.pk_paradox_got||(e.r.pk_paradox_got=[]);
+      if(got.length){ const k=got.shift(); e.r.pk_paradox_re=now+3; proc(e,'역설 : '+k.name,'70%'); try{ if(k.kit&&CH[k.kit]&&!(e.r.pk_paradox_in||(e.r.pk_paradox_in={}))[k.kit]&&!Object.values(e.c.skills).some(q=>q.kit===k.kit&&q!==k)){ e.r.pk_paradox_in[k.kit]=1; const r0=e.r,keep=Object.assign({},r0); CH[k.kit].init(e); for(const f in keep) e.r[f]=keep[f]; } k.cast(e); }catch(x){ say(e,'실패','#f0b458'); } return; }
+      e.r.pk_paradox_cd=now+180; S.focus(e,1.5); after(1.5,()=>{ if(e.dead) return; proc(e,'역설의 경계','5초'); zone(e,{x:e.x,y:e.y,r:10,dur:5,every:1,label:'역설의 경계',pkp:true,tick:()=>{}}); }); }}
   },
-  note:"2026년 3월 카드 < 6 >이다. 시험장에는 남의 권능 시전을 가로채 되쏘는 장치가 없어, '5단계 이하 권능을 취소하고 70% 위력으로 되쓴다'는 줄은 옮기지 못했다. 대신 경계(10칸, 5초) 안의 적은 스킬을 쓸 수 없다(침묵). 기본 공격은 된다. 경계의 침묵은 상태이상 지속 감소의 영향을 받지 않는다. 경계는 펼친 자리에 남는다."});
+  note:"2026년 3월 카드 < 6 >이다. 경계(10칸, 5초) 안에서 적이 5단계 이하의 권능을 쓰면 그 시전이 취소되고 '역설 : 이름'을 얻는다. 같은 단추를 다시 누르면 가진 역설 하나를 소모해 그 권능을 조건 없이 바로 쓴다(되쓴 뒤 3초 동안 내가 주는 피해가 70%가 된다: 되쓴 권능의 위력 70%를 이렇게 옮겼다). 정한 것: 취소당한 쪽의 권능은 대기시간이 돈다. 경계는 적의 권능만 막는다(카드에는 누구의 것인지 적혀 있지 않다). 권능인지는 권능 키트의 스킬이면 그 키트의 단계로, 키트가 아닌데 종류에 '권능'이 적힌 스킬은 5단계 이하로 본다. 일반 캐릭터 스킬은 막지 않는다. 단추 하나로 경계 펼치기와 되쓰기를 겸하므로, 경계의 재사용 대기시간 180초는 단추가 아니라 상태 줄에 '경계 Ns'로 뜬다. 역설은 판이 끝날 때까지 남고, 얻은 순서대로 쓴다. 경계는 펼친 자리에 남는다."});
 
 /* ───────── 질풍보 (준족지체 번외) ───────── */
 defKit('pk_gale',{name:'질풍보',kind:'권능',tier:4,col:'#9fe6c0',

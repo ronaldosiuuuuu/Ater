@@ -906,9 +906,12 @@ function basic(e){ /* 기본 공격은 침묵 중에도 된다(스킬만 막힌�
   for(const t of hit){ const g=has(t,'grab'),g2=has(e,'grab'); if((g&&g.by===e)||(g2&&g2.by===t)) continue; damage(e,t,e.atk,'기본 공격',{basic:true}); if(e.c.basicBonus&&!t.dead) e.c.basicBonus(e,t); if(!t.dead&&!has(t,'grab')) knock(t,e,.3); }
   hitFeats(e,f=>{ const d=Math.hypot(f.x-e.x,f.y-e.y); if(d>CFG.reach+f.r) return false; let da=Math.atan2(f.y-e.y,f.x-e.x)-a; da=Math.atan2(Math.sin(da),Math.cos(da)); return Math.abs(da)<=half+.2; },e.atk);
   if(e.c.onBasic) e.c.onBasic(e,hit.filter(t=>!t.dead)); }
+/* CASTGATE: 스킬이 나가기 직전에 묻는 문지기들. (e,slot,k)=>true 를 돌려주면 그 시전은 취소되고 대기시간만 돈다(역설 - 전지무능) */
+const CASTGATE=[];
 function cast(e,slot){ if(NET.client){ if(e===me) NET.cast(slot); return true; } if(e.dead) return false; /* intercept: 캐릭터가 단추 입력을 통째로 가로챈다(아몬의 기록) */ if(e.c.intercept&&!over&&e.c.intercept(e,slot)) return true; if(slot==='b') return basic(e); if(slot==='jump') return jump(e); const k=e.c.skills[slot]; if(!k) return false;
   const usable=canUse(e)||(k.whileChant&&canAct(e)&&!has(e,'silence')); const free=practice&&pFree&&e===me&&slot==='ult'; if(!usable||e.cd[slot]>0||(slot==='ult'&&e.ultUsed&&!free)||(k.can&&!k.can(e)&&!free)) return false; if(slot==='ult'&&!free) e.ultUsed=true;
   { const kd0=k.kind||KIND[slot]; for(const s2 of e.st.slice()){ if(!s2.onCast) continue; const r=s2.onCast(e,slot,kd0); if(r==='deny'){ say(e,'제한','#d7a6ff'); return false; } if(r===true){ e.cd[slot]=k.cd||0.5; if(slot==='ult'&&!free) e.ultUsed=true; return true; } } }
+  for(const gate of CASTGATE){ if(gate(e,slot,k)){ e.cd[slot]=k.cd||0.5; return true; } }
   e.cd[slot]=k.cd||0.5; const kd=k.kind||KIND[slot];
   if(slot==='ult'){ msg([['★ '+short(e)+' >> ','#e3c377'],['('+kd+') : ','#e3c377'],[k.name,'#fff6d6'],[' (X)','#97a1cf']],e.team,true); if(e===me){ banner={who:e.c.name,skill:k.name,team:e.team,t0:performance.now(),e}; slowUntil=performance.now()+650; shake=.4; } else mini={who:short(e),skill:k.name,team:e.team,t0:performance.now()}; sfx('ult'); buzz([40,60,90]); burst(e.x,e.y,40,'#e3c377',8); }
   else if(k.cd>=1){ /* 다인전에서는 남의 스킬을 왼쪽 기록 대신 그 캐릭터 밑에 작게 띄운다 */ if(OPT.log==='all'||(OPT.log==='auto'&&(TN()<=1||e===me))) msg([[short(e)+'  ','rgb('+TC[e.team]+')'],[kd+' ',typeof kcol==='function'?kcol(k,slot):'#97a1cf'],[k.name,'#ffffff'],['  '+k.cd+'s','#8088ad']],e.team); else e.tag={n:k.name,t0:now}; castSnd(e,slot); }
@@ -1246,6 +1249,7 @@ modeNote();
 <script src="pkits.js"></script>
 <script src="build.js"></script>
 <script src="game.js"></script>
+<script src="story2.js"></script>
 <script>
 /* 홈 화면 앱(PWA): https(또는 localhost)로 열었을 때만 서비스 워커를 건다. 파일을 그냥 연 경우에는 아무 일도 하지 않는다. */
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)) addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
