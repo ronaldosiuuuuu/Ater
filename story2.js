@@ -14,3 +14,4 @@
   /* 혼자서 여럿과: 섬멸전으로 만든 판에서 내 편 컴퓨터와 남는 상대를 뺀다 */
   on('begin',()=>{ if(typeof SPM==='undefined'||!SPM||SPM.kind!=='story'||!SPM.cfg||!SPM.cfg.solo) return; let keep=SPM.cfg.solo; const want=[SPM.cfg.foe].concat(SPM.cfg.fo||[]);
     ents=ents.filter(e=>e===me||(e.team===1&&want.includes(e.key)&&keep-->0)); ents.forEach((e,i)=>{ if(e.team===1) e.slot=i-1; }); foe=ents.find(e=>e.team===1)||foe; }); }
+if(typeof hubCard==='function') hubCard();
