@@ -3,10 +3,11 @@
    1) 등반: 한 캐릭터로 층을 오른다. 이기면 보상을 고르고 다음 길(평범 · 정예 · 저주 · 쉼터 · 상인)을 고른다. 5층마다 보스 몬스터와 마왕이 번갈아 나온다.
    2) 이야기: 정리본에 적힌 싸움을 장으로 묶었다. 장을 더하려면 STORY에 한 덩이(cfg = 누가 누구와 어떤 방식으로, goal = 별 둘 조건, src = 정리본 문장).
    3) 오늘의 도전: 날짜로 정해지는 1대1 한 판.
-   4) 해금: 내 캐릭터 칸의 등급이 승수·등반 층으로 열린다(NEEDS). 기록 화면에서 모두 열 수 있다.
+   4) 보유와 뽑기: 에이·비라로 시작해 코인으로 뽑는다(PULL · GRATE · DUP · SBUY). 기록 화면에서 모두 열 수 있다.
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
-const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{}},d); })();
+const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},coin:1500,star:0},d); })();
+for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
 const baseKey=k=>CH[k]&&CH[k].re?CH[k].base:k;
 const stars=k=>{ const w=(PF.ch[k]||{}).w||0; return w>=15?3:w>=5?2:w>=1?1:0; };
@@ -20,14 +21,16 @@ const ACH=[
  ['v10','두루 쓰는 손','서로 다른 캐릭터 10명으로 이긴다',()=>Object.values(PF.ch).filter(c=>c.w>0).length>=10],['v40','만물상','서로 다른 캐릭터 40명으로 이긴다',()=>Object.values(PF.ch).filter(c=>c.w>0).length>=40],
  ['m3','손에 익은 무기','한 캐릭터로 15승 (★★★)',()=>Object.values(PF.ch).some(c=>c.w>=15)],['built','내가 만든 영웅','조합 캐릭터로 이긴다',x=>x.win&&me.c.built],
  ['golem','골렘 사냥','골렘을 쓰러뜨린다',()=>PF.mon.golem>0],['hydra','히드라 사냥','히드라를 쓰러뜨린다',()=>PF.mon.hydra>0],
+ ['g10','작은 모임','캐릭터 10명을 가진다',()=>Object.keys(PF.own).length>=10],['g50','큰 모임','캐릭터 50명을 가진다',()=>Object.keys(PF.own).length>=50],['gmyth','신화를 품다','신화 캐릭터를 가진다',()=>Object.keys(PF.own).some(k=>CH[k]&&CH[k].grade==='신화')],
  ['korhen','학살자를 멈추다','코르헨을 쓰러뜨린다',()=>PF.mon.korhen>0],['st1','첫 장','이야기 한 장을 넘긴다',()=>Object.values(PF.story).some(a=>a.some(x=>x>0))],['stmax','첫 번째 용사','맥스 이야기를 끝까지 본다',()=>(PF.story.max||[]).filter(x=>x>0).length>=5],['stall','빠짐없이','이야기의 별을 모두 모은다',()=>STORY.every(s=>s.ch.every((_,j)=>((PF.story[s.id]||[])[j]||0)>=2))],
  ['d1','오늘의 승리','오늘의 도전을 이긴다',()=>PF.dwin>=1],['d7','이레','오늘의 도전을 이레 내리 이긴다',()=>PF.dstreak>=7],
  ['t5','다섯 층','등반 5층을 넘는다',()=>PF.tw.best>=5],['t10','열 층','등반 10층을 넘는다',()=>PF.tw.best>=10],['t15','꼭대기','등반 15층을 넘는다',()=>PF.tw.best>=15],['t25','구름 위','등반 25층을 넘는다',()=>PF.tw.best>=25]
 ];
 function achCheck(x){ const got=[]; for(const a of ACH){ if(PF.ach[a[0]]) continue; let ok=false; try{ ok=a[3](x||{}); }catch(e){} if(ok){ PF.ach[a[0]]=Date.now(); got.push(a[1]); } } if(got.length){ pfSave(); setTimeout(()=>toast('업적 달성 · '+got.join(' · '),3600),1200); } }
 const openSet=()=>Object.keys(CH).filter(k=>!CH[k].re&&!locked(k));
-on('end',w=>{ if(practice||!w||NET.client) return; const was=new Set(openSet()); setTimeout(()=>{ const nw=openSet().filter(k=>!was.has(k)); if(nw.length) toast('새로 열린 캐릭터 · '+nw.slice(0,4).map(k=>CH[k].name.split(', ')[1]).join(' · ')+(nw.length>4?' 외 '+(nw.length-4)+'명':''),4200); },2600); const win=w.team===0,k=baseKey(me.key),solo=ents.length===2&&!RAID(),c=PF.ch[k]||(PF.ch[k]={w:0,l:0});
-  if(win){ ents.forEach(o=>{ if(o.team===1&&CH[o.key]&&!o.c.mon&&!o.c.mob) PF.beat[baseKey(o.key)]=1; }); PF.w++; PF.streak++; c.w++; if(foe.c.mon) PF.mon[foe.key]=(PF.mon[foe.key]||0)+1; } else { PF.l++; PF.streak=0; c.l++; } pfSave(); achCheck({win,solo}); });
+on('end',w=>{ if(practice||!w||NET.client) return; const was=new Set(openSet()); setTimeout(()=>{ const nw=openSet().filter(k=>!was.has(k)); if(nw.length&&0) toast('새로 열린 캐릭터 · '+nw.slice(0,4).map(k=>CH[k].name.split(', ')[1]).join(' · ')+(nw.length>4?' 외 '+(nw.length-4)+'명':''),4200); },2600); const win=w.team===0,k=baseKey(me.key),solo=ents.length===2&&!RAID(),c=PF.ch[k]||(PF.ch[k]={w:0,l:0});
+  { const g=earn(win); showResult.gain=g; setTimeout(()=>toast('코인 +'+g.c+(g.st?' · 별무리의 흔적 +1':''),2600),200); }
+  if(win){ PF.w++; PF.streak++; c.w++; if(foe.c.mon) PF.mon[foe.key]=(PF.mon[foe.key]||0)+1; } else { PF.l++; PF.streak=0; c.l++; } pfSave(); achCheck({win,solo}); });
 
 /* ───── 권능을 아무 캐릭터에게나 얹기(등반 보상) ───── */
 function empower(c,pw,atkB){ const W=id=>POWERS[id],each=(h,fn)=>{ for(const id of pw) if(W(id)[h]) fn(W(id),id); },n=Object.assign({},c); n.atk=c.atk+(atkB||0);
@@ -54,16 +57,35 @@ function setup(x){ keepSet(); practice=false; mode=x.mode||1; teamN=x.teamN||1; 
   sel.al=[0,1,2,3].map(j=>(x.al||[])[j]||null); sel.fo=[0,1,2,3].map(j=>(x.fo||[])[j]||null); if(x.raid) OPT.raid=x.raid; OPT.myth=x.myth?1:0; if(x.map&&MAPS[x.map]) OPT.map=x.map; }
 
 /* ───── 해금: 처음에는 고화만. 이기고 오르면 윗등급이 열린다. 연습과 상대·팀원 칸은 언제나 모두 열려 있다 ───── */
-const NEEDS={서사:[3,0],전설:[10,5],히든:[25,10],신화:[50,15]};      /* [승수, 등반 층] 둘 중 하나만 채우면 된다 */
-const MEET={전설:1,히든:1,신화:1};                                     /* 이 등급은 그 캐릭터를 상대로 한 번 이겨야 한다 */
-const REWIN=5;                                                       /* 재림: 원래 캐릭터로 5승 */
-const gradeOpen=g=>!NEEDS[g]||PF.open||PF.w>=NEEDS[g][0]||(NEEDS[g][1]&&PF.tw.best>=NEEDS[g][1]);
-function locked(k){ const c0=CH[k]; if(!c0||PF.open) return false; const b=baseKey(k),c=CH[b]; if(!c||c.built||c.custom||c.mon||c.mob||c.kit) return false; if(!gradeOpen(c.grade)) return true; if(MEET[c.grade]&&!PF.beat[b]) return true; return !!c0.re&&((PF.ch[b]||{}).w||0)<REWIN; }
-function lockWhy(k){ const b=baseKey(k),c=CH[b],n=NEEDS[c.grade],L=[]; if(n&&!gradeOpen(c.grade)) L.push(n[0]+'승'+(n[1]?' 또는 등반 '+n[1]+'층':'')); if(MEET[c.grade]&&!PF.beat[b]) L.push('상대로 만나 한 번 이기기'); if(CH[k].re&&((PF.ch[b]||{}).w||0)<REWIN) L.push('원래 캐릭터로 '+REWIN+'승'); return L.join(' · '); }
-/* 고르는 화면 아래에 뜨는 한 줄: 아직 안 보이는 캐릭터가 몇인지, 어떻게 여는지 */
-function lockNote(tab,qq){ if(slot!=='me'||practice||PF.open) return ''; const L=Object.values(CH).filter(c=>!c.re&&(qq?c.name.includes(qq):c.cls===tab)&&locked(c.key)); if(!L.length) return ''; const g={}; L.forEach(c=>g[c.grade]=(g[c.grade]||0)+1);
-  return '<p class="note" style="margin-top:10px">아직 보이지 않는 캐릭터 '+L.length+'명 ('+Object.keys(g).map(k=>k+' '+g[k]).join(' · ')+')\n'+Object.keys(g).map(k=>k+': '+NEEDS[k][0]+'승'+(NEEDS[k][1]?' 또는 등반 '+NEEDS[k][1]+'층':'')+(MEET[k]?', 그리고 그 캐릭터를 상대로 한 번 이기기':'')).join('\n')+'\n상대 칸과 연습에서는 모두 보인다.</p>'; }
-{ const pc0=pickCh; pickCh=function(k){ if(slot==='me'&&!practice&&locked(k)) return toast(CH[k].grade+' 등급은 아직 잠겨 있다 · '+lockWhy(k)+' (연습에서는 쓸 수 있다)',3000); pc0(k); };
+/* ───── 보유와 뽑기 ─────
+   처음부터 가진 캐릭터는 에이와 비라 둘. 나머지는 코인으로 뽑는다. 가지지 않은 캐릭터는 내 캐릭터 칸에 보이지 않는다(상대·팀원 칸, 연습, 이야기, 오늘의 도전은 모두 열려 있다).
+   코인과 별무리의 흔적을 버는 양은 기획 그대로다('균형' 채널): 적 처치 시 250~500 코인, 적에게 사망했을 시 150~350 코인, 40% 확률로 별무리의 흔적 1개.
+   시험장에서는 한 판을 기준으로 준다(이기면 처치 몫, 지면 사망 몫). 뽑기 값·확률·겹쳤을 때의 보상·별무리 교환 값은 기획에 없어 시험장에서 정했다. */
+const START=['ei','vira'], PULL=1500, PULL10=13500;
+const GRATE=[['고화',60],['서사',28],['전설',9],['히든',2.5],['신화',.5]];             /* 한 번 뽑을 때 등급이 나올 확률(%) */
+const DUP={고화:1,서사:3,전설:8,히든:15,신화:30};                                       /* 이미 가진 캐릭터가 나오면 받는 별무리의 흔적 */
+const SBUY={고화:5,서사:15,전설:40,히든:80,신화:150};                                   /* 별무리의 흔적으로 골라서 데려오는 값 */
+const REWIN=5;                                                                       /* 재림: 원래 캐릭터로 5승 */
+const DIFFPAY=[.5,.75,1];                                                            /* 컴퓨터 실력에 따른 코인 배수(쉬움 · 보통 · 어려움) */
+const gachaPool=g=>Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&!c.mob&&!c.kit&&c.grade===g; });
+const owned=k=>!!PF.own[baseKey(k)];
+function locked(k){ const c0=CH[k]; if(!c0||PF.open) return false; const b=baseKey(k),c=CH[b]; if(!c||c.built||c.custom||c.mon||c.mob||c.kit) return false; if(!PF.own[b]) return true; return !!c0.re&&((PF.ch[b]||{}).w||0)<REWIN; }
+function lockWhy(k){ const b=baseKey(k); return !PF.own[b]?'뽑기로 얻는다':CH[k].re?'원래 캐릭터로 '+REWIN+'승':''; }
+function lockNote(tab,qq){ if(slot!=='me'||practice||PF.open) return ''; const L=Object.values(CH).filter(c=>!c.re&&(qq?c.name.includes(qq):c.cls===tab)&&locked(c.key)); if(!L.length) return '';
+  return '<p class="note" style="margin-top:10px">아직 가지지 않은 캐릭터 '+L.length+'명은 보이지 않는다. 대전 화면의 모험 → 뽑기에서 코인으로 데려온다.\n상대 칸과 연습에서는 모두 보인다.</p>'; }
+function earn(win){ const r=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),m=DIFFPAY[diff]==null?1:DIFFPAY[diff],c=Math.round((win?r(250,500):r(150,350))*m),st=Math.random()<.4?1:0; PF.coin+=c; PF.star+=st; return {c,st}; }
+function pullOne(minIdx){ let L=GRATE.slice(minIdx||0),tot=L.reduce((a,x)=>a+x[1],0),x=Math.random()*tot,g=L[L.length-1][0]; for(const q of L){ if((x-=q[1])<0){ g=q[0]; break; } } const pool=gachaPool(g),k=pool[Math.floor(Math.random()*pool.length)]; if(!k) return null; const dup=!!PF.own[k]; if(dup) PF.star+=DUP[g]; else PF.own[k]=Date.now(); return {k,g,dup}; }
+function pulls(n){ const cost=n===10?PULL10:PULL*n; if(PF.coin<cost) return toast('코인이 모자라다 · '+(cost-PF.coin).toLocaleString()+' 더 필요하다'),null; PF.coin-=cost; const L=[]; for(let i=0;i<n;i++){ const sure=n===10&&i===9&&!L.some(r=>r.g!=='고화'); L.push(pullOne(sure?1:0)); } pfSave(); achCheck({}); return L.filter(Boolean); }
+function gachaScreen(res){ const all=GRATE.map(g=>gachaPool(g[0])),have=all.map(L=>L.filter(k=>PF.own[k]).length);
+  let h=head('GACHA','뽑기','코인 '+PF.coin.toLocaleString()+' · 별무리의 흔적 '+PF.star);
+  if(res) h+='<h2>나온 캐릭터</h2>'+res.map(r=>{ const c=CH[r.k]; return '<div class="pl" style="border-left-color:'+GCOL[r.g]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:'+GCOL[r.g]+'">'+r.g+' '+c.cls+'</small></b><span style="color:var(--muted)">'+(r.dup?'이미 있다 · 별무리 +'+DUP[r.g]:'<b style="color:var(--gold)">새로 얻었다</b>')+'</span></div>'; }).join('');
+  h+='<div class="row" style="margin-top:12px"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+' · 서사 이상 하나 보장</small></button></div>';
+  h+='<p class="note" style="white-space:pre-line">확률: '+GRATE.map(g=>g[0]+' '+g[1]+'%').join(' · ')+'\n이미 가진 캐릭터가 나오면 별무리의 흔적으로 바뀐다 ('+Object.keys(DUP).map(g=>g+' '+DUP[g]).join(' · ')+').\n코인은 싸워서 번다: 이기면 250~500, 져도 150~350 (컴퓨터 실력 쉬움 ×0.5 · 보통 ×0.75). 한 판마다 40% 확률로 별무리의 흔적 1개.</p>';
+  h+='<h2>가진 캐릭터</h2>'+GRATE.map((g,i)=>'<div class="pl" style="border-left-color:'+GCOL[g[0]]+'"><b>'+g[0]+' '+have[i]+' / '+all[i].length+'</b><span style="color:var(--muted)">골라서 데려오기 · 별무리 '+SBUY[g[0]]+'</span>'+(have[i]<all[i].length?'<button type="button" data-sb="'+g[0]+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px">고르기</button>':'')+'</div>').join('');
+  h+='<div class="dock"><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tw-body').innerHTML=h; $('tower').hidden=false; if(res) $('tower').scrollTop=0; }
+function starScreen(g){ const L=gachaPool(g).filter(k=>!PF.own[k]).sort((a,b)=>CH[a].cls.localeCompare(CH[b].cls)||CH[a].name.localeCompare(CH[b].name));
+  $('tw-body').innerHTML=head('GACHA',g+' 골라서 데려오기','별무리의 흔적 '+SBUY[g]+'개 · 지금 '+PF.star+'개')+L.map(k=>{ const c=CH[k]; return '<div class="pl" style="border-left-color:'+GCOL[g]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:var(--muted)">'+c.cls+' · '+esc(c.name.split(', ')[0])+'</small></b><button type="button" data-i2="'+k+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px">스킬</button><button type="button" data-get="'+k+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px'+(PF.star<SBUY[g]?';opacity:.5':'')+'">데려온다</button></div>'; }).join('')+'<div class="dock"><button class="ghost" id="ga-back" type="button">뽑기로 돌아가기</button></div>'; $('tower').hidden=false; $('tower').scrollTop=0; }
+{ const pc0=pickCh; pickCh=function(k){ if(slot==='me'&&!practice&&locked(k)) return toast('아직 가지지 않았다 · '+lockWhy(k)+' (연습에서는 쓸 수 있다)',3000); pc0(k); };
   const la0=launch; launch=function(){ if(NET.host&&!KEEP&&typeof okKey==='function'&&!okKey(sel.me)) return toast('만든 캐릭터는 함께에서 쓸 수 없다 · 다른 캐릭터를 고른다',3000); if(!KEEP&&!practice&&!NET.client&&locked(kOf('me'))) return toast('내 캐릭터가 아직 잠겨 있다 · '+lockWhy(kOf('me')),3000); return la0(); }; $('start').onclick=()=>launch(); }
 
 /* ───── 등반 ─────
@@ -160,6 +182,7 @@ function spGo(m){ if(NET.host||NET.client) return toast('친구와 함께 중에
 { const sr0=showResult; showResult=function(){ if(TW&&TW.on){ if(!over) return; running=false; wakeOff(); $('menu').style.display='none'; if(!over.winner){ const f=TW.floor; TW.on=false; keepBack(); $('sel').hidden=false; over=null; toast('등반은 '+f+'층에서 멈춰 있다. 이어서 오를 수 있다'); return; } return towerEnd(over.winner); }
     if(!over) return; const win=!!over.winner&&over.winner.team===0,solo=ents.length===2,m=SPM; sr0();
     if(win&&!practice&&solo) $('r-small').textContent='VICTORY · '+rankOf();
+    if(showResult.gain&&over.winner&&!practice){ const g=showResult.gain; $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +1':'')+' · '+$('r-sub').textContent; } showResult.gain=null;
     if(m){ let line='';
       if(m.kind==='story'){ const s=STORY[m.si],c=s.ch[m.ci]; if(win){ const st=goalOk(c.goal)?2:1,a=PF.story[s.id]||(PF.story[s.id]=[]); a[m.ci]=Math.max(a[m.ci]||0,st); pfSave(); achCheck({}); line=(m.ci+1)+'장 '+'★'.repeat(st)+(st<2?' · ★★ 조건: '+goalTxt(c.goal):''); } else if(over.winner) line=(m.ci+1)+'장 · 다시 겨뤄 볼 수 있다'; }
       else if(m.kind==='daily'&&over.winner){ const d=today(); if(PF.daily.d!==d){ const y=new Date(Date.now()-864e5),yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); PF.dstreak=win?(PF.daily.d===yd&&PF.daily.win?PF.dstreak+1:1):0; if(win) PF.dwin++; PF.daily={d,win,rank:win?rankOf():'',t:over.t}; pfSave(); achCheck({}); line='오늘의 도전 · 기록에 남았다'; } else line='오늘의 도전 · 이미 기록이 있어 이번 판은 남지 않는다'; }
@@ -170,9 +193,11 @@ function spGo(m){ if(NET.host||NET.client) return toast('친구와 함께 중에
 
 /* ───── 대전 화면의 모험 칸 ───── */
 function hubCard(){ const el=$('twcard'); if(!el) return; const s=twLoad(),d=PF.daily.d===today(),st=STORY.reduce((a,x)=>a+x.ch.reduce((b,_,j)=>b+stStar(x,j),0),0),sm=STORY.reduce((a,x)=>a+x.ch.length*2,0);
-  el.innerHTML='<b style="font:600 15px var(--display)">모험</b><div class="row" style="margin-top:8px"><button type="button" id="hub-tw">등반<small style="display:block;font-size:10.5px;opacity:.75">'+(s?'이어서 '+s.floor+'층':'최고 '+PF.tw.best+'층')+'</small></button><button type="button" id="hub-st">이야기<small style="display:block;font-size:10.5px;opacity:.75">★ '+st+' / '+sm+'</small></button><button type="button" id="hub-dy">오늘의 도전<small style="display:block;font-size:10.5px;opacity:.75">'+(d?(PF.daily.win?'이겼다 '+PF.daily.rank:'졌다'):'아직 안 했다')+'</small></button></div>'; }
+  el.innerHTML='<b style="font:600 15px var(--display)">모험</b> <small style="color:var(--muted)">코인 '+PF.coin.toLocaleString()+' · 별무리 '+PF.star+'</small><div class="row" style="margin-top:8px"><button type="button" id="hub-ga">뽑기<small style="display:block;font-size:10.5px;opacity:.75">캐릭터 '+Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]).length+'명</small></button><button type="button" id="hub-tw">등반<small style="display:block;font-size:10.5px;opacity:.75">'+(s?'이어서 '+s.floor+'층':'최고 '+PF.tw.best+'층')+'</small></button><button type="button" id="hub-st">이야기<small style="display:block;font-size:10.5px;opacity:.75">★ '+st+' / '+sm+'</small></button><button type="button" id="hub-dy">오늘의 도전<small style="display:block;font-size:10.5px;opacity:.75">'+(d?(PF.daily.win?'이겼다 '+PF.daily.rank:'졌다'):'아직 안 했다')+'</small></button></div>'; }
 function towerHome(){ const s=twLoad(); $('tw-body').innerHTML=head('TOWER','등반','가장 높이 '+PF.tw.best+'층'+(CH[PF.tw.key]?' · '+CH[PF.tw.key].name.split(', ')[1]:''))+'<p class="note">지금 고른 내 캐릭터('+esc(CH[kOf('me')].name)+')로 층을 오른다. 이길 때마다 보상을 고르고, 다음 길을 고른다. 체력은 이어지고 이기면 최대 체력의 30%를 되찾는다. 5층마다 보스 몬스터와 마왕이 번갈아 나온다. 지면 끝난다.</p><div class="dock">'+(s?'<button class="go" id="tw-res" type="button">이어서 · '+s.floor+'층 ('+CH[s.key].name.split(', ')[1]+')</button>':'')+'<button class="'+(s?'ghost':'go')+'" id="tw-new" type="button">'+(s?'새로 오르기 (하던 등반은 지워진다)':'오르기 시작')+'</button><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tower').hidden=false; $('tower').scrollTop=0; }
-document.addEventListener('click',e=>{ const t=e.target.closest('#hub-tw,#hub-st,#hub-dy,#tw-new,#tw-res,#tw-go,#tw-out,#tw-again,#tw-info,#tw-shopout,#st-back,#dy-go,#dy-me,#dy-foe,[data-rw],[data-path],[data-buy],[data-st],[data-sc],[data-sgo]'); if(!t||t.disabled) return; const D=t.dataset;
+document.addEventListener('click',e=>{ const t=e.target.closest('#hub-ga,#ga-back,[data-pull],[data-sb],[data-get],[data-i2],#hub-tw,#hub-st,#hub-dy,#tw-new,#tw-res,#tw-go,#tw-out,#tw-again,#tw-info,#tw-shopout,#st-back,#dy-go,#dy-me,#dy-foe,[data-rw],[data-path],[data-buy],[data-st],[data-sc],[data-sgo]'); if(!t||t.disabled) return; const D=t.dataset;
+  if(t.id==='hub-ga'||t.id==='ga-back') return gachaScreen(); if(D.pull){ const r=pulls(+D.pull); if(r){ sfx('win'); gachaScreen(r); drawSel(); } return; } if(D.sb) return starScreen(D.sb); if(D.i2) return info(D.i2);
+  if(D.get){ const g=CH[D.get].grade; if(PF.star<SBUY[g]) return toast('별무리의 흔적이 모자라다'); PF.star-=SBUY[g]; PF.own[D.get]=Date.now(); pfSave(); sfx('win'); toast(CH[D.get].name.split(', ')[1]+' · 데려왔다'); drawSel(); return gachaScreen([{k:D.get,g,dup:false}]); }
   if(t.id==='hub-tw') towerHome(); else if(t.id==='hub-st'||t.id==='st-back') storyScreen(); else if(t.id==='hub-dy') dailyScreen();
   else if(t.id==='tw-new'||t.id==='tw-again') towerStart(false); else if(t.id==='tw-res') towerStart(true); else if(t.id==='tw-go') towerGo(); else if(t.id==='tw-out'){ $('tower').hidden=true; hubCard(); } else if(t.id==='tw-info') info(TW.next.k);
   else if(t.id==='tw-shopout'){ TW.shop=null; genFork(); twStore(); towerScreen(); } else if(D.rw&&TW&&TW.rew) towerTake(TW.rew[+D.rw]); else if(D.path&&TW&&TW.fork) towerPath(+D.path); else if(D.buy&&TW&&TW.shop) towerBuy(+D.buy);
@@ -183,11 +208,11 @@ document.addEventListener('click',e=>{ const t=e.target.closest('#hub-tw,#hub-st
 function drawRec(){ const el=$('rec'); if(!el) return; const tot=PF.w+PF.l,L=Object.entries(PF.ch).filter(x=>CH[x[0]]).sort((a,b)=>b[1].w-a[1].w).slice(0,8),got=ACH.filter(a=>PF.ach[a[0]]).length;
   el.innerHTML='<h2>전적</h2><div class="pl"><b>'+PF.w+'승 '+PF.l+'패</b><span style="color:var(--muted)">'+(tot?'승률 '+Math.round(PF.w/tot*100)+'% · ':'')+'연승 '+PF.streak+'</span></div><div class="pl"><b>등반 최고 '+PF.tw.best+'층</b><span style="color:var(--muted)">'+(CH[PF.tw.key]?CH[PF.tw.key].name.split(', ')[1]+' · ':'')+PF.tw.runs+'번 올랐다</span></div>'
    +'<div class="pl"><b>이야기 ★ '+STORY.reduce((a,x)=>a+x.ch.reduce((b,_,j)=>b+stStar(x,j),0),0)+' / '+STORY.reduce((a,x)=>a+x.ch.length*2,0)+'</b><span style="color:var(--muted)">오늘의 도전 '+PF.dwin+'승 · 내리 '+PF.dstreak+'일</span></div>'
-   +'<h2>해금</h2>'+Object.keys(NEEDS).map(g=>{ const all=Object.values(CH).filter(c=>!c.re&&c.grade===g),op=all.filter(c=>!locked(c.key)).length; return '<div class="pl" style="opacity:'+(gradeOpen(g)?1:.55)+'"><b>'+(gradeOpen(g)?'◆ ':'◇ ')+g+' '+op+' / '+all.length+'</b><span style="color:var(--muted)">'+NEEDS[g][0]+'승'+(NEEDS[g][1]?' 또는 등반 '+NEEDS[g][1]+'층':'')+(MEET[g]?' + 상대로 이기기':'')+'</span></div>'; }).join('')+'<div class="pl"><b>재림</b><span style="color:var(--muted)">원래 캐릭터로 '+REWIN+'승</span></div>'+'<button class="ghost" id="rec-open" type="button">'+(PF.open?'모두 열어 둠 · 눌러서 해금 방식으로':'해금 방식 · 눌러서 모두 열기')+'</button><p class="note">조건을 못 채운 캐릭터는 내 캐릭터 칸에서 보이지 않는다. 연습, 상대·팀원 칸, 이야기, 오늘의 도전, 조합 캐릭터는 언제나 열려 있다.</p>'
+   +'<h2>보유</h2><div class="pl"><b>코인 '+PF.coin.toLocaleString()+'</b><span style="color:var(--muted)">별무리의 흔적 '+PF.star+'</span></div><div class="pl"><b>캐릭터 '+Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]).length+' / '+Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom).length+'</b><span style="color:var(--muted)">재림: 원래 캐릭터로 '+REWIN+'승</span></div>'+'<button class="ghost" id="rec-open" type="button">'+(PF.open?'모두 열어 둠 · 눌러서 뽑기 방식으로':'뽑기 방식 · 눌러서 모두 열기')+'</button><p class="note">가지지 않은 캐릭터는 내 캐릭터 칸에서 보이지 않는다. 연습, 상대·팀원 칸, 이야기, 오늘의 도전, 조합 캐릭터는 언제나 열려 있다.</p>'
    +'<h2>숙련</h2>'+(L.length?L.map(([k,c])=>'<div class="pl"><b>'+esc(CH[k].name.split(', ')[1])+mastery(k)+'</b><span style="color:var(--muted)">'+c.w+'승 '+c.l+'패</span></div>').join('')+'<p class="note">★ 1승 · ★★ 5승 · ★★★ 15승. 캐릭터 고르는 칸에도 뜬다.</p>':'<p class="sub">아직 싸운 기록이 없다.</p>')
    +'<h2>업적 '+got+' / '+ACH.length+'</h2>'+ACH.map(a=>'<div class="pl" style="border-left-color:'+(PF.ach[a[0]]?'var(--gold)':'var(--line)')+';opacity:'+(PF.ach[a[0]]?1:.55)+'"><b>'+(PF.ach[a[0]]?'◆ ':'◇ ')+a[1]+'</b><span style="color:var(--muted)">'+a[2]+'</span></div>').join('')
    +'<button class="ghost" id="rec-reset" type="button" style="margin-top:14px">기록 모두 지우기</button>'; }
-{ let armed=0; document.addEventListener('click',e=>{ if(!e.target.closest('#rec-reset')) return; const t=performance.now(); if(t-armed>2600){ armed=t; toast('한 번 더 누르면 기록을 모두 지운다'); return; } armed=0; Object.assign(PF,{w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,beat:{}}); pfSave(); drawRec(); hubCard(); drawSel(); });
+{ let armed=0; document.addEventListener('click',e=>{ if(!e.target.closest('#rec-reset')) return; const t=performance.now(); if(t-armed>2600){ armed=t; toast('한 번 더 누르면 기록을 모두 지운다'); return; } armed=0; Object.assign(PF,{w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,beat:{},own:{ei:1,vira:1},coin:1500,star:0}); pfSave(); drawRec(); hubCard(); drawSel(); });
   document.addEventListener('click',e=>{ if(!e.target.closest('#rec-open')) return; PF.open=!PF.open; pfSave(); drawRec(); drawSel(); });
   const gp0=goPage; goPage=function(p){ gp0(p); if(p==='rec') drawRec(); if(p==='play') hubCard(); if(p==='chars') drawSel(); }; }
 hubCard();
@@ -201,3 +226,6 @@ hubCard();
   const sec=document.querySelector('section[data-page="opts"]'); if(sec){ const box=document.createElement('div'); box.innerHTML='<h2>만들기 · 도구</h2><div class="tools" id="tools"></div><p class="sub" style="margin-top:8px">판 v'+(typeof APPV!=='undefined'?APPV:'')+'</p><h2>설정</h2>'; const first=sec.firstElementChild; sec.insertBefore(box,first); if(first&&first.tagName==='H2') first.remove();
     const lab={buildb:['조합 캐릭터','스킬 · 권능 · 장비'],forgeb:['카드로 만들기','카드 글 → 캐릭터 초안'],benchb:['대전표','컴퓨터끼리 승률'],helpb:['도움말','조작과 규칙'],instb:['앱으로 설치','홈 화면에 추가']}; for(const id in lab){ const b=$(id); if(!b) continue; b.className='tool'; b.innerHTML='<b>'+lab[id][0]+'</b><small>'+lab[id][1]+'</small>'; $('tools').appendChild(b); } }
   drawOpts(); }
+
+/* 가지지 않은 캐릭터가 내 칸에 남아 있으면 에이로 돌린다 */
+if(!PF.open&&locked(kOf('me'))){ sel.me='ei'; sel.meR=false; drawSel(); }
