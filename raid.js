@@ -69,7 +69,7 @@ function lootHtml(win){ if(!win) return ''; const bag={},rare=[]; let sec='';
   const ks=Object.keys(bag); return '<h2>전리품</h2>'+(ks.length?ks.map(k=>'<div class="pl'+(rare.includes(k)?' t1':'')+'"><b>'+esc(k)+'</b><span>x '+bag[k]+'</span>'+(rare.includes(k)?'<span style="color:var(--gold)">물욕 보상</span>':'')+'</div>').join(''):'<p class="sub">아무것도 나오지 않았다.</p>')+'<p class="sub">카드의 보상 확률대로 굴린 결과다. 이 기기에 쌓이지는 않는다.</p>'; }
 /* 고르는 화면의 보스 줄 */
 /* 레이드 난이도: 소란 < 집결 < 결속 < 군주 < 위신. 데스카운트는 1 · 2 · 2 · 3 · 3 (편 전체가 나눠 쓴다).
-   지금 있는 보스 가운데 가장 높은 것은 결속(여덟 머리의 뱀)이고, 군주·위신은 아직 비어 있다. 보스를 더하면 MONTIER에 한 줄 */
+   군주·위신의 보스는 docboss.js(구글 문서 '보스 문서')에 있다. 보스를 더하면 MONTIER에 한 줄 */
 const RTIER=['소란','집결','결속','군주','위신'],RDC=[1,2,2,3,3],RTCOL=['#8fd0a0','#7ec8ff','#b48cff','#ffb86b','#ff7d8c'];
 const MONTIER={korhen:0,s_lion:0,golem:0,s_urkan:0,b_gobking:0,s_centaur:0,
  ggolem:1,b_skull:1,b_swamp:1,s_cactus:1,s_pyrite:1,b_shadow:1,b_fgiant:1,b_paladin:1,b_storm:1,s_scorpion:1,
