@@ -199,7 +199,7 @@ button:active:not([disabled]){transform:scale(.97);filter:brightness(1.18)}
 :root{--ui:1}
 #sel{overflow:hidden;touch-action:auto}
 .shell{height:100%;display:flex;flex-direction:column-reverse;max-width:620px;margin:0 auto}
-#nav{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--deep);padding-bottom:env(safe-area-inset-bottom)}
+#nav{flex:none;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);background:var(--deep);padding-bottom:env(safe-area-inset-bottom)}
 #nav button{border:0;background:none;min-height:52px;padding:6px 0 5px;font:600 11.5px var(--body);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
 #nav button i{font-style:normal;font-size:19px;line-height:1.1}
 #nav button[aria-selected="true"]{color:var(--aether)}
@@ -380,7 +380,7 @@ body.xs .sk[data-s^="x"]{border-color:color-mix(in srgb,var(--kc) 38%,var(--line
 
 <div class="overlay" id="sel"><div class="shell">
  <nav id="nav" aria-label="화면 고르기">
-  <button type="button" data-p="play" aria-selected="true"><i>⚔</i>대전</button><button type="button" data-p="chars"><i>◈</i>캐릭터</button><button type="button" data-p="net"><i>∞</i>함께</button><button type="button" data-p="rec"><i>★</i>기록</button><button type="button" data-p="opts"><i>⚙</i>설정</button>
+  <button type="button" data-p="play" aria-selected="true"><i>⚔</i>대전</button><button type="button" data-p="chars"><i>◈</i>캐릭터</button><button type="button" data-p="net"><i>∞</i>함께</button><button type="button" data-p="bag"><i>▣</i>가방</button><button type="button" data-p="rec"><i>★</i>기록</button><button type="button" data-p="opts"><i>⚙</i>설정</button>
  </nav>
  <div class="main">
   <div class="vs">
@@ -454,6 +454,7 @@ body.xs .sk[data-s^="x"]{border-color:color-mix(in srgb,var(--kc) 38%,var(--line
   </details>
   <p class="note">방장이 방식(1대1 · 3대3 · 5대5 · 점령전 · 대돌격) · 맵 · 컴퓨터 실력을 정하고 '싸우기'를 누르면 모두 함께 시작한다. 각자 고르는 화면에서 자기 캐릭터를 고르면 된다(재림도 된다). 사람이 모자란 자리는 컴퓨터가 채운다. 연습은 혼자서만 된다. 인터넷이 있어야 연결된다.</p>
  </section>
+ <section data-page="bag" hidden><div id="bag"></div></section>
  <section data-page="rec" hidden><div id="rec"></div></section>
  <section data-page="opts" hidden>
   <h2>화면과 조작</h2><div class="optbox"></div>
