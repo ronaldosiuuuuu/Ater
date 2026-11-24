@@ -385,3 +385,45 @@ function keysScreen(){ const pc=matchMedia('(pointer:fine)').matches,row=(k,d)=>
 { const pr=$('p-me'); if(pr){ const b=document.createElement('button'); b.className='ghost'; b.id='p-keys'; b.type='button'; b.textContent='조작키 보기'; pr.parentNode.insertBefore(b,pr); }
   const tl=$('tools'); if(tl){ const b=document.createElement('button'); b.className='tool'; b.id='keysb'; b.type='button'; b.innerHTML='<b>조작키</b><small>자판 · 터치 조작 모아 보기</small>'; tl.insertBefore(b,tl.children[3]||null); }
   document.addEventListener('click',e=>{ if(e.target.closest('#p-keys,#keysb')) keysScreen(); else if(e.target.closest('#tw-out')) $('tower').style.zIndex=''; }); }
+
+/* ═════ 둘이서(여럿이서) 함께: 레이드와 등반을 방 화면에서 바로 고른다 ═════ */
+{ const dn1=drawNet; drawNet=function(){ dn1(); const q=$('n-quick'); if(q) q.hidden=!NET.host; };
+  document.addEventListener('click',e=>{ const t=e.target.closest('#n-qraid,#n-qtower'); if(!t||!NET.host) return; const n=NET.players.length;
+    if(t.id==='n-qraid'){ NET.players.forEach(p=>{ p.team=0; }); teamN=[1,2,3,5].find(x=>x>=n)||5; $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===teamN)); setMode(6); lobbyOut(); goPage('play'); const a=$('acc-mode'); if(a) a.open=true; toast('함께 레이드 '+n+'명 · 보스를 고르고 싸우기를 누른다'+(teamN>n?' (빈 자리는 컴퓨터가 채운다)':''),4200); }
+    else { goPage('play'); towerHome(); toast(n>1?n+'명이 함께 오른다 · 오르기 시작을 누른다':'지금은 혼자다. 친구가 들어온 뒤 시작하면 함께 오른다',3600); } }); }
+
+/* ═════ 업적 더하기 ═════ 세는 것(PF.cnt)을 늘리고, 업적을 한꺼번에 얹는다. 보상은 achPay의 규칙대로 달성 순간 들어온다 */
+PF.cnt=Object.assign({play:0,pull:0,claim:0,mw:0,raidw:0,sr:0,dmg:0,coop:0,cls:{},maxhit:0,flawless:0,tfloor:0,hardw:0,lose:0},PF.cnt||{});
+{ const C=PF.cnt,clsN=c=>C.cls[c]||0,ownN=()=>Object.keys(PF.own).filter(k=>CH[k]&&!CH[k].re).length,stars=()=>STORY.reduce((a,x)=>a+x.ch.reduce((b,_,j)=>b+stStar(x,j),0),0),bossN=()=>Object.keys(PF.mon).filter(k=>PF.mon[k]>0).length;
+  const A=(id,name,desc,fn,coin,star)=>{ if(ACH.some(a=>a[0]===id)) return; ACH.push([id,name,desc,fn]); ACHPAY[id]=[coin,star]; };
+  A('w100','백 번의 승리','100승',()=>PF.w>=100,3000,10); A('w200','이백 승','200승',()=>PF.w>=200,5000,15); A('w500','전설의 투사','500승',()=>PF.w>=500,10000,30);
+  A('st10','열 번 내리','10연승',()=>PF.streak>=10,2000,6); A('st15','멈추지 않는다','15연승',()=>PF.streak>=15,4000,12);
+  A('p50','단골','50판을 끝까지 한다',()=>C.play>=50,800,2); A('p200','개근','200판을 끝까지 한다',()=>C.play>=200,2500,8); A('p500','붙박이','500판을 끝까지 한다',()=>C.play>=500,6000,20);
+  A('l10','져도 일어난다','10번 진다',()=>PF.l>=10,500,2); A('hw10','어려움 숙련','어려움에서 10승',()=>C.hardw>=10,1500,5); A('hw50','어려움 정복','어려움에서 50승',()=>C.hardw>=50,5000,15);
+  A('sr10','깔끔한 손','S 평가 10번',()=>C.sr>=10,1500,5); A('sr50','완벽주의','S 평가 50번',()=>C.sr>=50,5000,15); A('fl5','무결','체력을 하나도 잃지 않고 5번 이긴다',()=>C.flawless>=5,2500,8);
+  A('d100k','십만','준 피해 합계 100,000',()=>C.dmg>=1e5,1000,3); A('d1m','백만','준 피해 합계 1,000,000',()=>C.dmg>=1e6,5000,15); A('hit200','한 방','한 번에 200 이상 피해',()=>C.maxhit>=200,1000,3); A('hit500','일격필살','한 번에 500 이상 피해',()=>C.maxhit>=500,3000,10);
+  for(const [c,nm] of [['전사','칼잡이'],['수호자','방패잡이'],['마법사','주문꾼'],['암살자','그림자'],['지원가','버팀목'],['척후병','길잡이']]){ A('c10'+c,nm,c+'(으)로 10승',()=>clsN(c)>=10,1000,3); A('c50'+c,nm+' 달인',c+'(으)로 50승',()=>clsN(c)>=50,4000,12); }
+  A('allcls','두루두루','여섯 직업 모두로 이긴다',()=>['전사','수호자','마법사','암살자','지원가','척후병'].every(c=>clsN(c)>=1),1500,5);
+  A('g20','모임 스물','캐릭터 20명을 가진다',()=>ownN()>=20,1200,4); A('g30','모임 서른','캐릭터 30명을 가진다',()=>ownN()>=30,2000,6); A('g70','대가족','캐릭터 70명을 가진다',()=>ownN()>=70,5000,15); A('gleg','전설을 품다','전설 캐릭터를 가진다',()=>Object.keys(PF.own).some(k=>CH[k]&&CH[k].grade==='전설'),1000,3); A('gleg5','전설 다섯','전설 캐릭터 5명을 가진다',()=>Object.keys(PF.own).filter(k=>CH[k]&&CH[k].grade==='전설').length>=5,3000,10);
+  A('pu10','첫 열 번','뽑기 10번',()=>C.pull>=10,500,2); A('pu50','손맛','뽑기 50번',()=>C.pull>=50,1500,5); A('pu200','중독','뽑기 200번',()=>C.pull>=200,5000,15);
+  A('re1','다시 온 자','재림을 하나 연다',()=>Object.keys(PF.re||{}).length>=1,2000,6); A('re5','재림 다섯','재림을 다섯 연다',()=>Object.keys(PF.re||{}).length>=5,6000,20);
+  A('t20','스무 층','등반 20층을 넘는다',()=>PF.tw.best>=20,2500,8); A('t30','서른 층','등반 30층을 넘는다',()=>PF.tw.best>=30,4000,12); A('t40','마흔 층','등반 40층을 넘는다',()=>PF.tw.best>=40,6000,18); A('t50','쉰 층','등반 50층을 넘는다',()=>PF.tw.best>=50,10000,30);
+  A('tf50','오르고 또 오르고','등반에서 넘은 층 합계 50',()=>C.tfloor>=50,1500,5); A('tf300','산을 사는 사람','등반에서 넘은 층 합계 300',()=>C.tfloor>=300,6000,18); A('tr10','열 번의 등반','등반을 10번 시작한다',()=>PF.tw.runs>=10,800,2);
+  A('b3','사냥꾼','서로 다른 보스 셋을 쓰러뜨린다',()=>bossN()>=3,1500,5); A('b10','보스 사냥꾼','서로 다른 보스 열을 쓰러뜨린다',()=>bossN()>=10,4000,12); A('ball','도감 완성','모든 보스를 쓰러뜨린다',()=>typeof MONS!=='undefined'&&MONS.every(k=>PF.mon[k]>0),10000,30); A('rw10','레이드 열 번','레이드 10승',()=>C.raidw>=10,2000,6); A('rw50','레이드 쉰 번','레이드 50승',()=>C.raidw>=50,6000,18);
+  A('mw1','함께 첫 승','친구와 함께 한 판에서 이긴다',()=>C.mw>=1,800,3); A('mw10','단짝','친구와 함께 10승',()=>C.mw>=10,2500,8); A('mw50','전우','친구와 함께 50승',()=>C.mw>=50,7000,20); A('co5','둘이서 다섯 층','함께 오르는 등반에서 5층을 넘는다',()=>C.coop>=5,1500,5); A('co15','둘이서 열다섯 층','함께 오르는 등반에서 15층을 넘는다',()=>C.coop>=15,5000,15);
+  A('ms10','성실','임무 보상 10번 받기',()=>C.claim>=10,1000,3); A('ms50','근면','임무 보상 50번 받기',()=>C.claim>=50,4000,12); A('dw3','사흘','오늘의 도전 3승',()=>PF.dwin>=3,800,3); A('dw15','보름','오늘의 도전 15승',()=>PF.dwin>=15,3000,10); A('ds14','두 이레','오늘의 도전을 14일 내리 이긴다',()=>PF.dstreak>=14,5000,15);
+  A('ss10','이야기꾼','이야기 별 10개',()=>stars()>=10,1500,5); A('ss20','기록자','이야기 별 20개',()=>stars()>=20,3000,10); A('lv5','다섯 걸음','계정 레벨 5',()=>lvInfo().lv>=5,500,2); A('lv10','열 걸음','계정 레벨 10',()=>lvInfo().lv>=10,1500,5); A('lv20','스무 걸음','계정 레벨 20',()=>lvInfo().lv>=20,4000,12); A('lv30','서른 걸음','계정 레벨 30',()=>lvInfo().lv>=30,8000,25);
+  on('hit',(s,t,amt)=>{ if(s===me&&!practice&&amt>C.maxhit) C.maxhit=Math.round(amt); });
+  on('end',w=>{ if(practice||!w) return; const win=me&&w.team===me.team; C.play++; C.dmg+=Math.round(Object.values(me.dealt||{}).reduce((a,b)=>a+b,0)); if(win){ C.cls[me.c.cls]=(C.cls[me.c.cls]||0)+1; if(diff===2) C.hardw++; if(ents.length===2&&me.hp>=me.max*.7) C.sr++; if(me.hp>=me.max) C.flawless++; if(foe&&foe.c.mon) C.raidw++; if(NET.host&&NET.players.length>1) C.mw++; if(TW&&TW.on){ C.tfloor++; if(coopN()>1) C.coop=Math.max(C.coop,TW.floor); } } pfSave(); setTimeout(()=>achCheck({}),50); });
+  const po1=pullOne; pullOne=function(m){ const r=po1(m); C.pull++; return r; };
+  document.addEventListener('click',e=>{ if(e.target.closest('[data-mc]')){ C.claim++; pfSave(); setTimeout(()=>achCheck({}),100); } },true);
+  const sr3=showResult; showResult=function(){ if(NET.client&&over&&over.winner&&me&&!over.cnt){ over.cnt=true; C.play++; if(over.winner.team===me.team){ C.mw++; C.cls[me.c.cls]=(C.cls[me.c.cls]||0)+1; PF.w++; } else PF.l++; pfSave(); setTimeout(()=>achCheck({}),50); } sr3(); };
+  achCheck({}); }
+
+/* ═════ 보상 코드 ═════ 기록 화면의 코드 칸에 적는다. 한 번만 듣는다 */
+const CODES={'(지운 코드)':{coin:15000}};
+function redeem(v){ const k=String(v||'').replace(/\s+/g,''),c=CODES[k]; if(!c) return false; PF.codes=PF.codes||{}; if(PF.codes[k]){ toast('이미 쓴 코드다'); return true; } PF.codes[k]=Date.now(); PF.coin+=c.coin||0; PF.star+=c.star||0; pfSave(); sfx('win'); toast('코드 보상 · 코인 +'+(c.coin||0).toLocaleString()+(c.star?' · 별무리 +'+c.star:''),4200); hubCard(); return true; }
+{ const dr1=drawRec; drawRec=function(){ dr1(); const rs=$('rec-reset'); if(rs&&!$('code-in')) rs.insertAdjacentHTML('beforebegin','<h2>보상 코드</h2><div class="row"><input type="text" id="code-in" placeholder="코드를 적는다" autocomplete="off" style="flex:2"><button type="button" id="code-go">받기</button></div>'); };
+  document.addEventListener('click',e=>{ if(!e.target.closest('#code-go')) return; const el=$('code-in'); if(!el) return; if(!el.value.trim()) return toast('코드를 적는다'); if(redeem(el.value)){ el.value=''; drawRec(); } else toast('없는 코드다'); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='code-in'){ const b=$('code-go'); if(b) b.click(); } });
+  const q=$('q'); if(q) q.addEventListener('input',()=>{ if(CODES[q.value.replace(/\s+/g,'')]&&redeem(q.value)){ q.value=''; drawSel(); } }); }
