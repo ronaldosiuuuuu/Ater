@@ -6,6 +6,8 @@
    4) 보유와 뽑기: 에이·비라로 시작해 코인으로 뽑는다(PULL · GRATE · DUP · SBUY). 기록 화면에서 모두 열 수 있다.
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
+/* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
+const VER='1.0.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -65,7 +67,7 @@ const START=['ei','vira'], PULL=1500, PULL10=13500;
 const GRATE=[['고화',70],['서사',23.5],['전설',6.4],['신화',.1]];   /* 히든은 뽑기 · 모험 어디에도 나오지 않는다 */             /* 한 번 뽑을 때 등급이 나올 확률(%) */
 const DUP={고화:1,서사:3,전설:8,히든:15,신화:30};                                       /* 이미 가진 캐릭터가 나오면 받는 별무리의 흔적 */
 const SBUY={고화:5,서사:15,전설:40,히든:80,신화:150};                                   /* 별무리의 흔적으로 골라서 데려오는 값 */
-const REWIN=50, RECOST={고화:20,서사:30,전설:50,히든:80,신화:120};   /* 재림: 원래 캐릭터로 50승 + 별무리의 흔적 */
+const REWIN=15, RECOST={고화:20,서사:30,전설:50,히든:80,신화:120};   /* 재림: 원래 캐릭터로 50승 + 별무리의 흔적 */
 const REWIN_OLD=5;                                                                       /* 재림: 원래 캐릭터로 5승 */
 const DIFFPAY=[.5,.75,1];                                                            /* 컴퓨터 실력에 따른 코인 배수(쉬움 · 보통 · 어려움) */
 const gachaPool=g=>Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&!c.mob&&!c.kit&&c.grade===g; });
@@ -229,7 +231,7 @@ hubCard();
     const h=GROUPS.concat(rest.length?[['그 밖',rest.map(s=>s.k)]]:[]).map(g=>'<details class="opt og" data-g="'+g[0]+'"'+(openG.has(g[0])?' open':'')+'><summary>'+g[0]+' <small style="color:var(--muted);font-weight:400">'+g[1].map(k=>(SETTINGS.find(s=>s.k===k)||{}).name).filter(Boolean).slice(0,3).join(' · ')+(g[1].length>3?' …':'')+'</small></summary>'+g[1].map(k=>SETTINGS.find(s=>s.k===k)).filter(Boolean).map(one).join('')+'</details>').join('');
     document.querySelectorAll('.optbox').forEach(b=>b.innerHTML=h); };
   document.addEventListener('toggle',e=>{ const d=e.target; if(d.classList&&d.classList.contains('og')){ if(d.open) openG.add(d.dataset.g); else openG.delete(d.dataset.g); } },true);
-  const sec=document.querySelector('section[data-page="opts"]'); if(sec){ const box=document.createElement('div'); box.innerHTML='<h2>만들기 · 도구</h2><div class="tools" id="tools"></div><p class="sub" style="margin-top:8px">판 v'+(typeof APPV!=='undefined'?APPV:'')+'</p><h2>설정</h2>'; const first=sec.firstElementChild; sec.insertBefore(box,first); if(first&&first.tagName==='H2') first.remove();
+  const sec=document.querySelector('section[data-page="opts"]'); if(sec){ const box=document.createElement('div'); box.innerHTML='<h2>만들기 · 도구</h2><div class="tools" id="tools"></div><p class="sub" style="margin-top:8px">버전 '+VER+'</p><h2>설정</h2>'; const first=sec.firstElementChild; sec.insertBefore(box,first); if(first&&first.tagName==='H2') first.remove();
     const lab={buildb:['조합 캐릭터','스킬 · 권능 · 장비'],forgeb:['카드로 만들기','카드 글 → 캐릭터 초안'],benchb:['대전표','컴퓨터끼리 승률'],helpb:['도움말','조작과 규칙'],instb:['앱으로 설치','홈 화면에 추가']}; for(const id in lab){ const b=$(id); if(!b) continue; b.className='tool'; b.innerHTML='<b>'+lab[id][0]+'</b><small>'+lab[id][1]+'</small>'; $('tools').appendChild(b); } }
   drawOpts(); }
 
@@ -369,7 +371,7 @@ function tempRoll(){ const un=g=>gachaPool(g).filter(k=>!PF.own[k]); let pool=un
    +'.lvbar{display:flex;align-items:center;gap:8px;margin:-2px 2px 10px}.lvbar b{font:800 12.5px var(--mono);color:var(--gold);flex:none}.lvbar div{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.lvbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#fff3cf)}.lvbar span{font:11px var(--mono);color:var(--muted);flex:none}';
   document.head.appendChild(st);
   if(!/[?&]room=/.test(location.search)&&!/[?&]bc\b/.test(location.search)&&!navigator.webdriver){   /* 초대 링크로 들어올 때와 자동 시험에서는 건너뛴다 */ const L=lvInfo(),own=Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]).length,sv=twLoad(),el=document.createElement('div'); el.id='title';
-    el.innerHTML='<canvas></canvas><div class="en">AETHER</div><div class="tl">에테르</div><div class="rl"></div><div class="sb">카드 시험장</div><div class="pf"><span>Lv '+L.lv+'</span><span>캐릭터 '+own+'명</span><span>'+PF.w+'승</span>'+(sv?'<span>등반 '+sv.floor+'층 진행 중</span>':'')+'</div><div class="go2">'+(matchMedia('(pointer:fine)').matches?'눌러서 시작':'화면을 눌러 시작')+'</div><div class="vr">v'+(typeof APPV!=='undefined'?APPV:'')+'</div>';
+    el.innerHTML='<canvas></canvas><div class="en">AETHER</div><div class="tl">에테르</div><div class="rl"></div><div class="sb">카드 시험장</div><div class="pf"><span>Lv '+L.lv+'</span><span>캐릭터 '+own+'명</span><span>'+PF.w+'승</span>'+(sv?'<span>등반 '+sv.floor+'층 진행 중</span>':'')+'</div><div class="go2">'+(matchMedia('(pointer:fine)').matches?'눌러서 시작':'화면을 눌러 시작')+'</div><div class="vr">v'+VER+'</div>';
     document.body.appendChild(el); const cv=el.querySelector('canvas'),c=cv.getContext('2d'); let run=true,S=[]; const rz=()=>{ cv.width=innerWidth; cv.height=innerHeight; S=Array.from({length:Math.min(110,Math.round(innerWidth*innerHeight/9000))},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+.3,v:Math.random()*.25+.05,p:Math.random()*6.28})); }; rz(); addEventListener('resize',rz);
     const tick=t=>{ if(!run) return; c.clearRect(0,0,cv.width,cv.height); for(const s of S){ s.y-=s.v; if(s.y<-4){ s.y=cv.height+4; s.x=Math.random()*cv.width; } c.globalAlpha=.35+.45*Math.sin(t/900+s.p); c.fillStyle=s.r>1.2?'#e3c377':'#9fe9ff'; c.beginPath(); c.arc(s.x,s.y,s.r,0,7); c.fill(); } requestAnimationFrame(tick); }; requestAnimationFrame(tick);
     const go=()=>{ if(el.classList.contains('out')) return; el.classList.add('out'); try{ if(typeof audioOn==='function') audioOn(); sfx('ui'); }catch(x){} setTimeout(()=>{ run=false; el.remove(); removeEventListener('resize',rz); },560); }; el.addEventListener('pointerup',go); addEventListener('keydown',function kd(e){ if(e.key==='Enter'||e.key===' '){ go(); removeEventListener('keydown',kd); } }); } }
@@ -427,3 +429,57 @@ function redeem(v){ const k=String(v||'').replace(/\s+/g,''),c=CODES[k]; if(!c) 
   document.addEventListener('click',e=>{ if(!e.target.closest('#code-go')) return; const el=$('code-in'); if(!el) return; if(!el.value.trim()) return toast('코드를 적는다'); if(redeem(el.value)){ el.value=''; drawRec(); } else toast('없는 코드다'); });
   document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='code-in'){ const b=$('code-go'); if(b) b.click(); } });
   const q=$('q'); if(q) q.addEventListener('input',()=>{ if(CODES[q.value.replace(/\s+/g,'')]&&redeem(q.value)){ q.value=''; drawSel(); } }); }
+
+/* ════════════════ 1.0.0 ════════════════ */
+/* ── 재림 캐릭터의 몸: 원래 캐릭터보다 체력 +50, 기본 공격 +2 ── */
+for(const k of Object.keys(CH)){ const c=CH[k]; if(!c.re||!CH[c.base]) continue; const b=CH[c.base]; if(c.hp===b.hp) c.hp=b.hp+50; if(c.atk===b.atk) c.atk=b.atk+2; }
+
+/* ── 뽑기: 캐릭터 대신 파편이 1~3개 나온다. 파편 10개가 모이면 캐릭터가 되고, 이미 가진 캐릭터라면 '중복' 하나가 된다(재림에 쓴다).
+   확률은 고화 60 · 서사 30 · 전설 10. 신화와 히든은 나오지 않는다. ── */
+PF.shard=PF.shard||{}; PF.dup=PF.dup||{};
+GRATE.length=0; GRATE.push(['고화',60],['서사',30],['전설',10]);
+const SHARDN=10, RDUP={고화:3,서사:2,전설:1,히든:0,신화:0};
+pullOne=function(minIdx){ PF.pity=(PF.pity||0)+1; const force=PF.pity>=PITY?2:(minIdx||0),L=GRATE.slice(Math.min(force,GRATE.length-1)); let tot=L.reduce((a,x)=>a+x[1],0),x=Math.random()*tot,g=L[L.length-1][0]; for(const q of L){ if((x-=q[1])<0){ g=q[0]; break; } }
+  const pool=gachaPool(g),k=pool[Math.floor(Math.random()*pool.length)]; if(!k) return null; const n=1+Math.floor(Math.random()*3); PF.shard[k]=(PF.shard[k]||0)+n; let got='';
+  while(PF.shard[k]>=SHARDN){ PF.shard[k]-=SHARDN; if(!PF.own[k]){ PF.own[k]=Date.now(); got='new'; } else { PF.dup[k]=(PF.dup[k]||0)+1; if(!got) got='dup'; } }
+  if(g==='전설') PF.pity=0; mission('pull',1); PF.cnt.pull++; return {k,g,n,got,have:PF.shard[k]||0}; };
+gachaShow=function(res,done){ const el=$('tw-body'); let fin=false; const end=()=>{ if(fin) return; fin=true; done(); };
+  el.innerHTML=head('GACHA','뽑기','눌러서 넘긴다')+'<div class="gst'+(res.length===1?' one':'')+'">'+res.map(r=>{ const c=CH[r.k]; return '<div class="gc'+(r.got==='new'||r.g==='전설'?' hi':'')+'" style="--gc:'+GCOL[r.g]+'"><div class="bk"></div><div class="ft"><b>'+esc(c.name.split(', ')[1])+'</b><small>'+r.g+' · 파편 ×'+r.n+'</small><em>'+(r.got==='new'?'캐릭터 획득!':r.got==='dup'?'중복 +1':r.have+' / '+SHARDN)+'</em></div></div>'; }).join('')+'</div><div class="dock"><button class="go" id="ga-skip" type="button">넘기기</button></div>';
+  $('tower').hidden=false; $('tower').scrollTop=0; [...el.querySelectorAll('.gc')].forEach((c,i)=>setTimeout(()=>{ if(fin) return; c.classList.add('on'); const r=res[i]; if(r.got==='new'){ sfx('ult'); buzz(80); } else sfx('ui'); },350+i*(res.length>1?260:0)));
+  setTimeout(()=>{ const b=$('ga-skip'); if(b&&!fin) b.textContent='결과 보기'; },350+res.length*260+200); el.querySelector('#ga-skip').onclick=end; };
+const reNeed=k=>{ const c=CH[k],w=(PF.ch[k]||{}).w||0,d=PF.dup[k]||0,nd=RDUP[c.grade]||0,st=RECOST[c.grade]||50; return {w,d,nd,st,ok:w>=REWIN&&d>=nd&&PF.star>=st}; };
+lockWhy=function(k){ const b=baseKey(k); if(!PF.own[b]) return '파편 '+SHARDN+'개를 모아 얻는다'; if(CH[k].re){ const n=reNeed(b); return '재림: '+REWIN+'승('+n.w+') · 중복 '+n.nd+'('+n.d+') · 별무리 '+n.st+' — 뽑기 화면에서 연다'; } return ''; };
+gachaScreen=function(res){ if(res&&res.length&&!res.shown){ res.shown=true; return gachaShow(res,()=>gachaScreen(res)); }
+  const pb=(v,m,col)=>'<div class="mbar"><i style="width:'+Math.min(100,Math.round(100*v/m))+'%;background:'+(col||'var(--aether)')+'"></i></div>';
+  let h=head('GACHA','뽑기','코인 '+PF.coin.toLocaleString()+' · 별무리의 흔적 '+PF.star+' · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번');
+  if(res) h+='<h2>나온 파편</h2>'+res.map(r=>{ const c=CH[r.k]; return '<div class="pl" style="border-left-color:'+GCOL[r.g]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:'+GCOL[r.g]+'">'+r.g+' '+c.cls+'</small></b><span style="color:var(--muted)">파편 +'+r.n+' · '+(r.got==='new'?'<b style="color:var(--gold)">캐릭터 획득</b>':r.got==='dup'?'<b style="color:var(--ok)">중복 +1</b>':r.have+' / '+SHARDN)+'</span></div>'; }).join('');
+  h+='<div class="row" style="margin-top:12px"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+' · 서사 이상 하나 보장</small></button></div>';
+  h+='<p class="note" style="white-space:pre-line">한 번에 캐릭터 하나의 파편이 1~3개 나온다. 파편 '+SHARDN+'개가 모이면 그 캐릭터를 얻는다.\n이미 가진 캐릭터의 파편 '+SHARDN+'개는 \'중복\' 하나가 되고, 재림에 쓴다.\n확률: '+GRATE.map(g=>g[0]+' '+g[1]+'%').join(' · ')+' (신화 · 히든은 나오지 않는다)</p>';
+  const S=Object.keys(PF.shard).filter(k=>CH[k]&&PF.shard[k]>0).sort((a,b)=>PF.shard[b]-PF.shard[a]); if(S.length) h+='<h2>모으는 중인 파편</h2>'+S.slice(0,30).map(k=>{ const c=CH[k]; return '<div class="pl" style="border-left-color:'+GCOL[c.grade]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:var(--muted)">'+c.grade+' '+c.cls+(PF.own[k]?' · 가짐':'')+'</small></b><span style="color:var(--muted)">'+PF.shard[k]+' / '+SHARDN+'</span>'+pb(PF.shard[k],SHARDN,GCOL[c.grade])+'</div>'; }).join('')+(S.length>30?'<p class="sub">많이 모은 순으로 30명만 보인다.</p>':'');
+  const R=Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]&&CH[k+'_r']&&!PF.re[k]).sort((a,b)=>(reNeed(b).ok-reNeed(a).ok)||(((PF.ch[b]||{}).w||0)+(PF.dup[b]||0)*5)-(((PF.ch[a]||{}).w||0)+(PF.dup[a]||0)*5));
+  if(R.length) h+='<h2>재림</h2><p class="note">원래 캐릭터로 '+REWIN+'승 이상 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적. 재림 캐릭터는 체력 +50, 기본 공격 +2.</p>'+R.slice(0,12).map(k=>{ const c=CH[k],n=reNeed(k),ck=(a,b)=>'<span style="color:'+(a>=b?'var(--ok)':'var(--muted)')+'">'; return '<div class="pl" style="border-left-color:'+GCOL[c.grade]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:var(--muted)">'+esc(CH[k+'_r'].name.split(', ')[0])+'</small></b>'+(n.ok?'<button type="button" data-re2="'+k+'" style="height:34px;border:1px solid var(--gold);border-radius:8px;background:var(--panel);color:var(--gold);padding:0 12px;font-weight:700">재림</button>':'')+'<div style="flex-basis:100%;font-size:12px">'+ck(n.w,REWIN)+'승 '+n.w+'/'+REWIN+'</span> · '+ck(n.d,n.nd)+'중복 '+n.d+'/'+n.nd+'</span> · '+ck(PF.star,n.st)+'별무리 '+n.st+'</span></div></div>'; }).join('')+(R.length>12?'<p class="sub">조건에 가까운 순으로 12명만 보인다.</p>':'');
+  const GG=['고화','서사','전설','신화'],all=GG.map(g=>gachaPool(g)); h+='<h2>가진 캐릭터</h2>'+GG.map((g,i)=>{ const hv=all[i].filter(k=>PF.own[k]).length; return '<div class="pl" style="border-left-color:'+GCOL[g]+'"><b>'+g+' '+hv+' / '+all[i].length+'</b><span style="color:var(--muted)">골라서 데려오기 · 별무리 '+SBUY[g]+'</span>'+(hv<all[i].length?'<button type="button" data-sb="'+g+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px">고르기</button>':'')+'</div>'; }).join('');
+  h+='<div class="dock"><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tw-body').innerHTML=h; $('tower').hidden=false; if(res) $('tower').scrollTop=0; };
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); if(!t) return; const k=t.dataset.re2,n=reNeed(k); if(!n.ok) return toast('조건이 모자라다'); PF.star-=n.st; PF.dup[k]=(PF.dup[k]||0)-n.nd; PF.re[k]=Date.now(); pfSave(); sfx('win'); toast(CH[k+'_r'].name+' · 재림했다',3600); achCheck({}); drawSel(); gachaScreen(); });
+
+/* ── 닉네임 ── */
+const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
+/* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
+const PATCH=[
+ ['1.0.0','2026-11',['뽑기가 파편 방식으로 바뀌었다. 한 번에 파편 1~3개, 10개를 모으면 캐릭터. 확률은 고화 60 · 서사 30 · 전설 10 (신화 · 히든은 나오지 않는다).','재림 조건: 원래 캐릭터로 15승 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적. 재림 캐릭터는 체력 +50, 기본 공격 +2.','레이드에 난이도가 생겼다: 소란 · 집결 · 결속 · 군주 · 위신. 데스카운트는 1 · 2 · 2 · 3 · 3이고 편 전체가 나눠 쓴다.','처음 들어오면 닉네임을 정한다. 싸움 중 체력 줄 위에 닉네임과 (캐릭터명)이 뜬다.','정신 집중(캐스팅)과 고유 자원이 캐릭터 아래에 막대로 보인다.','가나안의 기본 공격이 좁은 부채꼴(6.5칸)이 되었다. 메릴다의 선회 8칸, 사냥개는 느려지고 5초 뒤 사라진다.']]
+];
+function patchScreen(){ const d=document.createElement('div'); d.className='overlay'; d.style.zIndex=44; d.id='patchv'; d.innerHTML='<div class="wrap">'+head('PATCH NOTES','버전 '+VER,'바뀐 것')+PATCH.slice(0,4).map(p=>'<h2>'+p[0]+' <small style="color:var(--muted);font-weight:400">'+p[1]+'</small></h2>'+p[2].map(l=>'<p class="note" style="margin:6px 0">'+esc(l)+'</p>').join('')).join('')+'<div class="dock"><button class="go" id="pv-ok" type="button">확인</button></div></div>'; document.body.appendChild(d); d.querySelector('#pv-ok').onclick=()=>d.remove(); }
+function nickScreen(done){ const d=document.createElement('div'); d.className='overlay'; d.style.zIndex=46; d.innerHTML='<div class="wrap">'+head('WELCOME','닉네임을 정한다','싸움 중 내 캐릭터 위에 뜨고, 친구와 함께 할 때 보인다')+'<div class="row"><input type="text" id="nk-in" maxlength="8" placeholder="닉네임 (8자까지)" autocomplete="off" style="flex:1;height:52px;font-size:17px;text-align:center"></div><p class="note">나중에 \'함께\' 화면의 내 이름 칸에서 바꿀 수 있다.</p><div class="dock"><button class="go" id="nk-ok" type="button">정했다</button></div></div>'; document.body.appendChild(d);
+  const inp=d.querySelector('#nk-in'),ok=()=>{ const v=inp.value.trim().slice(0,8); if(!v) return toast('닉네임을 적는다'); try{ localStorage.setItem('aetherName',v); }catch(x){} if($('n-name')) $('n-name').value=v; d.remove(); toast(v+' · 반갑다'); done&&done(); }; d.querySelector('#nk-ok').onclick=ok; inp.addEventListener('keydown',e=>{ if(e.key==='Enter') ok(); e.stopPropagation(); }); setTimeout(()=>inp.focus(),300); }
+/* 들어올 때: (제목 화면) → 닉네임이 없으면 정하기 → 버전과 패치 내역 */
+{ const flow=()=>{ let has=false; try{ has=!!localStorage.getItem('aetherName'); }catch(x){} if(!has) nickScreen(patchScreen); else patchScreen(); };
+  if(!navigator.webdriver&&!/[?&]bc\b/.test(location.search)){ if(document.getElementById('title')){ const iv=setInterval(()=>{ if(!document.getElementById('title')){ clearInterval(iv); flow(); } },200); } else flow(); } }
+
+/* ── 캐릭터 아래 막대: 정신 집중(캐스팅)이 차는 모습과, 그 캐릭터만의 자원(n/m) ── */
+on('step',()=>{ for(const e of ents){ if(e.chant>now){ if(!e._c1||Math.abs(e._c1-e.chant)>.02){ e._c0=now; e._c1=e.chant; } } else e._c1=0; } });
+on('draw:world',()=>{ if(!me) return; g.save(); g.textAlign='center'; g.lineJoin='round';
+  const bar=(x,y,w,f,col,lab,txt)=>{ g.globalAlpha=.85; g.fillStyle='rgba(6,9,23,.85)'; g.fillRect(x-w/2-.03,y-.03,w+.06,.2); g.fillStyle=col; g.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,f)),.14); if(lab){ g.globalAlpha=1; g.font='700 .26px "Gothic A1",sans-serif'; g.lineWidth=.06; g.strokeStyle='rgba(6,9,23,.9)'; g.strokeText(lab+(txt?' '+txt:''),x,y+.44); g.fillStyle='#e9ecff'; g.fillText(lab+(txt?' '+txt:''),x,y+.44); } };
+  for(const e of ents){ if(e.dead) continue; const st=has(e,'stealth'); if(st&&e.team!==me.team) continue; let y=e.y+(e.rad||R)+.34; const fo=e.st.find(q=>q.k==='focus'&&q.until>now); let c1=NET.client?e.chant:e._c1,c0=NET.client?(e._n0||(e._n0=now)):e._c0; if(NET.client&&!(e.chant>now)) e._n0=0; if(fo&&fo.d0>0&&!(c1>now)){ c1=fo.until; c0=fo.until-fo.d0; }
+    if(c1>now&&c1>c0){ bar(e.x,y,1.5,(now-c0)/(c1-c0),e.team===me.team?'#fff3cf':'#ff9aa5','집중',(c1-now).toFixed(1)+'s'); y+=.62; }
+    if(e===me){ const Rz=RES[e.key]; if(!(Rz&&(Rz.p||Rz.gz))){ let h=''; try{ h=String(e.c.hud(e)||''); }catch(x){} const m=h.match(/([^·\d\/]{1,10}?)\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/); if(m&&+m[3]>1){ const f=+m[2]/+m[3]; bar(e.x,y,1.5,f,f>=1?'#e3c377':'#7fe9ff',m[1].trim(),m[2]+'/'+m[3]); } } } }
+  g.restore(); });

@@ -68,7 +68,19 @@ function lootHtml(win){ if(!win) return ''; const bag={},rare=[]; let sec='';
   for(const l of (CARDTEXT[OPT.mon]||'').split('\n')){ if(/^@처치 보상/.test(l)) sec='n'; else if(/^@물욕 보상/.test(l)) sec='r'; else if(sec){ const m=l.match(/^-\s*(.+?)\s*(?:x\s*(\d+)\s*)?\(([\d.]+)%\)\s*$/); if(m&&Math.random()*100<+m[3]){ const nm=m[1].trim(),n=+m[2]||1; bag[nm]=(bag[nm]||0)+n; if(sec==='r') rare.push(nm); } } }
   const ks=Object.keys(bag); return '<h2>전리품</h2>'+(ks.length?ks.map(k=>'<div class="pl'+(rare.includes(k)?' t1':'')+'"><b>'+esc(k)+'</b><span>x '+bag[k]+'</span>'+(rare.includes(k)?'<span style="color:var(--gold)">물욕 보상</span>':'')+'</div>').join(''):'<p class="sub">아무것도 나오지 않았다.</p>')+'<p class="sub">카드의 보상 확률대로 굴린 결과다. 이 기기에 쌓이지는 않는다.</p>'; }
 /* 고르는 화면의 보스 줄 */
-function drawMon(){ if(!CH[OPT.mon]||!CH[OPT.mon].mon) OPT.mon='golem'; $('mon').innerHTML=MONS.map(k=>'<button type="button" data-k="'+k+'" aria-pressed="'+(OPT.mon===k)+'">'+CH[k].name.split(', ')[1]+'<small style="display:block;font-size:10.5px;opacity:.75">체력 '+monHp(k).toLocaleString()+'</small></button>').join(''); $('monhp').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===OPT.monhp)); }
+/* 레이드 난이도: 소란 < 집결 < 결속 < 군주 < 위신. 데스카운트는 1 · 2 · 2 · 3 · 3 (편 전체가 나눠 쓴다).
+   지금 있는 보스 가운데 가장 높은 것은 결속(여덟 머리의 뱀)이고, 군주·위신은 아직 비어 있다. 보스를 더하면 MONTIER에 한 줄 */
+const RTIER=['소란','집결','결속','군주','위신'],RDC=[1,2,2,3,3],RTCOL=['#8fd0a0','#7ec8ff','#b48cff','#ffb86b','#ff7d8c'];
+const MONTIER={korhen:0,s_lion:0,golem:0,s_urkan:0,b_gobking:0,s_centaur:0,
+ ggolem:1,b_skull:1,b_swamp:1,s_cactus:1,s_pyrite:1,b_shadow:1,b_fgiant:1,b_paladin:1,b_storm:1,s_scorpion:1,
+ hydra:2,s_behemoth:2,s_sphinx:2,b_fdragon:2,b_eye:2,s_dynamis:2,b_guardian:2};
+const tierOf=k=>MONTIER[k]===undefined?1:MONTIER[k], dcOf=k=>RDC[tierOf(k)];
+let raidDC=2, monTab=-1;
+on('begin',()=>{ if(mode===6&&!practice){ raidDC=dcOf(OPT.mon); msg([['난이도 '+RTIER[tierOf(OPT.mon)],RTCOL[tierOf(OPT.mon)]],[' · 데스카운트 '+raidDC,'#eef1ff']],1,true); } });
+function drawMon(){ if(!CH[OPT.mon]||!CH[OPT.mon].mon) OPT.mon='golem'; if(monTab<0) monTab=tierOf(OPT.mon); let tr=$('montier'); if(!tr){ tr=document.createElement('div'); tr.className='row'; tr.id='montier'; tr.style.marginTop='8px'; $('mon').parentNode.insertBefore(tr,$('mon')); tr.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; monTab=+b.dataset.t; const L=MONS.filter(k=>tierOf(k)===monTab); if(L.length&&tierOf(OPT.mon)!==monTab){ OPT.mon=L[0]; save(); } drawMon(); drawSel(); }; }
+  tr.innerHTML=RTIER.map((n,i)=>'<button type="button" data-t="'+i+'" aria-pressed="'+(monTab===i)+'" style="min-width:56px"><span style="color:'+(monTab===i?'inherit':RTCOL[i])+'">'+n+'</span><small style="display:block;font-size:10.5px;opacity:.75">데스카운트 '+RDC[i]+'</small></button>').join('');
+  const ML=MONS.filter(k=>tierOf(k)===monTab); if(!ML.length){ $('mon').innerHTML='<p class="sub" style="margin:6px 2px">이 난이도의 보스는 아직 없다.</p>'; $('monhp').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===OPT.monhp)); return; }
+  $('mon').innerHTML=ML.map(k=>'<button type="button" data-k="'+k+'" aria-pressed="'+(OPT.mon===k)+'">'+CH[k].name.split(', ')[1]+'<small style="display:block;font-size:10.5px;opacity:.75">체력 '+monHp(k).toLocaleString()+'</small></button>').join(''); $('monhp').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===OPT.monhp)); }
 $('mon').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; OPT.mon=b.dataset.k; drawMon(); drawSel(); save(); };
 $('monhp').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; OPT.monhp=b.dataset.v; drawMon(); save(); };
 
