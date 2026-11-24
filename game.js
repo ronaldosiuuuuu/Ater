@@ -254,3 +254,22 @@ function skillIcon(k){ if(k.ico&&SKICO[k.ico]) return k.ico; let s=''; try{ s=St
   const t=has('S.proj')?'proj':has('S.arc')?'arc':has('S.circle')||has('ring(')||has('zone(')?'circle':has('S.line')||has('S.seg')?'line':has('S.leap')||has('S.blink')||has('hop(')?'dash':has('shield(')?'shield':has('heal(')?'heal':has("'haste'")||has("'resist'")||has('proc(')?'buff':'spark'; k.ico=t; return t; }
 { const ub0=uiBegin; uiBegin=function(){ ub0(); const el=(LOOK[me.key]||LOOK[baseKey(me.key)]||{}).el,col=(typeof EL!=='undefined'&&EL[el]?EL[el][0]:'#7fe9ff');
     document.querySelectorAll('.sk').forEach(b=>{ const s=b.dataset.s,k=me.c.skills[s]; if(typeof skLabel==='function'){ const h=skLabel(b,s); if(h) b.innerHTML=h; } let t=s==='b'?'arc':s==='jump'?'dash':k?skillIcon(k):null; if(!t) return; b.insertAdjacentHTML('afterbegin','<svg class="ic'+(s==='ult'?' u':'')+'" viewBox="0 0 24 24" style="color:'+(typeof kcol==='function'&&k?kcol(k,s):s==='ult'?'#e3c377':col)+'" aria-hidden="true">'+SKICO[t]+'</svg>'); }); }; }
+
+/* ───── 시작 화면 정리: 모험은 큰 칸 넷, 자유 대전의 방식·맵·실력은 한 줄씩 접어 두고 누르면 펼친다 ───── */
+{ const sec=document.querySelector('section[data-page="play"]');
+  if(sec){ const hs=[...sec.querySelectorAll(':scope > h2')]; hs.forEach(h=>h.remove()); const br=sec.querySelector(':scope > .brand'); if(br) br.remove();
+    const acc=(id,label,ids)=>{ const d=document.createElement('details'); d.className='acc'; d.id=id; d.innerHTML='<summary><span>'+label+'</span><b></b><i>›</i></summary><div class="accb"></div>'; for(const q of ids){ const el=q[0]==='.'?sec.querySelector(':scope > '+q):$(q); if(el) d.lastChild.appendChild(el); } return d; };
+    const t=document.createElement('h2'); t.textContent='자유 대전'; t.id='freeh'; sec.appendChild(t);
+    const A=[acc('acc-mode','방식',['size','mode','raid','monrow','modenote','popt']),acc('acc-map','맵',['maps','.mapbox']),acc('acc-diff','컴퓨터 실력',['diff'])]; A.forEach(d=>sec.appendChild(d));
+    A.forEach(d=>d.addEventListener('toggle',()=>{ if(d.open){ A.forEach(o=>{ if(o!==d) o.open=false; }); if(d.id==='acc-map'&&typeof drawMaps==='function') drawMaps(); setTimeout(()=>d.scrollIntoView({block:'nearest',behavior:'smooth'}),60); } }));
+    const sum=()=>{ const T=practice?1:teamN,m=practice?'연습':mode===6?'레이드 '+T+'명'+(CH[OPT.mon]?' · '+CH[OPT.mon].name.split(', ')[1]:''):mode===5?'대돌격 · '+(OPT.raid==='boss'?'내가 마왕':'내가 용사'):T+'대'+T+' · '+(mode===4?'점령전':mode===3?(T>1?3*T+'킬 선취':'5판 3선승'):(T>1?'섬멸전':'단판'));
+      $('acc-mode').querySelector('summary b').textContent=m; $('acc-map').querySelector('summary b').textContent=OPT.map==='random'?'무작위':(MAPS[OPT.map]||MAPS.basic).name; $('acc-diff').querySelector('summary b').textContent=['쉬움','보통','어려움'][diff]||''; $('acc-diff').style.display=practice?'none':''; };
+    const ds0=drawSum; drawSum=function(){ ds0(); try{ sum(); }catch(x){} }; sum(); } }
+/* 모험 칸: 큰 칸 넷 */
+hubCard=function(){ const el=$('twcard'); if(!el) return; const s=twLoad(),d=PF.daily.d===today(),st=STORY.reduce((a,x)=>a+x.ch.reduce((b,_,j)=>b+stStar(x,j),0),0),sm=STORY.reduce((a,x)=>a+x.ch.length*2,0),own=Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]).length;
+  el.className='hub'; el.removeAttribute('style'); el.innerHTML='<div class="hubh"><b>모험</b><span>코인 '+PF.coin.toLocaleString()+' · 별무리 '+PF.star+'</span></div><div class="hubg">'
+   +'<button type="button" class="tool" id="hub-tw"><em>▲</em><b>등반</b><small>'+(s?'이어서 '+s.floor+'층':'최고 '+PF.tw.best+'층')+'</small></button>'
+   +'<button type="button" class="tool" id="hub-st"><em>✦</em><b>이야기</b><small>★ '+st+' / '+sm+'</small></button>'
+   +'<button type="button" class="tool" id="hub-dy"><em>☀</em><b>오늘의 도전</b><small>'+(d?(PF.daily.win?'이겼다 '+PF.daily.rank:'졌다'):'아직 안 했다')+'</small></button>'
+   +'<button type="button" class="tool" id="hub-ga"><em>◈</em><b>뽑기</b><small>캐릭터 '+own+'명'+(PF.coin>=PULL?' · 뽑을 수 있다':'')+'</small></button></div>'; };
+hubCard();
