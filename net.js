@@ -15,7 +15,9 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=15;
+const APPV=16;
+/* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
+const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
 function ICE(){ const L=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'}]; try{ const t=JSON.parse(localStorage.getItem('aetherTurn')||'null'); if(t&&t.url) L.push({urls:t.url.split(/[\s,]+/).filter(Boolean),username:t.user||'',credential:t.pass||''}); }catch(x){} return {config:{iceServers:L},debug:0}; }
 /* 이어진 길이 직접인지 중계인지 */
@@ -138,11 +140,13 @@ function netLeave(quiet){ if(NET.tx){ if(!quiet){ try{ if(NET.host) sendAll({t:'
   /* 방장 화면이 가려지면 싸움이 멈춘다(브라우저가 그리기를 멈춘다). 돌아오면 알린다 */
   document.addEventListener('visibilitychange',()=>{ if(NET.host&&NET.live&&!document.hidden) toast('돌아왔다 · 화면이 가려진 동안 싸움이 멈춰 있었다',3000); });
   /* 초대 링크: 주소 뒤에 ?room=코드. 받은 사람은 열기만 하면 들어간다 */
-  const web=/^https?:$/.test(location.protocol),link=()=>location.origin+location.pathname+'?room='+NET.code;
+  const web=/^https?:$/.test(location.protocol),turnHash=()=>{ try{ const t=localStorage.getItem('aetherTurn'); return t?'#t='+btoa(unescape(encodeURIComponent(t))):''; }catch(x){ return ''; } },link=()=>location.origin+location.pathname+'?room='+NET.code+turnHash();   /* 중계 서버를 적어 두었다면 링크에 실어 보낸다(받는 사람은 적을 필요가 없다) */
+  { const m=/[#&]t=([A-Za-z0-9+/=]+)/.exec(location.hash); if(m){ try{ const t=JSON.parse(decodeURIComponent(escape(atob(m[1])))); if(t&&t.url){ localStorage.setItem('aetherTurn',JSON.stringify({url:String(t.url),user:String(t.user||''),pass:String(t.pass||'')})); setTimeout(()=>toast('초대 링크에 든 중계 서버를 적어 두었다'),1500); } }catch(x){} } }
   $('n-share').onclick=async()=>{ if(!NET.code) return; const text=web?link():NET.code; try{ if(web&&navigator.share){ await navigator.share({title:'에테르',text:'에테르 방 '+NET.code,url:link()}); return; } }catch(x){ if(x&&x.name==='AbortError') return; } try{ await navigator.clipboard.writeText(text); toast(web?'초대 링크를 복사했다':'방 코드를 복사했다'); }catch(x){ toast('방 코드 '+NET.code+' 를 직접 알려 준다'); } };
   { const m=/[?&]room=([A-Za-z0-9]{4,6})/.exec(location.search); if(m){ $('n-join-code').value=m[1].toUpperCase(); try{ history.replaceState(null,'',location.pathname); }catch(x){} setTimeout(()=>{ goPage('net'); if(!NET.host&&!NET.client) $('n-join').click(); },600); } }
   /* 중계 서버(TURN) 적어 두기 */
   try{ const t=JSON.parse(localStorage.getItem('aetherTurn')||'null')||{}; $('n-turn-url').value=t.url||''; $('n-turn-user').value=t.user||''; $('n-turn-pass').value=t.pass||''; }catch(x){}
-  for(const id of ['n-turn-url','n-turn-user','n-turn-pass']) $(id).addEventListener('change',()=>{ try{ const url=$('n-turn-url').value.trim(); if(url) localStorage.setItem('aetherTurn',JSON.stringify({url,user:$('n-turn-user').value.trim(),pass:$('n-turn-pass').value})); else localStorage.removeItem('aetherTurn'); toast(url?'중계 서버를 적어 두었다 · 다음 연결부터 쓴다':'중계 서버를 지웠다'); }catch(x){} });
+  for(const id of ['n-turn-url','n-turn-user','n-turn-pass']) $(id).addEventListener('change',()=>{ try{ let url=$('n-turn-url').value.trim(); if(!url&&$('n-turn-user').value.trim()&&$('n-turn-pass').value){ url=METERED; $('n-turn-url').value=url; } if(url) localStorage.setItem('aetherTurn',JSON.stringify({url,user:$('n-turn-user').value.trim(),pass:$('n-turn-pass').value})); else localStorage.removeItem('aetherTurn'); toast(url?'중계 서버를 적어 두었다 · 다음 연결부터 쓴다':'중계 서버를 지웠다'); }catch(x){} });
+  $('n-turn-fill').onclick=()=>{ $('n-turn-url').value=METERED; $('n-turn-url').dispatchEvent(new Event('change')); };
   if(!web) $('n-web').hidden=false;
   netStat(''); }
