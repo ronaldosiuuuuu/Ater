@@ -297,10 +297,10 @@ merilda:{name:'설원의 사냥꾼, 메릴다',cls:'척후병',grade:'고화',ra
   onSkillHit(e,t){ if(has(t,'spot')) e.r.hits++; if(e.r.night>now&&has(t,'slow')) damage(e,t,10,'새하얀 밤'); },
   skills:{
    n1:{name:'발사',cd:3,r:10,cast(e){ S.line(e,10,18,'발사'); }},
-   n2:{name:'선회',cd:16,ai:(e,d)=>d<4,cast(e){ S.leap(e,moveDir(e),11,26); }},
-   aw:{name:'사냥 시간',cd:45,r:14,cast(e){ const t=tgt(e,99); for(let i=-1;i<=1;i++){ const a=Math.atan2(e.aim.y,e.aim.x)+i*.9; S.proj(e,{x:Math.cos(a),y:Math.sin(a)},{speed:9,range:60,life:6,home:t,dmg:20,label:'사냥개',big:true,o:{root:1,post:x=>{ rm(x,'spot'); add(x,'spot',12,0,{by:e}); }}}); } }},
+   n2:{name:'선회',cd:16,ai:(e,d)=>d<4,cast(e){ S.leap(e,moveDir(e),8,26); }},
+   aw:{name:'사냥 시간',cd:45,r:14,cast(e){ const t=tgt(e,99); for(let i=-1;i<=1;i++){ const a=Math.atan2(e.aim.y,e.aim.x)+i*.9; S.proj(e,{x:Math.cos(a),y:Math.sin(a)},{speed:4.5,range:60,life:5,home:t,dmg:20,label:'사냥개',big:true,o:{root:1,post:x=>{ rm(x,'spot'); add(x,'spot',12,0,{by:e}); }}}); } }},
    ult:{name:'새하얀 밤',cd:0,r:8,can:e=>e.r.hits>=16,need:'포착 적중 16회',cast(e){ S.focus(e,1); after(1,()=>{ if(e.dead) return; e.r.night=now+8; zone(e,{x:e.x,y:e.y,r:8,dur:8,every:.25,label:'설원',tick:(z,inn)=>inn.forEach(t=>add(t,'slow',.35,has(t,'spot')?.4:.2))}); }); }}
-  },note:'탐색은 14칸 안의 가장 가까운 적을 잡는다. 사냥개는 초당 9칸으로 6초 동안 쫓는다.'},
+  },note:'탐색은 14칸 안의 가장 가까운 적을 잡는다. 시험장 조정(2026-11): 선회의 도약을 11칸에서 8칸으로 줄였고, 사냥개는 초당 4.5칸(전의 절반)으로 5초 동안 쫓다가 사라진다.'},
 mimosa:{name:'황천의 제해, 미모사',cls:'척후병',grade:'고화',range:9,
   init:e=>{e.r={u:0,awN:0,awT:0,gu:0,gt:0}}, hud:e=>'우천 '+e.r.u+'/18'+(e.r.awT>now?' · 창해 '+e.r.awN:''),
   onSkillHit(e,t){ if(dist(e,t)>=6){ e.r.u++; proc(e,'우천','+4 · 밀침'); if(e.r.gt>now) e.r.gu++; damage(e,t,4,'우천'); knock(t,e,1); if(e.r.u%3===0) add(t,'slow',1,.44); } },
