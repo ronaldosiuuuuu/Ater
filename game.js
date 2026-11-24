@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.0.1';
+const VER='1.0.2';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -468,6 +468,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.0.2','2026-11',['기록 화면의 업적을 단추로 묶었다. 누르면 창으로 뜨고, 전체 · 남은 것 · 달성으로 나눠 볼 수 있다.','보상 코드 칸을 기록 화면 맨 아래로 내렸다.']],
  ['1.0.1','2026-11',['레이드에서 아직 보스가 없는 난이도(군주 · 위신)를 고르면 다른 난이도의 보스와 싸우게 되던 것을 막았다.','별무리로 데려온 캐릭터의 결과 창에 "파편 +undefined"가 뜨던 것을 고쳤다.','조작키 창을 연 뒤 상대 스킬 보기 창이 가려지던 것을 고쳤다.','이야기 · 도전 · 등반 도중 화면이 닫히면 빌려 쓴 캐릭터가 내 칸에 남던 것을 막았다.','데스카운트가 혼자 하는 레이드와 들어온 사람 화면에도 보인다.','함께 할 때 방장의 닉네임이 다른 사람 화면에도 뜬다. 초대 링크로 들어올 때는 패치 창을 띄우지 않는다.','방 만들기 · 들어가기가 망 문제로 한 번에 안 붙으면 두 번까지 알아서 다시 해 본다.']],
  ['1.0.0','2026-11',['뽑기가 파편 방식으로 바뀌었다. 한 번에 파편 1~3개, 10개를 모으면 캐릭터. 확률은 고화 60 · 서사 30 · 전설 10 (신화 · 히든은 나오지 않는다).','재림 조건: 원래 캐릭터로 15승 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적. 재림 캐릭터는 체력 +50, 기본 공격 +2.','레이드에 난이도가 생겼다: 소란 · 집결 · 결속 · 군주 · 위신. 데스카운트는 1 · 2 · 2 · 3 · 3이고 편 전체가 나눠 쓴다.','처음 들어오면 닉네임을 정한다. 싸움 중 체력 줄 위에 닉네임과 (캐릭터명)이 뜬다.','정신 집중(캐스팅)과 고유 자원이 캐릭터 아래에 막대로 보인다.','가나안의 기본 공격이 좁은 부채꼴(6.5칸)이 되었다. 메릴다의 선회 8칸, 사냥개는 느려지고 5초 뒤 사라진다.']]
 ];
@@ -489,3 +490,15 @@ on('draw:world',()=>{ if(!me) return; g.save(); g.textAlign='center'; g.lineJoin
 
 /* 화면을 옮길 때도 빌려 쓴 설정이 남아 있지 않게 한다. 뒤로 가기로 조작키·패치 창을 닫는다 */
 { const gp2=goPage; goPage=function(p){ keepFix(); gp2(p); }; const bs0=backStep; backStep=function(){ const k=document.getElementById('keysv')||document.getElementById('patchv'); if(k){ k.remove(); return true; } return bs0(); }; }
+
+/* ── 기록 화면: 업적은 단추를 눌러 따로 띄우고, 보상 코드 칸은 맨 아래로 ── */
+function achScreen(){ const old=document.getElementById('achv'); if(old) old.remove(); const got=ACH.filter(a=>PF.ach[a[0]]).length,d=document.createElement('div'); d.className='overlay'; d.id='achv'; d.style.zIndex=9; let tab=achScreen.tab||'all';
+  const render=()=>{ const L=ACH.filter(a=>tab==='all'||(tab==='done')===!!PF.ach[a[0]]); d.innerHTML='<div class="wrap">'+head('ACHIEVEMENTS','업적',got+' / '+ACH.length+' 달성')+'<div class="row" id="ach-tab"><button type="button" data-t="all" aria-pressed="'+(tab==='all')+'">전체 '+ACH.length+'</button><button type="button" data-t="todo" aria-pressed="'+(tab==='todo')+'">남은 것 '+(ACH.length-got)+'</button><button type="button" data-t="done" aria-pressed="'+(tab==='done')+'">달성 '+got+'</button></div><div style="margin-top:10px">'
+     +(L.length?L.map(a=>{ const ok=!!PF.ach[a[0]],pay=achPay(a[0]); return '<div class="pl" style="border-left-color:'+(ok?'var(--gold)':'var(--line)')+';opacity:'+(ok?1:.62)+'"><b>'+(ok?'◆ ':'◇ ')+esc(a[1])+'</b><span style="color:var(--muted)">'+esc(a[2])+'</span><span style="color:'+(ok?'var(--muted)':'var(--gold)')+';font-size:11.5px;flex-basis:100%">'+(ok?'받음 · ':'보상 · ')+'코인 '+pay[0].toLocaleString()+' · 별무리 '+pay[1]+'</span></div>'; }).join(''):'<p class="sub">여기에는 아직 없다.</p>')+'</div><div class="dock"><button class="go" id="ach-out" type="button">닫기</button></div></div>';
+    d.querySelector('#ach-out').onclick=()=>d.remove(); d.querySelector('#ach-tab').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; tab=achScreen.tab=b.dataset.t; render(); d.scrollTop=0; }; };
+  render(); document.body.appendChild(d); }
+{ const dr2=drawRec; drawRec=function(){ dr2(); const el=$('rec'); if(!el) return;
+    const h=[...el.querySelectorAll('h2')].find(x=>/^업적/.test(x.textContent)); if(h){ let n=h.nextElementSibling; while(n&&n.classList.contains('pl')){ const nx=n.nextElementSibling; n.remove(); n=nx; } const got=ACH.filter(a=>PF.ach[a[0]]).length; h.textContent='업적'; h.insertAdjacentHTML('afterend','<button type="button" class="tool" id="ach-open" style="width:100%"><b>업적 '+got+' / '+ACH.length+'</b><small>눌러서 모두 본다 · 달성하면 코인과 별무리의 흔적을 받는다</small><div class="mbar" style="margin-top:8px"><i style="width:'+Math.round(100*got/ACH.length)+'%;background:var(--gold)"></i></div></button>'); }
+    const ci=$('code-in'); if(ci){ const row=ci.closest('.row'),hh=row.previousElementSibling; el.appendChild(hh); el.appendChild(row); } };
+  document.addEventListener('click',e=>{ if(e.target.closest('#ach-open')) achScreen(); });
+  const bs1=backStep; backStep=function(){ const k=document.getElementById('achv'); if(k){ k.remove(); return true; } return bs1(); }; }
