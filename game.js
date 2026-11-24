@@ -224,7 +224,7 @@ function drawRec(){ const el=$('rec'); if(!el) return; const tot=PF.w+PF.l,L=Obj
 hubCard();
 
 /* ───── 설정 화면 정리: 만들기·도구를 맨 위로, 설정은 묶음으로 접어 둔다 ───── */
-{ const GROUPS=[['화면',['ori','full','q','fps']],['조작',['ui','lefty','fst','guide']],['전투 표시',['tele','log','nums','edge','imp','shake','stop']],['소리 · 진동',['els','vib']]],openG=new Set(['화면']);
+{ const GROUPS=[['화면',['ori','full','q','cap','fps']],['조작',['ui','lefty','fst','guide']],['전투 표시',['tele','log','nums','edge','imp','shake','stop']],['소리 · 진동',['els','vib']]],openG=new Set(['화면']);
   drawOpts=function(){ const one=s=>'<h2>'+s.name+'</h2><div class="row" data-o="'+s.k+'">'+s.opts.map(o=>'<button type="button" data-v="'+o[0]+'" aria-pressed="'+(String(OPT[s.k])===String(o[0]))+'">'+o[1]+'</button>').join('')+'</div>'+(s.note?'<p class="note">'+s.note+'</p>':''),used=new Set(GROUPS.flatMap(g=>g[1])),rest=SETTINGS.filter(s=>!used.has(s.k));
     const h=GROUPS.concat(rest.length?[['그 밖',rest.map(s=>s.k)]]:[]).map(g=>'<details class="opt og" data-g="'+g[0]+'"'+(openG.has(g[0])?' open':'')+'><summary>'+g[0]+' <small style="color:var(--muted);font-weight:400">'+g[1].map(k=>(SETTINGS.find(s=>s.k===k)||{}).name).filter(Boolean).slice(0,3).join(' · ')+(g[1].length>3?' …':'')+'</small></summary>'+g[1].map(k=>SETTINGS.find(s=>s.k===k)).filter(Boolean).map(one).join('')+'</details>').join('');
     document.querySelectorAll('.optbox').forEach(b=>b.innerHTML=h); };

@@ -4,7 +4,7 @@
    · 연결: PeerJS(peerjs.min.js, WebRTC). 방 코드가 곧 방장의 주소다. 주소 뒤에 ?bc 를 붙여 열면 같은 브라우저의 탭끼리 붙는다(시험용, 인터넷 없이).
    · 엔진 쪽 자리: index.html의 NET.afterSpawn(사람이 모는 캐릭터 꽂기) · NET.start · NET.cast · NET.frame · step의 e.net 입력.
    주고받는 말 — 들어온 쪽→방장: hello · pick · in(이동·기본기 누름·조준) · cast · bye / 방장→들어온 쪽: lobby · start · s(화면 상태) · bye */
-Object.assign(NET,{ bc:/[?&]bc\b/.test(location.search), code:'', pid:'', tx:null, players:[], em:new Map(), you:0, flip:false, playing:false, live:false, acc:0, n:0, lastIn:0, lastC:{}, ev:{h:[],k:[],c:[]}, orig:null, HZ:15 });
+Object.assign(NET,{ bc:/[?&]bc\b/.test(location.search), code:'', pid:'', tx:null, players:[], em:new Map(), you:0, flip:false, playing:false, live:false, acc:0, n:0, lastIn:0, lastC:{}, ev:{h:[],k:[],c:[]}, orig:null, HZ:12 });
 const r2=v=>Math.round(v*100)/100, tf=t=>NET.flip?1-t:t;
 const isEnt=v=>!!(v&&typeof v==='object'&&v.c&&v.st&&v.id);
 /* 보낼 수 있는 꼴로: 숫자·글자·참거짓만 남기고, 캐릭터를 가리키는 칸은 '@이름': 번호로 바꾼다 */
@@ -15,7 +15,7 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=25;
+const APPV=26;
 /* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
 const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
@@ -53,20 +53,23 @@ function hostMsg(pid,d){ if(!NET.host||!d) return; let p=NET.players.find(x=>x.p
 const okKey=k=>!!CH[k]&&!CH[k].re&&!CH[k].built&&!CH[k].custom&&!CH[k].mon&&!CH[k].mob&&!CH[k].kit;
 function hostGone(pid){ const i=NET.players.findIndex(x=>x.pid===pid&&!x.host); if(i<0) return; const p=NET.players[i]; NET.players.splice(i,1); for(const e of ents) if(e.net&&e.net.pid===pid){ e.net=null; e.left=p.name; e.pname=null; } if(NET.host){ lobbyOut(); if(NET.live) toast((p.name||'손님')+' 연결이 끊겼다 · 컴퓨터가 대신 움직인다'); } }
 /* 싸우는 도중 끊겼다 다시 들어온 사람은 제 캐릭터를 돌려받는다 */
-function reseat(p){ const e=ents.find(o=>o.left&&o.left===p.name&&!o.net); if(!e) return; e.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; e.pname=p.name; e.left=null; p.eid=e.id; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic'; NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:e.id,team:e.team,cap:CAPGOAL}); toast((p.name||'손님')+' 다시 들어왔다'); }
+function reseat(p){ const e=ents.find(o=>o.left&&o.left===p.name&&!o.net); if(!e) return; e.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; e.pname=p.name; e.left=null; p.eid=e.id; NET.known=new Set(); NET.n=0; NET.mSig=''; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic'; NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:e.id,team:e.team,cap:CAPGOAL}); toast((p.name||'손님')+' 다시 들어왔다'); }
 /* 판을 만든 직후: 들어온 사람들을 자기 편의 컴퓨터 자리에 꽂는다(상대 편은 '상대' 칸부터). 자리가 없으면 다른 편, 그래도 없으면 구경 */
 NET.afterSpawn=()=>{ for(const p of others()){ p.eid=0; const seat=tm=>ents.filter(o=>o.team===tm&&o!==me&&!o.net&&!o.c.mon).sort((a,b)=>(a.slot||0)-(b.slot||0))[0],o=seat(p.team)||seat(1-p.team); if(!o) continue;
     const key=p.re&&CH[p.key+'_r']?p.key+'_r':p.key,n=mk(key,o.team,o.x,o.y); n.slot=o.slot; n.busy=o.busy; n.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; n.pname=p.name; ents[ents.indexOf(o)]=n; if(o===foe) foe=n; p.eid=n.id; } };
-NET.start=()=>{ NET.live=others().length>0; NET.acc=0; NET.n=0; NET.ev={h:[],k:[],c:[]}; if(!NET.live) return; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic';
+NET.start=()=>{ NET.live=others().length>0; NET.acc=0; NET.n=0; NET.known=new Set(); NET.mSig=''; for(const f of floats) f._s=0; NET.ev={h:[],k:[],c:[]}; if(!NET.live) return; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic';
   for(const p of others()){ const e=ents.find(o=>o.id===p.eid); NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:p.eid||0,team:e?e.team:1,cap:CAPGOAL}); } snap(); };
-function entS(e,full){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2(e.y),z:r2(e.z),hp:r2(e.hp),max:e.max,atk:e.atk,dead:!!e.dead,aim:[r2(e.aim.x),r2(e.aim.y)],busy:r2(e.busy),chant:r2(e.chant),slot:e.slot||0,
+/* 보내는 양 줄이기: 자리·체력처럼 늘 바뀌는 것만 매번 보내고, 이름·최대 체력·상태 줄처럼 잘 안 바뀌는 것은 세 번에 한 번만 보낸다.
+   피해 숫자·기록 줄은 새로 생긴 것만 보낸다. 5대5에서 손님 한 명당 초당 93KB쯤 나가던 것이 3분의 1쯤으로 준다 */
+function entS(e,full,mid){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2(e.y),z:r2(e.z),hp:r2(e.hp),max:e.max,atk:e.atk,dead:!!e.dead,aim:[r2(e.aim.x),r2(e.aim.y)],busy:r2(e.busy),chant:r2(e.chant),slot:e.slot||0,
     st:e.st.map(s=>({k:s.k,until:r2(s.until),v:typeof s.v==='number'||typeof s.v==='string'?s.v:undefined})),sh:e.sh.map(s=>({v:r2(s.v),until:r2(s.until)})),cd:{}};
   for(const k in e.cd) if(e.cd[k]>0) o.cd[k]=r2(e.cd[k]); if(e.dash) o.dash=[r2(e.dash.vx),r2(e.dash.vy),r2(e.dash.until)]; if(e.castFx) o.cf=[r2(e.castFx.t0),e.castFx.ult?1:0]; if(e.flash!==undefined) o.fl=r2(e.flash); if(e.swingT!==undefined){ o.sw=r2(e.swingT); o.sn=e.swingN||0; } if(e.shotT!==undefined) o.so=r2(e.shotT);
   if(e.ultUsed) o.uu=1; if(e.boss) o.boss=1; if(e.launched) o.la=1; if(e.sand) o.sand=1; if(e.tag) o.tag=[e.tag.n,r2(e.tag.t0)]; if(e.pname) o.pn=e.pname;
-  try{ o.r=ser(e.r,0); o.hud=e.c.hud(e); o.sl=stateList(e); const cn={}; for(const s in e.c.skills){ const k=e.c.skills[s]; if(k.can) cn[s]=!!k.can(e); } o.can=cn; }catch(x){}
-  if(full){ o.dealt={}; for(const k in e.dealt) o.dealt[k]=Math.round(e.dealt[k]); } return o; }
-function snap(){ if(!NET.live||!NET.tx) return; const full=NET.n++%15===0||!!over,ev=NET.ev; NET.ev={h:[],k:[],c:[]};
-  sendAll({t:'s',n:r2(now),e:ents.map(e=>entS(e,full)),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl:floats.map(plain),m:msgs,pr:procs,sc:score,cp:cap,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev}); }
+  if(mid) try{ o.r=ser(e.r,0); o.hud=e.c.hud(e); o.sl=stateList(e); const cn={}; for(const s in e.c.skills){ const k=e.c.skills[s]; if(k.can) cn[s]=!!k.can(e); } o.can=cn; }catch(x){}
+  if(full){ o.dealt={}; for(const k in e.dealt) o.dealt[k]=Math.round(e.dealt[k]); } if(!mid){ for(const k of ['key','team','max','atk','slot','uu','boss','sand','pn','cd']) delete o[k]; } return o; }
+function snap(){ if(!NET.live||!NET.tx) return; const full=NET.n++%15===0||!!over,mid=full||NET.n%4===0,ev=NET.ev; NET.ev={h:[],k:[],c:[]}; const K=NET.known||(NET.known=new Set());
+  const nf=floats.filter(f=>!f._s),fl=nf.map(plain); nf.forEach(f=>{ f._s=1; }); const ms=msgs.length+':'+(msgs.length?msgs[msgs.length-1].t0:0)+':'+procs.length+':'+(procs.length?procs[procs.length-1].t0:0),chg=full||ms!==NET.mSig; NET.mSig=ms;
+  sendAll({t:'s',n:r2(now),e:ents.map(e=>{ const m2=mid||!K.has(e.id); K.add(e.id); return entS(e,full,m2); }),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl,m:chg?msgs:undefined,pr:chg?procs:undefined,sc:score,cp:cap,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev}); }
 on('step',dt=>{ if(!NET.live) return; NET.acc+=dt; if(NET.acc>=1/NET.HZ){ NET.acc=0; snap(); } });
 on('end',()=>{ if(NET.live){ snap(); NET.live=false; } });
 on('hit',(s,t,amt,label,o)=>{ if(NET.live&&NET.ev.h.length<80) NET.ev.h.push([s.id,t.id,r2(amt),label,(o&&o.basic?1:0)|(o&&o.skill?2:0)|(o&&o.fixed?4:0)|(PH?8:0)]); });
@@ -91,19 +94,19 @@ function patchClient(){ if(NET.orig) return; const O=NET.orig={stateList,hud:{},
   for(const k in AURA){ const f=AURA[k]; O.aura[k]=f; AURA[k]=(e,by)=>{ try{ f(e,by); }catch(x){} }; }
   for(const k in RES){ const R0=RES[k]; O.res[k]=R0; const W={}; for(const m in R0){ const f=R0[m]; W[m]=typeof f==='function'?e=>{ try{ return f(e); }catch(x){ return 0; } }:f; } RES[k]=W; } }
 function unpatchClient(){ const O=NET.orig; if(!O) return; NET.orig=null; stateList=O.stateList; for(const k in O.hud) CH[k].hud=O.hud[k]; for(const [sk,f] of O.can) sk.can=f; for(const k in O.aura) AURA[k]=O.aura[k]; for(const k in O.res) RES[k]=O.res[k]; }
-function clientStart(d){ practice=false; mode=d.mode; teamN=d.teamN; LAND=!!d.land; MAP=MAPS[d.map]||MAPS.basic; W=d.W; H=d.H; NET.you=d.you; NET.flip=d.team===1; NET.em.clear(); NET.first=true; NET.playing=true;
+function clientStart(d){ floats=[]; practice=false; mode=d.mode; teamN=d.teamN; LAND=!!d.land; MAP=MAPS[d.map]||MAPS.basic; W=d.W; H=d.H; NET.you=d.you; NET.flip=d.team===1; NET.em.clear(); NET.first=true; NET.playing=true;
   loop.err=null; bgmStop(); chaosUntil=0; banner=null; mini=null; parts=[]; shake=0; procs=[]; msgs=[]; projs=[]; fx=[]; floats=[]; zones=[]; walls=[]; feats=[]; Q=[]; ents=[]; over=null; paused=false; score=[0,0]; cap=[0,0]; now=0; draw.k=9; me=null; foe=null;
   $('info').hidden=true; $('pause').hidden=true; netStat(''); }
 function apply(S){ const E=NET.em,seen=new Set(); now=S.n; const list=[];
-  for(const s of S.e){ let e=E.get(s.id); const fresh=!e||e.key!==s.key; if(fresh){ e={id:s.id,x:s.x,y:s.y,mv:{x:0,y:0},ai:{},dealt:{},r:{},cd:{}}; E.set(s.id,e); } seen.add(s.id);
-    e.key=s.key; e.c=CH[s.key]||CH.ei; e.team=tf(s.team); e.tx=s.x; e.ty=s.y; if(Math.hypot(e.x-s.x,e.y-s.y)>3){ e.x=s.x; e.y=s.y; } e.z=s.z; e.vz=0; e.hp=s.hp; e.max=s.max; e.atk=s.atk; e.dead=s.dead; e.aim={x:s.aim[0],y:s.aim[1]}; e.busy=s.busy; e.chant=s.chant; e.slot=s.slot; e.st=s.st; e.sh=s.sh;
-    e.cd={b:0,n1:0,n2:0,aw:0,ult:0,crouch:0,x1:0,x2:0,x3:0,x4:0}; Object.assign(e.cd,s.cd); e.dash=s.dash?{vx:s.dash[0],vy:s.dash[1],until:s.dash[2]}:null; e.castFx=s.cf?{t0:s.cf[0],ult:!!s.cf[1]}:null; e.flash=Math.max(e.flash||-9,s.fl===undefined?-9:s.fl); e.swingT=s.sw; e.swingN=s.sn; e.shotT=s.so;
+  for(const s of S.e){ let e=E.get(s.id); if(s.key===undefined){ if(!e) continue; s.key=e.key; s.team=e.teamRaw; s.max=e.max; s.atk=e.atk; s.slot=e.slot; s.uu=e.ultUsed; s.boss=e.boss; s.sand=e.sand; s.pn=e.pname; s.r=e.r; s.hud=e.hudS; s.sl=e.slS; s.can=e.canS; } const fresh=!e||e.key!==s.key; if(fresh){ e={id:s.id,x:s.x,y:s.y,mv:{x:0,y:0},ai:{},dealt:{},r:{},cd:{}}; E.set(s.id,e); } seen.add(s.id);
+    e.key=s.key; e.c=CH[s.key]||CH.ei; e.teamRaw=s.team; e.team=tf(s.team); e.tx=s.x; e.ty=s.y; if(Math.hypot(e.x-s.x,e.y-s.y)>3){ e.x=s.x; e.y=s.y; } e.z=s.z; e.vz=0; e.hp=s.hp; e.max=s.max; e.atk=s.atk; e.dead=s.dead; e.aim={x:s.aim[0],y:s.aim[1]}; e.busy=s.busy; e.chant=s.chant; e.slot=s.slot; e.st=s.st; e.sh=s.sh;
+    if(s.cd||!e.cd||!('b' in e.cd)){ e.cd={b:0,n1:0,n2:0,aw:0,ult:0,crouch:0,x1:0,x2:0,x3:0,x4:0}; Object.assign(e.cd,s.cd||{}); } e.dash=s.dash?{vx:s.dash[0],vy:s.dash[1],until:s.dash[2]}:null; e.castFx=s.cf?{t0:s.cf[0],ult:!!s.cf[1]}:null; e.flash=Math.max(e.flash||-9,s.fl===undefined?-9:s.fl); e.swingT=s.sw; e.swingN=s.sn; e.shotT=s.so;
     e.ultUsed=!!s.uu; e.boss=!!s.boss; e.launched=!!s.la; e.sand=!!s.sand; e.tag=s.tag?{n:s.tag[0],t0:s.tag[1]}:null; e.pname=s.pn||null; e.r=s.r||{}; e.hudS=s.hud||''; e.slS=s.sl||[]; e.canS=s.can||null; if(s.dealt) e.dealt=s.dealt; list.push(e); }
   for(const id of [...E.keys()]) if(!seen.has(id)) E.delete(id);
   ents=list; me=E.get(NET.you)||list.find(e=>e.team===0)||list[0]; pickFoe();
   projs=S.p.map(unplain).filter(p=>p.owner); for(const p of projs) p.hit=new Set(); fx=S.f.map(unplain); zones=S.z.map(unplain).filter(z=>z.owner); walls=S.w.map(unplain);
-  floats=S.fl.map(f=>{ unplain(f); if(f.kd&&f.own) f.col=(f.own.team===0?HURTCOL:NUMCOL)[f.kd]; return f; });
-  const sw=c=>!NET.flip?c:c==='rgb('+TC[0]+')'?'rgb('+TC[1]+')':c==='rgb('+TC[1]+')'?'rgb('+TC[0]+')':c; msgs=S.m.map(m=>({seg:m.seg.map(x=>[x[0],sw(x[1])]),team:tf(m.team),big:m.big,t0:m.t0})); procs=S.pr.map(q=>Object.assign({},q,{team:tf(q.team)}));
+  floats=floats.filter(f=>now-f.t0<.9).concat(S.fl.map(f=>{ unplain(f); if(f.kd&&f.own) f.col=(f.own.team===0?HURTCOL:NUMCOL)[f.kd]; return f; }));
+  const sw=c=>!NET.flip?c:c==='rgb('+TC[0]+')'?'rgb('+TC[1]+')':c==='rgb('+TC[1]+')'?'rgb('+TC[0]+')':c; if(S.m) msgs=S.m.map(m=>({seg:m.seg.map(x=>[x[0],sw(x[1])]),team:tf(m.team),big:m.big,t0:m.t0})); if(S.pr) procs=S.pr.map(q=>Object.assign({},q,{team:tf(q.team)}));
   score=NET.flip?[S.sc[1],S.sc[0]]:S.sc.slice(); cap=NET.flip?[S.cp[1],S.cp[0]]:S.cp.slice(); feats=S.ft.map(f=>{ if(f.t==='cap'&&NET.flip&&(f.own===0||f.own===1)) f.own=1-f.own; f.solid=!!(FEAT[f.t]&&FEAT[f.t].solid); return f; }); chaosUntil=S.ch[0]; chaosName=S.ch[1];
   if(NET.first&&me){ NET.first=false; OPT.raid=me.boss?'boss':'hero'; uiBegin(); $('sel').hidden=true; $('res').hidden=true; $('menu').style.display='block'; if(!running){ running=true; fit(); fire('begin'); last=performance.now(); requestAnimationFrame(loop); } else { fit(); fire('begin'); } }
   /* 방장 쪽에서 일어난 일을 여기서도 한 번씩 울린다: 타격 이펙트·소리·진동 */
@@ -113,7 +116,7 @@ function apply(S){ const E=NET.em,seen=new Set(); now=S.n; const list=[];
   if(S.ov&&!over){ over={winner:E.get(S.ov.w)||null,t:S.ov.t}; setTimeout(()=>{ if(NET.client&&over){ NET.playing=false; showResult(); } },900); } }
 function pickFoe(){ if(!me) return; const L=ents.filter(o=>o.team!==me.team); const f=L.filter(o=>!o.dead).sort((a,b)=>dist(me,a)-dist(me,b))[0]||L[0]||me; if(f!==foe){ foe=f; const el=$('hb-foe').querySelector('.nm'); if(el) el.textContent=foe.c.name; } }
 /* 받은 상태 사이사이를 부드럽게 잇고, 내 조작을 보낸다 */
-NET.frame=dt=>{ if(!me) return; now+=dt; const k=Math.min(1,dt*16); for(const e of ents){ if(e.tx!==undefined){ e.x+=(e.tx-e.x)*k; e.y+=(e.ty-e.y)*k; } } for(const p of projs){ p.x+=p.vx*dt; p.y+=p.vy*dt; }
+NET.frame=dt=>{ if(!me) return; now+=dt; const k=Math.min(1,dt*16); for(const e of ents){ if(e.tx!==undefined){ e.x+=(e.tx-e.x)*k; e.y+=(e.ty-e.y)*k; } for(const c in e.cd) if(e.cd[c]>0) e.cd[c]=Math.max(0,e.cd[c]-dt); }   /* 대기시간은 받은 값 사이를 여기서 센다 */ for(const p of projs){ p.x+=p.vx*dt; p.y+=p.vy*dt; }
   if(mAim&&!me.dead) mouseAim(); const t=performance.now(); if(t-NET.lastIn>33&&NET.tx){ NET.lastIn=t; NET.tx.send({t:'in',mv:[r2(stick.x),r2(stick.y)],hb:!!held.b&&!paused,aim:mAim?[r2(me.aim.x),r2(me.aim.y)]:0}); }
   if(!paused&&!over) for(const s in held) if(held[s]&&s!=='b') NET.cast(s); };
 NET.cast=slot=>{ if(!NET.tx||!me||over) return; const t=performance.now(); if(t-(NET.lastC[slot]||0)<90) return; NET.lastC[slot]=t; NET.tx.send({t:'cast',s:slot,aim:(me.aimMan>now||mAim)?[r2(me.aim.x),r2(me.aim.y)]:0}); };
