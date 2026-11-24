@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.1.0';
+const VER='1.2.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -31,7 +31,7 @@ const ACH=[
 function achCheck(x){ const got=[]; for(const a of ACH){ if(PF.ach[a[0]]) continue; let ok=false; try{ ok=a[3](x||{}); }catch(e){} if(ok){ PF.ach[a[0]]=Date.now(); got.push(a[1]); } } if(got.length){ pfSave(); setTimeout(()=>toast('업적 달성 · '+got.join(' · '),3600),1200); } }
 const openSet=()=>Object.keys(CH).filter(k=>!CH[k].re&&!locked(k));
 on('end',w=>{ if(practice||!w||NET.client) return; const was=new Set(openSet()); setTimeout(()=>{ const nw=openSet().filter(k=>!was.has(k)); if(nw.length&&0) toast('새로 열린 캐릭터 · '+nw.slice(0,4).map(k=>CH[k].name.split(', ')[1]).join(' · ')+(nw.length>4?' 외 '+(nw.length-4)+'명':''),4200); },2600); const win=w.team===0,k=baseKey(me.key),solo=ents.length===2&&!RAID(),c=PF.ch[k]||(PF.ch[k]={w:0,l:0});
-  { const g=earn(win); showResult.gain=g; setTimeout(()=>toast('코인 +'+g.c+(g.st?' · 별무리의 흔적 +1':''),2600),200); }
+  { const g=earn(win); showResult.gain=g; setTimeout(()=>toast('코인 +'+g.c+(g.st?' · 별무리의 흔적 +'+g.st:'')+(g.note?' · '+g.note:''),2600),200); }
   if(win){ PF.w++; PF.streak++; c.w++; if(foe.c.mon) PF.mon[foe.key]=(PF.mon[foe.key]||0)+1; } else { PF.l++; PF.streak=0; c.l++; } pfSave(); achCheck({win,solo}); });
 
 /* ───── 권능을 아무 캐릭터에게나 얹기(등반 보상) ───── */
@@ -191,7 +191,7 @@ function spGo(m){ if(NET.host||NET.client) return toast('친구와 함께 중에
 { const sr0=showResult; showResult=function(){ if(TW&&TW.on){ if(!over) return; running=false; wakeOff(); $('menu').style.display='none'; if(!over.winner){ const f=TW.floor; TW.on=false; keepBack(); $('sel').hidden=false; over=null; toast('등반은 '+f+'층에서 멈춰 있다. 이어서 오를 수 있다'); return; } return towerEnd(over.winner); }
     if(!over) return; const win=!!over.winner&&over.winner.team===0,solo=ents.length===2,m=SPM; sr0();
     if(win&&!practice&&solo) $('r-small').textContent='VICTORY · '+rankOf();
-    if(showResult.gain&&over.winner&&!practice){ const g=showResult.gain; $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +1':'')+' · '+$('r-sub').textContent; } showResult.gain=null;
+    if(showResult.gain&&over.winner&&!practice){ const g=showResult.gain; $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +'+g.st:'')+(g.note?' · '+g.note:'')+' · '+$('r-sub').textContent; } showResult.gain=null;
     if(m){ let line='';
       if(m.kind==='story'){ const s=STORY[m.si],c=s.ch[m.ci]; if(win){ const st=goalOk(c.goal)?2:1,a=PF.story[s.id]||(PF.story[s.id]=[]); a[m.ci]=Math.max(a[m.ci]||0,st); pfSave(); achCheck({}); line=(m.ci+1)+'장 '+'★'.repeat(st)+(st<2?' · ★★ 조건: '+goalTxt(c.goal):''); } else if(over.winner) line=(m.ci+1)+'장 · 다시 겨뤄 볼 수 있다'; }
       else if(m.kind==='daily'&&over.winner){ const d=today(); if(PF.daily.d!==d){ const y=new Date(Date.now()-864e5),yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); PF.dstreak=win?(PF.daily.d===yd&&PF.daily.win?PF.dstreak+1:1):0; if(win) PF.dwin++; PF.daily={d,win,rank:win?rankOf():'',t:over.t}; pfSave(); achCheck({}); line='오늘의 도전 · 기록에 남았다'; } else line='오늘의 도전 · 이미 기록이 있어 이번 판은 남지 않는다'; }
@@ -326,7 +326,7 @@ on('begin',()=>{ if(NET.client){ $('tower').hidden=true; return; } if(!TW||!TW.o
 function coopSend(end){ if(!NET.host||!NET.tx||coopN()<2) return; const T=TW; sendAll({t:'tw',end:end||'',floor:T?T.floor:0,what:T?(T.rew?'방장이 보상을 고르는 중':T.shop?'방장이 상인과 거래하는 중':T.fork?'방장이 길을 고르는 중':T.next?'다음 상대 · '+foeLine(T.next):''):'',pw:T?T.pw.map(id=>POWERS[id].name+' '+POWERS[id].lv):[],gear:T?['w','a','t'].filter(s=>GEAR[T.gear[s]]).map(s=>GEAR[T.gear[s]].name):[],best:PF.tw.best}); }
 function coopInfo(d){ $('res').hidden=true; $('tw-body').innerHTML=d.end?head('TOWER','함께 오르는 등반',esc(d.end))+'<div class="dock"><button class="ghost" id="tw-out" type="button">닫기</button></div>':head('TOWER · 함께','등반 '+d.floor+'층',d.what)+(d.pw.length?'<p class="note">모두에게 든 권능: '+d.pw.map(esc).join(' · ')+'</p>':'')+(d.gear.length?'<p class="note">모두에게 든 장비: '+d.gear.map(esc).join(' · ')+'</p>':'')+'<p class="sub">길과 보상은 방장이 고른다. 방장이 올라가면 함께 시작한다.</p>'; $('tower').hidden=false; $('sel').hidden=false; }
 /* 들어온 쪽도 판이 끝나면 코인을 받는다(이기면 처치 몫, 지면 사망 몫) */
-{ const sr1=showResult; showResult=function(){ if(NET.client&&over&&over.winner&&me&&!over.paid){ over.paid=true; const g=earn(over.winner.team===me.team); pfSave(); sr1(); $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +1':'')+' · '+$('r-sub').textContent; hubCard(); return; } sr1(); }; }
+{ const sr1=showResult; showResult=function(){ if(NET.client&&over&&over.winner&&me&&!over.paid){ over.paid=true; const g=earn(over.winner.team===me.team); pfSave(); sr1(); $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +'+g.st:'')+(g.note?' · '+g.note:'')+' · '+$('r-sub').textContent; hubCard(); return; } sr1(); }; }
 
 /* ═════ 계정 레벨 · 업적 보상 ═════ (값은 시험장에서 정했다)
    경험치: 이기면 100, 지면 40, 업적 하나에 80. 레벨 L에서 다음 레벨까지 150+50×L.
@@ -468,6 +468,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.2.0','2026-11',['새 탭 「가방」: 뽑기 · 파편 가방 · 중복 캐릭터 · 재림 · 숙련 · 골라서 데려오기를 한곳에 모았다.','「모두 열기」 단추를 없앴다. 이제 뽑기 방식이 기본이다.','보상 코드는 셋이다. 기록 화면 맨 아래에 적는다.','맵 여덟 개 추가: 무너진 유적 · 오아시스 · 바람골 · 가시 정원 · 차원문 회랑 · 대투기장 · 수렁 늪지 · 협곡. 등반은 층마다 맵이 바뀐다.','이야기는 (임시로) 지금 고른 내 캐릭터로 싸운다.','보상 정리: 레이드는 난이도별 코인 · 별무리와 첫 처치 보상(파편 포함), 등반은 층마다 코인과 5층 단위 첫 돌파 보상, 이야기는 첫 승리 · ★★ · 완주 보상, 오늘의 도전은 그날 첫 승리 보상.','업적을 유형별(전투 · 수집 · 레이드 · 등반 · 이야기 · 함께)로 나눠 본다. 군주 · 위신 사냥 업적 추가.','문서 보스의 「미친척 모드」를 「광폭화 모드」로 바꾸고, 보스 이름과 기술 이름을 새로 지었다.']],
  ['1.1.0','2026-11',['구글 문서 「보스 문서」의 보스 여덟이 레이드에 들어왔다. 결속: 우르사온 · 드리아드 · 미노타우로스 / 군주: 진흙 거인 · 박준형 · 여왕 개미 / 위신: 숭배받는 신 · 모래 왕.','새 보스는 체력이 절반 아래로 내려가면 「미친척 모드」가 되어 패턴이 강해진다.','비어 있던 레이드 난이도 군주 · 위신에 보스가 생겼다(데스카운트 3).','문서에 수치가 없어 체력 · 피해 · 범위 · 대기시간은 시험장에서 정했다. 보스 설명에 정한 것을 적어 두었다.','등반의 보스 차례 뒤쪽에 새 보스가 이어진다.']],
  ['1.0.2','2026-11',['기록 화면의 업적을 단추로 묶었다. 누르면 창으로 뜨고, 전체 · 남은 것 · 달성으로 나눠 볼 수 있다.','보상 코드 칸을 기록 화면 맨 아래로 내렸다.']],
  ['1.0.1','2026-11',['레이드에서 아직 보스가 없는 난이도(군주 · 위신)를 고르면 다른 난이도의 보스와 싸우게 되던 것을 막았다.','별무리로 데려온 캐릭터의 결과 창에 "파편 +undefined"가 뜨던 것을 고쳤다.','조작키 창을 연 뒤 상대 스킬 보기 창이 가려지던 것을 고쳤다.','이야기 · 도전 · 등반 도중 화면이 닫히면 빌려 쓴 캐릭터가 내 칸에 남던 것을 막았다.','데스카운트가 혼자 하는 레이드와 들어온 사람 화면에도 보인다.','함께 할 때 방장의 닉네임이 다른 사람 화면에도 뜬다. 초대 링크로 들어올 때는 패치 창을 띄우지 않는다.','방 만들기 · 들어가기가 망 문제로 한 번에 안 붙으면 두 번까지 알아서 다시 해 본다.']],
@@ -503,3 +504,84 @@ function achScreen(){ const old=document.getElementById('achv'); if(old) old.rem
     const ci=$('code-in'); if(ci){ const row=ci.closest('.row'),hh=row.previousElementSibling; el.appendChild(hh); el.appendChild(row); } };
   document.addEventListener('click',e=>{ if(e.target.closest('#ach-open')) achScreen(); });
   const bs1=backStep; backStep=function(){ const k=document.getElementById('achv'); if(k){ k.remove(); return true; } return bs1(); }; }
+
+/* ════════════════ 1.2.0 ════════════════ */
+/* ── 보상 코드 셋: 비요가른(코인 15000) · 일곱 별의 화신(별무리 40) · 만마의 궁전(모두 열기 켬/끔). 띄어쓰기는 없어도 된다 ── */
+delete CODES['호날두시우']; Object.assign(CODES,{'비요가른':{coin:15000},'일곱별의화신':{star:40},'만마의궁전':{palace:1}});
+PF.codes=PF.codes||{}; if(PF.codes['호날두시우']&&!PF.codes['비요가른']){ PF.codes['비요가른']=PF.codes['호날두시우']; delete PF.codes['호날두시우']; }
+/* 모두 열기 단추는 없앴다. 예전에 단추로 열어 둔 것은 뽑기 방식으로 돌린다(만마의 궁전으로 연 것만 남는다) */
+if(PF.open&&!PF.palace){ PF.open=false; pfSave(); }
+{ const rd0=redeem; redeem=function(v){ const k=String(v||'').replace(/\s+/g,''); if(k!=='만마의궁전') return rd0(v);
+    PF.open=!PF.open; PF.palace=PF.open?1:0; pfSave(); sfx('win'); toast(PF.open?'만마의 궁전 · 모든 캐릭터가 열렸다 (한 번 더 적으면 닫힌다)':'만마의 궁전 · 닫혔다. 다시 뽑기 방식이다',4200);
+    if(!PF.open&&locked(kOf('me'))){ sel.me='ei'; sel.meR=false; } drawSel(); hubCard(); if(typeof drawBag==='function') drawBag(); return true; }; }
+
+/* ── 가방 탭: 뽑기 · 파편 · 재림 · 숙련 · 데려오기를 한곳에 ── */
+function giveShard(k,n){ PF.shard=PF.shard||{}; PF.dup=PF.dup||{}; PF.shard[k]=(PF.shard[k]||0)+n; let got=''; while(PF.shard[k]>=SHARDN){ PF.shard[k]-=SHARDN; if(PF.own[k]){ PF.dup[k]=(PF.dup[k]||0)+1; got=' (중복 +1)'; } else { PF.own[k]=Date.now(); got=' (캐릭터 획득)'; } } return CH[k].name.split(', ')[1]+' 파편 +'+n+got; }
+function drawBag(){ const el=$('bag'); if(!el) return; const pb=(v,m,col)=>'<div class="mbar"><i style="width:'+Math.min(100,Math.round(100*v/m))+'%;background:'+(col||'var(--aether)')+'"></i></div>',nm=k=>esc(CH[k].name.split(', ')[1]);
+  const base=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom),own=base.filter(k=>PF.own[k]);
+  let h='<h2>보유</h2><div class="pl"><b>코인 '+PF.coin.toLocaleString()+'</b><span style="color:var(--muted)">별무리의 흔적 '+PF.star+'</span></div><div class="pl"><b>캐릭터 '+own.length+' / '+base.length+'</b><span style="color:var(--muted)">재림 '+Object.keys(PF.re||{}).length+'명</span></div>'+(PF.open?'<p class="note">만마의 궁전이 열려 있다. 지금은 모든 캐릭터를 쓸 수 있다.</p>':'');
+  h+='<h2>뽑기</h2><div class="row"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+' · 서사 이상 하나 보장</small></button></div>';
+  h+='<p class="note" style="white-space:pre-line">한 번에 캐릭터 하나의 파편이 1~3개 나온다. 파편 '+SHARDN+'개가 모이면 그 캐릭터를 얻는다.\n이미 가진 캐릭터의 파편 '+SHARDN+'개는 \'중복\' 하나가 되고, 재림에 쓴다.\n확률: '+GRATE.map(g=>g[0]+' '+g[1]+'%').join(' · ')+' (신화 · 히든은 나오지 않는다) · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번</p>';
+  const S=Object.keys(PF.shard||{}).filter(k=>CH[k]&&PF.shard[k]>0).sort((a,b)=>PF.shard[b]-PF.shard[a]),D=Object.keys(PF.dup||{}).filter(k=>CH[k]&&PF.dup[k]>0);
+  h+='<h2>파편 가방</h2>'+(S.length?S.slice(0,60).map(k=>{ const c=CH[k]; return '<div class="pl" style="border-left-color:'+GCOL[c.grade]+'"><b>'+nm(k)+' <small style="color:var(--muted)">'+c.grade+' '+c.cls+(PF.own[k]?' · 가짐':'')+'</small></b><span style="color:var(--muted)">'+PF.shard[k]+' / '+SHARDN+'</span>'+pb(PF.shard[k],SHARDN,GCOL[c.grade])+'</div>'; }).join('')+(S.length>60?'<p class="sub">많이 모은 순으로 60명만 보인다.</p>':''):'<p class="sub">아직 모은 파편이 없다. 뽑기와 레이드 첫 처치에서 나온다.</p>');
+  if(D.length) h+='<h2>중복 캐릭터</h2>'+D.map(k=>'<div class="pl" style="border-left-color:'+GCOL[CH[k].grade]+'"><b>'+nm(k)+'</b><span style="color:var(--muted)">중복 '+PF.dup[k]+' · 재림에 쓴다</span></div>').join('');
+  const R=own.filter(k=>CH[k+'_r']&&!PF.re[k]).sort((a,b)=>(reNeed(b).ok-reNeed(a).ok)||(((PF.ch[b]||{}).w||0)+(PF.dup[b]||0)*5)-(((PF.ch[a]||{}).w||0)+(PF.dup[a]||0)*5));
+  h+='<h2>재림</h2><p class="note">원래 캐릭터로 '+REWIN+'승 이상 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적. 재림 캐릭터는 체력 +50, 기본 공격 +2.</p>'+(R.length?R.slice(0,12).map(k=>{ const c=CH[k],n=reNeed(k),ck=(a,b)=>'<span style="color:'+(a>=b?'var(--ok)':'var(--muted)')+'">'; return '<div class="pl" style="border-left-color:'+GCOL[c.grade]+'"><b>'+nm(k)+' <small style="color:var(--muted)">'+esc(CH[k+'_r'].name.split(', ')[0])+'</small></b>'+(n.ok?'<button type="button" data-re2="'+k+'" style="height:34px;border:1px solid var(--gold);border-radius:8px;background:var(--panel);color:var(--gold);padding:0 12px;font-weight:700">재림</button>':'')+'<div style="flex-basis:100%;font-size:12px">'+ck(n.w,REWIN)+'승 '+n.w+'/'+REWIN+'</span> · '+ck(n.d,n.nd)+'중복 '+n.d+'/'+n.nd+'</span> · '+ck(PF.star,n.st)+'별무리 '+n.st+'</span></div></div>'; }).join('')+(R.length>12?'<p class="sub">조건에 가까운 순으로 12명만 보인다.</p>':''):'<p class="sub">재림할 수 있는 캐릭터가 아직 없다.</p>');
+  const L=Object.entries(PF.ch).filter(x=>CH[x[0]]).sort((a,b)=>b[1].w-a[1].w);
+  h+='<h2>숙련</h2>'+(L.length?L.slice(0,20).map(([k,c])=>{ const nx=c.w>=15?0:c.w>=5?15:c.w>=1?5:1; return '<div class="pl"><b>'+nm(k)+mastery(k)+'</b><span style="color:var(--muted)">'+c.w+'승 '+c.l+'패'+(nx?' · 다음 ★까지 '+(nx-c.w)+'승':' · 숙련 끝')+'</span>'+(nx?pb(c.w,nx,'var(--gold)'):'')+'</div>'; }).join('')+'<p class="note">★ 1승 · ★★ 5승 · ★★★ 15승. 캐릭터 고르는 칸에도 뜬다.'+(L.length>20?' 많이 이긴 순으로 20명만 보인다.':'')+'</p>':'<p class="sub">아직 싸운 기록이 없다.</p>');
+  const GG=['고화','서사','전설','신화'],all=GG.map(g=>gachaPool(g)); h+='<h2>골라서 데려오기</h2>'+GG.map((g,i)=>{ const hv=all[i].filter(k=>PF.own[k]).length; return '<div class="pl" style="border-left-color:'+GCOL[g]+'"><b>'+g+' '+hv+' / '+all[i].length+'</b><span style="color:var(--muted)">별무리의 흔적 '+SBUY[g]+'</span>'+(hv<all[i].length?'<button type="button" data-sb="'+g+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px">고르기</button>':'')+'</div>'; }).join('');
+  el.innerHTML=h; }
+/* 뽑기 화면은 이제 결과만 띄운다. 결과가 없으면 가방 탭으로 간다 */
+{ gachaScreen=function(res){ if(res) res.forEach(r=>{ if(r.n===undefined){ r.n=0; r.got='new'; r.have=0; r.direct=true; } }); if(res&&res.length&&!res.shown){ res.shown=true; return gachaShow(res,()=>gachaScreen(res)); }
+    drawBag(); if(!res||!res.length){ $('tower').hidden=true; if(page!=='bag') goPage('bag'); return; }
+    let h=head('GACHA','나온 파편','코인 '+PF.coin.toLocaleString()+' · 별무리의 흔적 '+PF.star)+res.map(r=>{ const c=CH[r.k]; return '<div class="pl" style="border-left-color:'+GCOL[r.g]+'"><b>'+esc(c.name.split(', ')[1])+' <small style="color:'+GCOL[r.g]+'">'+r.g+' '+c.cls+'</small></b><span style="color:var(--muted)">'+(r.direct?'별무리로 데려옴 · ':'파편 +'+r.n+' · ')+(r.got==='new'?'<b style="color:var(--gold)">캐릭터 획득</b>':r.got==='dup'?'<b style="color:var(--ok)">중복 +1</b>':r.have+' / '+SHARDN)+'</span></div>'; }).join('');
+    h+='<div class="row" style="margin-top:12px"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 더<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 더<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+'</small></button></div><div class="dock"><button class="go" id="tw-out" type="button">가방으로</button></div>';
+    $('tw-body').innerHTML=h; $('tower').hidden=false; $('tower').scrollTop=0; if(page!=='bag') goPage('bag'); };
+  const gp3=goPage; goPage=function(p){ gp3(p); if(p==='bag') drawBag(); };
+  document.addEventListener('click',e=>{ if(e.target.closest('#tw-out,[data-get]')) setTimeout(drawBag,0); });
+  /* 기록 화면에서는 모두 열기 단추 · 보유 · 숙련을 뺀다(가방 탭으로 옮겼다) */
+  const dr3=drawRec; drawRec=function(){ dr3(); const el=$('rec'); if(!el) return; const b=$('rec-open'); if(b){ const n=b.nextElementSibling; if(n&&n.classList.contains('note')) n.remove(); b.remove(); }
+    for(const t of ['보유','숙련']){ const hh=[...el.querySelectorAll('h2')].find(x=>x.textContent===t); if(!hh) continue; let n=hh.nextElementSibling; while(n&&n.tagName!=='H2'&&n.id!=='ach-open'){ const nx=n.nextElementSibling; n.remove(); n=nx; } hh.remove(); }
+    el.insertAdjacentHTML('beforeend','<p class="sub" style="margin-top:10px">뽑기 · 파편 · 재림 · 숙련은 아래 \'가방\' 탭에 있다.</p>'); }; }
+
+/* ── 이야기: 정해진 캐릭터 대신 지금 고른 내 캐릭터로 싸운다(임시) ── */
+{ const sg0=spGo; spGo=function(m){ if(m&&m.kind==='story'){ const k=kOf('me'); if(CH[k]&&!CH[k].mon&&!locked(k)) m=Object.assign({},m,{cfg:Object.assign({},m.cfg,{me:k,meR:false})}); } return sg0(m); };
+  const ss0=storyScreen; storyScreen=function(si,ci){ ss0(si,ci); const el=$('tw-body'),k=kOf('me'); el.querySelectorAll('.sub').forEach(p=>{ if(/정해진 캐릭터로 싸운다/.test(p.textContent)) p.textContent='이야기는 지금 고른 내 캐릭터로 싸운다(임시). 글은 노션 \'맥스 세계관 정리본 (정사)\'에서 옮겼다.'; });
+    if(si!=null&&ci!=null){ const d=el.querySelector('.dock'); if(d) d.insertAdjacentHTML('beforebegin','<p class="sub">내 캐릭터 · '+esc(CH[k].name)+' (글 속의 주인공 자리에 선다)</p><p class="note">'+payTxt.story(STORY[si],ci)+'</p>'); } }; }
+
+/* ── 보상: 판마다 받는 기본 코인에 더해, 레이드 · 등반 · 이야기 · 오늘의 도전은 따로 얹어 준다 ── */
+const RAIDPAY={coin:[200,400,700,1100,1600],star:[0,1,1,2,3],fcoin:[600,1000,1800,3000,5000],fstar:[1,2,3,5,8],fshard:[1,2,3,4,5]};   /* 난이도(소란~위신)별 · f = 첫 처치 */
+const TWPAY={coin:f=>40+f*15,boss:f=>f>=20?2:1,mcoin:f=>f*150,mstar:f=>f/5};                                                        /* 층마다 · 보스 층 별무리 · 5층 단위 첫 돌파 */
+const STPAY={first:[500,2],two:[500,2],again:100,all:[1500,5]}, DYPAY=[600,2];
+const payTxt={ raid:k=>{ const t=tierOf(k),f=!(PF.rf||{})[k]; return '이기면 코인 +'+RAIDPAY.coin[t]+(RAIDPAY.star[t]?' · 별무리 +'+RAIDPAY.star[t]:'')+(t>=2?' · 가끔 파편':'')+(f?'\n첫 처치: 코인 +'+RAIDPAY.fcoin[t].toLocaleString()+' · 별무리 +'+RAIDPAY.fstar[t]+' · 서사 이상 파편 '+RAIDPAY.fshard[t]+'개':'\n첫 처치 보상은 이미 받았다'); },
+  story:(s,ci)=>{ const was=(PF.story[s.id]||[])[ci]||0; return '보상 · '+(was?'':'첫 승리 코인 +'+STPAY.first[0]+' · 별무리 +'+STPAY.first[1]+' / ')+(was<2?'★★ 코인 +'+STPAY.two[0]+' · 별무리 +'+STPAY.two[1]+' / ':'다시 이기면 코인 +'+STPAY.again+' / ')+'이야기를 끝까지 넘기면 코인 +'+STPAY.all[0].toLocaleString()+' · 별무리 +'+STPAY.all[1]; },
+  tower:()=>'보상 · 층을 넘을 때마다 코인(1층 '+TWPAY.coin(1)+' → 20층 '+TWPAY.coin(20)+'), 보스 · 마왕 층은 별무리 +1(20층부터 +2). 5 · 10 · 15…층을 처음 넘으면 코인 층×150 · 별무리 층÷5.' };
+{ const en0=earn; earn=function(win){ const g=en0(win); let c=0,s=0; const N=[];
+    try{ if(TW&&TW.on){ if(win){ const f=TW.floor,n=TW.next||{}; c+=TWPAY.coin(f); if(n.boss||n.lord) s+=TWPAY.boss(f); if(f%5===0&&f>PF.tw.best){ c+=TWPAY.mcoin(f); s+=TWPAY.mstar(f); N.push(f+'층 첫 돌파'); } } }
+      else if(SPM&&SPM.kind==='story'){ if(win){ const S0=STORY[SPM.si],ch=S0.ch[SPM.ci],a=PF.story[S0.id]||[],was=a[SPM.ci]||0,st=goalOk(ch.goal)?2:1; if(!was){ c+=STPAY.first[0]; s+=STPAY.first[1]; N.push('첫 승리'); } if(st===2&&was<2){ c+=STPAY.two[0]; s+=STPAY.two[1]; N.push('★★'); } if(was>=st) c+=STPAY.again; if(!was&&S0.ch.every((_,j)=>j===SPM.ci||(a[j]||0)>0)){ c+=STPAY.all[0]; s+=STPAY.all[1]; N.push('이야기 완주'); } } }
+      else if(SPM&&SPM.kind==='daily'){ if(win&&PF.daily.d!==today()){ c+=DYPAY[0]; s+=DYPAY[1]; N.push('오늘의 도전'); } }
+      else if(mode===6&&foe&&foe.c.mon&&win){ const k=foe.key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; s+=RAIDPAY.star[t]; PF.rf=PF.rf||{};
+        if(!PF.rf[k]){ PF.rf[k]=Date.now(); c+=RAIDPAY.fcoin[t]; s+=RAIDPAY.fstar[t]; N.push('첫 처치'); const q=pool(); if(q) N.push(giveShard(q,RAIDPAY.fshard[t])); } else if(t>=2&&Math.random()<.35){ const q=pool(); if(q) N.push(giveShard(q,1)); } }
+    }catch(x){}
+    PF.coin+=c; PF.star+=s; g.c+=c; g.st+=s; g.note=N.join(' · '); return g; };
+  /* 보상 표를 고르는 화면에 적어 둔다 */
+  const dm0=drawMon; drawMon=function(){ dm0(); let p=$('monpay'); if(!p){ p=document.createElement('p'); p.className='note'; p.id='monpay'; p.style.whiteSpace='pre-line'; const m=$('mon'); m.parentNode.insertBefore(p,m.nextSibling); } p.textContent=CH[OPT.mon]&&tierOf(OPT.mon)===monTab?CH[OPT.mon].name.split(', ')[1]+' · '+payTxt.raid(OPT.mon):''; };
+  const th0=towerHome; towerHome=function(){ th0(); const d=$('tw-body').querySelector('.dock'); if(d) d.insertAdjacentHTML('beforebegin','<p class="note">'+payTxt.tower()+' 층마다 맵이 바뀐다.</p>'); }; }
+
+/* ── 등반: 층마다 맵을 무작위로 고른다. 보스 층은 좁은 맵을 뺀다 ── */
+{ let pick=null; const tg0=towerGo; towerGo=function(){ if(TW&&!TW.on&&TW.next){ const n=TW.next; if(!n.map||!MAPS[n.map]){ const L=Object.keys(MAPS).filter(k=>!(n.boss||n.lord)||!['duel','canyon','storm'].includes(k)); n.map=L[Math.floor(Math.random()*L.length)]; twStore(); } pick=n.map; } try{ tg0(); } finally { pick=null; } };
+  const su0=setup; setup=function(x){ su0(x); if(pick&&!x.map&&MAPS[pick]) OPT.map=pick; }; }
+
+/* ── 업적: 유형별로 나눠 본다 ── */
+ACH.push(['rt3','군주 사냥','군주 난이도의 보스를 쓰러뜨린다',()=>Object.keys(PF.mon).some(k=>PF.mon[k]>0&&CH[k]&&tierOf(k)===3)],['rt4','위신 사냥','위신 난이도의 보스를 쓰러뜨린다',()=>Object.keys(PF.mon).some(k=>PF.mon[k]>0&&CH[k]&&tierOf(k)===4)]); ACHPAY.rt3=[3000,10]; ACHPAY.rt4=[6000,20];
+const ACAT=[['전투',null],['수집 · 숙련',/^(v\d+|m3|built|g\d+|gmyth|gleg\d*|pu\d+|re\d+|c\d0.+|allcls)$/],['레이드',/^(golem|hydra|korhen|b\d+|ball|rw\d+|rt\d)$/],['등반',/^(t\d+|tf\d+|tr\d+|co\d+)$/],['이야기 · 도전',/^(st1|stmax|stall|d1|d7|dw\d+|ds\d+|ss\d+)$/],['함께 · 계정',/^(mw\d+|ms\d+|lv\d+)$/]];
+const acat=id=>{ for(let i=1;i<ACAT.length;i++) if(ACAT[i][1].test(id)) return i; return 0; };
+achScreen=function(){ const old=document.getElementById('achv'); if(old) old.remove(); const d=document.createElement('div'); d.className='overlay'; d.id='achv'; d.style.zIndex=9; let tab=achScreen.tab||'all',cat=achScreen.cat==null?-1:achScreen.cat;
+  const row=a=>{ const ok=!!PF.ach[a[0]],pay=achPay(a[0]); return '<div class="pl" style="border-left-color:'+(ok?'var(--gold)':'var(--line)')+';opacity:'+(ok?1:.62)+'"><b>'+(ok?'◆ ':'◇ ')+esc(a[1])+'</b><span style="color:var(--muted)">'+esc(a[2])+'</span><span style="color:'+(ok?'var(--muted)':'var(--gold)')+';font-size:11.5px;flex-basis:100%">'+(ok?'받음 · ':'보상 · ')+'코인 '+pay[0].toLocaleString()+' · 별무리 '+pay[1]+'</span></div>'; };
+  const render=()=>{ const got=ACH.filter(a=>PF.ach[a[0]]).length,inC=i=>ACH.filter(a=>acat(a[0])===i),st=a=>tab==='all'||(tab==='done')===!!PF.ach[a[0]]; let body='';
+    for(let i=0;i<ACAT.length;i++){ if(cat>=0&&cat!==i) continue; const L=inC(i).filter(st),A0=inC(i); if(!L.length&&cat<0) continue; body+='<h2>'+ACAT[i][0]+' <small style="color:var(--muted);font-weight:400">'+A0.filter(a=>PF.ach[a[0]]).length+' / '+A0.length+'</small></h2>'+(L.length?L.map(row).join(''):'<p class="sub">여기에는 아직 없다.</p>'); }
+    d.innerHTML='<div class="wrap">'+head('ACHIEVEMENTS','업적',got+' / '+ACH.length+' 달성')+'<div class="row" id="ach-cat" style="flex-wrap:wrap"><button type="button" data-c="-1" aria-pressed="'+(cat<0)+'">모두</button>'+ACAT.map((c,i)=>'<button type="button" data-c="'+i+'" aria-pressed="'+(cat===i)+'">'+c[0]+'<small style="display:block;font-size:10.5px;opacity:.75">'+inC(i).filter(a=>PF.ach[a[0]]).length+' / '+inC(i).length+'</small></button>').join('')+'</div>'
+     +'<div class="row" id="ach-tab" style="margin-top:8px"><button type="button" data-t="all" aria-pressed="'+(tab==='all')+'">전체</button><button type="button" data-t="todo" aria-pressed="'+(tab==='todo')+'">남은 것 '+(ACH.length-got)+'</button><button type="button" data-t="done" aria-pressed="'+(tab==='done')+'">달성 '+got+'</button></div><div style="margin-top:4px">'+(body||'<p class="sub">여기에는 아직 없다.</p>')+'</div><div class="dock"><button class="go" id="ach-out" type="button">닫기</button></div></div>';
+    d.querySelector('#ach-out').onclick=()=>d.remove(); d.querySelector('#ach-tab').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; tab=achScreen.tab=b.dataset.t; render(); d.scrollTop=0; }; d.querySelector('#ach-cat').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; cat=achScreen.cat=+b.dataset.c; render(); d.scrollTop=0; }; };
+  render(); document.body.appendChild(d); };
+achCheck({}); hubCard();
