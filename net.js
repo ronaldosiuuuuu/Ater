@@ -15,18 +15,24 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=16;
+const APPV=17;
 /* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
 const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
-function ICE(){ const L=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'}]; try{ const t=JSON.parse(localStorage.getItem('aetherTurn')||'null'); if(t&&t.url) L.push({urls:t.url.split(/[\s,]+/).filter(Boolean),username:t.user||'',credential:t.pass||''}); }catch(x){} return {config:{iceServers:L},debug:0}; }
+/* 중계 서버를 아이디·비밀번호 없이 쓰기: Metered의 '앱 이름'과 'API Key'만 있으면, 이을 때마다 그쪽에서 접속 정보를 받아 온다.
+   API Key는 화면 쪽에 두어도 되는 열쇠다(접속 정보만 받아 올 수 있고, 계정은 건드리지 못한다. 대시보드에서 언제든 지우면 끝난다).
+   둘을 두는 곳: 이 기기(함께 화면에서 적는다) → 초대 링크(#r=) → 사이트의 relay.json(있으면 모두에게 기본값) */
+const relayGet=()=>{ try{ const r=JSON.parse(localStorage.getItem('aetherRelay')||'null'); if(r&&r.app&&r.key) return r; }catch(x){} return NET.siteRelay||null; };
+function relayIce(){ const r=relayGet(); if(!r){ NET.ice=null; return Promise.resolve(); } if(NET.ice&&NET.iceFor===r.app+r.key&&performance.now()-NET.iceAt<6e5) return Promise.resolve();
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000); return fetch('https://'+encodeURIComponent(r.app)+'.metered.live/api/v1/turn/credentials?apiKey='+encodeURIComponent(r.key),{signal:ctl.signal}).then(q=>q.ok?q.json():Promise.reject(new Error(q.status))).then(L=>{ if(Array.isArray(L)&&L.length){ NET.ice=L; NET.iceFor=r.app+r.key; NET.iceAt=performance.now(); } }).catch(x=>{ NET.ice=null; netStat('중계 서버 정보를 받지 못했다 ('+(x&&x.message||'')+') · 직접 연결로 해 본다'); }).finally(()=>clearTimeout(to)); }
+function ICE(){ if(NET.ice) return {config:{iceServers:NET.ice.concat([{urls:'stun:stun.l.google.com:19302'}])},debug:0}; const L=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'}]; try{ const t=JSON.parse(localStorage.getItem('aetherTurn')||'null'); if(t&&t.url) L.push({urls:t.url.split(/[\s,]+/).filter(Boolean),username:t.user||'',credential:t.pass||''}); }catch(x){} return {config:{iceServers:L},debug:0}; }
 /* 이어진 길이 직접인지 중계인지 */
 function linkKind(c,cb){ try{ c.peerConnection.getStats().then(st=>{ let pair=null; st.forEach(r=>{ if(r.type==='transport'&&r.selectedCandidatePairId) pair=st.get(r.selectedCandidatePairId); }); if(!pair) st.forEach(r=>{ if(r.type==='candidate-pair'&&r.state==='succeeded'&&(r.nominated||r.selected)) pair=pair||r; }); const loc=pair&&st.get(pair.localCandidateId); cb(loc?(loc.candidateType==='relay'?'중계':'직접'):''); }).catch(()=>cb('')); }catch(x){ cb(''); } }
 
 /* ───────── 방장 ───────── */
 function hostOpen(code){ return new Promise((ok,no)=>{
   if(NET.bc){ const ch=new BroadcastChannel(ROOM(code)); ch.onmessage=ev=>{ const m=ev.data; if(m&&m.to==='host') hostMsg(m.from,m.d); }; NET.tx={send:(pid,d)=>ch.postMessage({to:pid,d}),close:()=>ch.close()}; return ok(); }
-  loadPeer().then(()=>{ const peer=new Peer(ROOM(code),ICE()),conns=new Map(); let done=false;
+  Promise.all([loadPeer(),relayIce()]).then(()=>{ const peer=new Peer(ROOM(code),ICE()),conns=new Map(); let done=false;
     peer.on('open',()=>{ done=true; NET.tx={send:(pid,d)=>{ const c=conns.get(pid); if(c&&c.open){ try{ c.send(d); }catch(x){} } },close:()=>{ try{ peer.destroy(); }catch(x){} }}; ok(); });
     peer.on('connection',c=>{ c.on('open',()=>conns.set(c.peer,c)); c.on('data',d=>hostMsg(c.peer,d)); c.on('close',()=>{ conns.delete(c.peer); hostGone(c.peer); }); c.on('error',()=>{ conns.delete(c.peer); hostGone(c.peer); }); });
     peer.on('disconnected',()=>{ try{ peer.reconnect(); }catch(x){} });
@@ -70,7 +76,7 @@ on('cast',(e,slot)=>{ if(NET.live) NET.ev.c.push([e.id,slot]); });
 /* ───────── 들어온 쪽 ───────── */
 function joinOpen(code){ return new Promise((ok,no)=>{
   if(NET.bc){ const pid='p'+Math.random().toString(36).slice(2,8),ch=new BroadcastChannel(ROOM(code)); ch.onmessage=ev=>{ const m=ev.data; if(m&&m.to===pid) clientMsg(m.d); }; NET.pid=pid; NET.tx={send:d=>ch.postMessage({to:'host',from:pid,d}),close:()=>ch.close()}; return ok(); }
-  loadPeer().then(()=>{ const peer=new Peer(ICE()); let done=false; const fail=e=>{ if(!done){ done=true; try{ peer.destroy(); }catch(x){} no(e); } },to=setTimeout(()=>fail(new Error('방을 찾지 못했다')),15000);
+  Promise.all([loadPeer(),relayIce()]).then(()=>{ const peer=new Peer(ICE()); let done=false; const fail=e=>{ if(!done){ done=true; try{ peer.destroy(); }catch(x){} no(e); } },to=setTimeout(()=>fail(new Error('방을 찾지 못했다')),15000);
     peer.on('open',id=>{ NET.pid=id; const c=peer.connect(ROOM(code),{reliable:true,serialization:'json'});
       c.on('open',()=>{ clearTimeout(to); done=true; NET.tx={send:d=>{ if(c.open){ try{ c.send(d); }catch(x){} } },close:()=>{ try{ peer.destroy(); }catch(x){} }}; setTimeout(()=>linkKind(c,k=>{ NET.kind=k; drawNet(); }),1500); ok(); });
       c.on('data',clientMsg); c.on('close',()=>{ if(NET.tx) clientLost('방장과 연결이 끊겼다',true); }); c.on('error',()=>{ if(NET.tx) clientLost('연결 오류',true); }); });
@@ -140,7 +146,12 @@ function netLeave(quiet){ if(NET.tx){ if(!quiet){ try{ if(NET.host) sendAll({t:'
   /* 방장 화면이 가려지면 싸움이 멈춘다(브라우저가 그리기를 멈춘다). 돌아오면 알린다 */
   document.addEventListener('visibilitychange',()=>{ if(NET.host&&NET.live&&!document.hidden) toast('돌아왔다 · 화면이 가려진 동안 싸움이 멈춰 있었다',3000); });
   /* 초대 링크: 주소 뒤에 ?room=코드. 받은 사람은 열기만 하면 들어간다 */
-  const web=/^https?:$/.test(location.protocol),turnHash=()=>{ try{ const t=localStorage.getItem('aetherTurn'); return t?'#t='+btoa(unescape(encodeURIComponent(t))):''; }catch(x){ return ''; } },link=()=>location.origin+location.pathname+'?room='+NET.code+turnHash();   /* 중계 서버를 적어 두었다면 링크에 실어 보낸다(받는 사람은 적을 필요가 없다) */
+  const web=/^https?:$/.test(location.protocol),turnHash=()=>{ try{ const r=JSON.parse(localStorage.getItem('aetherRelay')||'null'); if(r&&r.app&&r.key) return '#r='+encodeURIComponent(r.app)+'~'+encodeURIComponent(r.key); const t=localStorage.getItem('aetherTurn'); return t?'#t='+btoa(unescape(encodeURIComponent(t))):''; }catch(x){ return ''; } },link=()=>location.origin+location.pathname+'?room='+NET.code+turnHash();   /* 중계 서버를 적어 두었다면 링크에 실어 보낸다(받는 사람은 적을 필요가 없다) */
+  { const m=/[#&]r=([^~&]+)~([^&]+)/.exec(location.hash); if(m){ try{ localStorage.setItem('aetherRelay',JSON.stringify({app:decodeURIComponent(m[1]),key:decodeURIComponent(m[2])})); setTimeout(()=>toast('초대 링크에 든 중계 서버 열쇠를 적어 두었다'),1500); }catch(x){} } }
+  fetch('relay.json',{cache:'no-cache'}).then(q=>q.ok?q.json():null).then(r=>{ if(r&&r.app&&r.key){ NET.siteRelay={app:String(r.app),key:String(r.key)}; relayShow(); } }).catch(()=>{});
+  const relayShow=()=>{ const r=relayGet(); $('n-relay-stat').textContent=r?(r===NET.siteRelay?'이 사이트에 중계 서버가 마련돼 있다. 아무것도 적지 않아도 된다.':'중계 서버 열쇠를 적어 두었다 ('+r.app+').'):'중계 서버 없음 · 직접 연결만 쓴다.'; };
+  try{ const r=JSON.parse(localStorage.getItem('aetherRelay')||'null')||{}; $('n-relay-app').value=r.app||''; $('n-relay-key').value=r.key||''; }catch(x){} relayShow();
+  for(const id of ['n-relay-app','n-relay-key']) $(id).addEventListener('change',()=>{ try{ const app=$('n-relay-app').value.trim().replace(/^https?:\/\//,'').replace(/\.metered\.live.*$/,''),key=$('n-relay-key').value.trim(); $('n-relay-app').value=app; if(app&&key){ localStorage.setItem('aetherRelay',JSON.stringify({app,key})); NET.ice=null; relayIce().then(()=>toast(NET.ice?'중계 서버 확인됨 · 다음 연결부터 쓴다':'열쇠를 적어 두었지만 확인하지 못했다. 앱 이름과 API Key를 다시 본다',3600)); } else if(!app&&!key){ localStorage.removeItem('aetherRelay'); NET.ice=null; toast('중계 서버 열쇠를 지웠다'); } relayShow(); }catch(x){} });
   { const m=/[#&]t=([A-Za-z0-9+/=]+)/.exec(location.hash); if(m){ try{ const t=JSON.parse(decodeURIComponent(escape(atob(m[1])))); if(t&&t.url){ localStorage.setItem('aetherTurn',JSON.stringify({url:String(t.url),user:String(t.user||''),pass:String(t.pass||'')})); setTimeout(()=>toast('초대 링크에 든 중계 서버를 적어 두었다'),1500); } }catch(x){} } }
   $('n-share').onclick=async()=>{ if(!NET.code) return; const text=web?link():NET.code; try{ if(web&&navigator.share){ await navigator.share({title:'에테르',text:'에테르 방 '+NET.code,url:link()}); return; } }catch(x){ if(x&&x.name==='AbortError') return; } try{ await navigator.clipboard.writeText(text); toast(web?'초대 링크를 복사했다':'방 코드를 복사했다'); }catch(x){ toast('방 코드 '+NET.code+' 를 직접 알려 준다'); } };
   { const m=/[?&]room=([A-Za-z0-9]{4,6})/.exec(location.search); if(m){ $('n-join-code').value=m[1].toUpperCase(); try{ history.replaceState(null,'',location.pathname); }catch(x){} setTimeout(()=>{ goPage('net'); if(!NET.host&&!NET.client) $('n-join').click(); },600); } }
