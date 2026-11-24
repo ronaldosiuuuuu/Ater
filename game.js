@@ -62,7 +62,7 @@ function setup(x){ keepSet(); practice=false; mode=x.mode||1; teamN=x.teamN||1; 
    코인과 별무리의 흔적을 버는 양은 기획 그대로다('균형' 채널): 적 처치 시 250~500 코인, 적에게 사망했을 시 150~350 코인, 40% 확률로 별무리의 흔적 1개.
    시험장에서는 한 판을 기준으로 준다(이기면 처치 몫, 지면 사망 몫). 뽑기 값·확률·겹쳤을 때의 보상·별무리 교환 값은 기획에 없어 시험장에서 정했다. */
 const START=['ei','vira'], PULL=1500, PULL10=13500;
-const GRATE=[['고화',70],['서사',23.5],['전설',5.5],['히든',.9],['신화',.1]];             /* 한 번 뽑을 때 등급이 나올 확률(%) */
+const GRATE=[['고화',70],['서사',23.5],['전설',6.4],['신화',.1]];   /* 히든은 뽑기 · 모험 어디에도 나오지 않는다 */             /* 한 번 뽑을 때 등급이 나올 확률(%) */
 const DUP={고화:1,서사:3,전설:8,히든:15,신화:30};                                       /* 이미 가진 캐릭터가 나오면 받는 별무리의 흔적 */
 const SBUY={고화:5,서사:15,전설:40,히든:80,신화:150};                                   /* 별무리의 흔적으로 골라서 데려오는 값 */
 const REWIN=50, RECOST={고화:20,서사:30,전설:50,히든:80,신화:120};   /* 재림: 원래 캐릭터로 50승 + 별무리의 흔적 */
@@ -93,7 +93,7 @@ function starScreen(g){ const L=gachaPool(g).filter(k=>!PF.own[k]).sort((a,b)=>C
 /* ───── 등반 ─────
    길: 싸움 층을 넘을 때마다 다음 길을 고른다. 평범한 길 · 험한 길(정예: 체력 ×1.6, 피해 +20%, 보상 둘) · 저주받은 길(불리한 조건, 보상은 권능만) · 쉼터 · 상인.
    5층마다 보스: 몬스터(코르헨 → 골렘 → 거대 골렘 → 히드라)와 마왕(히든·신화 캐릭터, 체력 3배)이 번갈아 나온다. */
-const TIER=[['고화'],['고화','서사'],['서사'],['서사','전설'],null,['전설'],['전설','히든'],['히든'],['히든','신화'],null];
+const TIER=[['고화'],['고화','서사'],['서사'],['서사','전설'],null,['전설'],['전설'],['전설'],['전설','신화'],null];
 const BOONS={train:{name:'단련',text:'최대 체력 +80, 그만큼 회복한다.',price:25},hone:{name:'연마',text:'기본 공격 +1.',price:25},rest:{name:'휴식',text:'체력을 모두 회복한다.',price:20}};
 const CURSES={frail:{name:'깨진 갑옷',text:'이 층에서는 받는 피해가 25% 는다.'},swift:{name:'쫓기는 길',text:'이 층의 상대는 기동력이 25% 높다.'},dry:{name:'마른 샘',text:'이 층은 이겨도 체력이 돌아오지 않는다.'}};
 const TPOW=()=>Object.keys(POWERS).filter(id=>!POWERS[id].active&&!POWERS[id].gear);
@@ -107,8 +107,8 @@ const twLoad=()=>{ try{ const d=JSON.parse(localStorage.getItem('aetherTower')||
 const twStore=()=>{ try{ if(TW) localStorage.setItem('aetherTower',JSON.stringify(TW)); else localStorage.removeItem('aetherTower'); }catch(x){} };
 const isBoss=f=>f%5===0, twMax=()=>CH[TW.key].hp+TW.hpB+statOf(twIds()).hp, rnd=a=>a[Math.floor(Math.random()*a.length)];
 function twPool(gr){ return Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&gr.includes(c.grade)&&k!==TW.key&&k!==(TW.last||''); }); }
-function towerFoe(f,up){ if(isBoss(f)){ const i=f/5,B=typeof TBOSS!=='undefined'?TBOSS:MONS; if(i%3!==0) return {t:'fight',k:B[(i-Math.floor(i/3)-1)%B.length],boss:true}; return {t:'fight',k:rnd(twPool(f<=15?['히든']:['히든','신화']))||'max',lord:true}; }
-  const gr=f+(up?2:0)<=10?TIER[f-1+(up?2:0)]||TIER[f-1]:['히든','신화']; return {t:'fight',k:rnd(twPool(gr))||'ei'}; }
+function towerFoe(f,up){ if(isBoss(f)){ const i=f/5,B=typeof TBOSS!=='undefined'?TBOSS:MONS; if(i%3!==0) return {t:'fight',k:B[(i-Math.floor(i/3)-1)%B.length],boss:true}; return {t:'fight',k:rnd(twPool(f<=15?['전설']:['전설','신화']))||'max',lord:true}; }
+  const gr=f+(up?2:0)<=10?TIER[f-1+(up?2:0)]||TIER[f-1]:['전설','신화']; return {t:'fight',k:rnd(twPool(gr))||'ei'}; }
 /* 무리: 시험장에서 만든 적(foes.js) 여럿. 층이 높을수록 강한 적이 더 많이 나온다 */
 function towerHorde(f){ if(typeof MOBS==='undefined') return null; const T=Math.min(5,1+Math.floor((f-1)/3)),pool=MOBS.filter(m=>m[2]<=T&&m[2]>=T-1).map(m=>m[0]),n=f<4?2:f<10?3:4,L=[]; for(let i=0;i<n;i++) L.push(rnd(pool)); return {t:'fight',k:L[0],horde:L.slice(1)}; }
 const twScale=f=>f>10?1+.12*(f-10):1;      /* 10층 위: 상대 체력이 층마다 12%씩 는다 */
@@ -177,7 +177,7 @@ function storyScreen(si,ci){ const el=$('tw-body'); let h='';
 /* ───── 오늘의 도전: 날짜로 정해지는 한 판. 그날 첫 판만 기록에 남는다 ───── */
 const today=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function dailyOf(day){ let h=2166136261; for(const ch of day) h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0; const r=()=>{ h=Math.imul(h^(h>>>15),2246822507)>>>0; h=Math.imul(h^(h>>>13),3266489909)>>>0; return ((h^=h>>>16)>>>0)/4294967296; };
-  const L=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom&&!CH[k].mon).sort(),mk0=L[Math.floor(r()*L.length)]; let fk=mk0; while(fk===mk0) fk=L[Math.floor(r()*L.length)]; const maps=Object.keys(MAPS); return {me:mk0,foe:fk,map:maps[Math.floor(r()*maps.length)],mode:1,diff:2}; }
+  const L=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom&&!CH[k].mon&&CH[k].grade!=='히든').sort(),mk0=L[Math.floor(r()*L.length)]; let fk=mk0; while(fk===mk0) fk=L[Math.floor(r()*L.length)]; const maps=Object.keys(MAPS); return {me:mk0,foe:fk,map:maps[Math.floor(r()*maps.length)],mode:1,diff:2}; }
 function dailyScreen(){ const d=today(),x=dailyOf(d),rec=PF.daily.d===d?PF.daily:null,a=CH[x.me],b=CH[x.foe];
   $('tw-body').innerHTML=head('DAILY · '+d,'오늘의 도전',esc(a.name)+' 대 '+esc(b.name))+'<p class="note">나는 '+esc(a.name.split(', ')[1])+' ('+a.grade+' '+a.cls+'), 상대는 '+esc(b.name.split(', ')[1])+' ('+b.grade+' '+b.cls+'). 맵 '+MAPS[x.map].name+', 난이도 어려움, 1대1 단판.\n날마다 모두 같은 조합이 나온다. 그날 첫 판만 기록에 남고, 그 뒤로는 몇 번이든 다시 해 볼 수 있다.</p>'+(rec?'<div class="pl"><b>오늘 기록 · '+(rec.win?'승리 '+rec.rank:'패배')+'</b><span style="color:var(--muted)">'+rec.t.toFixed(1)+'초</span></div>':'')+'<p class="sub">이어서 이긴 날 '+PF.dstreak+'일 · 지금까지 '+PF.dwin+'번 이겼다</p><div class="dock"><button class="go" id="dy-go" type="button">'+(rec?'다시 해 본다 (기록 안 됨)':'도전한다')+'</button><button class="ghost" id="dy-me" type="button">내 스킬 보기</button><button class="ghost" id="dy-foe" type="button">상대 스킬 보기</button><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tower').hidden=false; $('tower').scrollTop=0; }
 
@@ -376,3 +376,12 @@ function tempRoll(){ const un=g=>gachaPool(g).filter(k=>!PF.own[k]); let pool=un
 
 /* 내 캐릭터 무작위: 가진 캐릭터(와 방에서 빌린 캐릭터) 안에서만 고른다. 연습에서는 모두 나온다 */
 $('randme').onclick=()=>{ let k=randPool(new Set([sel.foe])); if(!practice){ const mine=k.filter(x=>!locked(x)); k=mine.length?mine:Object.keys(CH).filter(x=>!CH[x].re&&!locked(x)); } if(!k.length) return; if(k.length>1) k=k.filter(x=>x!==sel.me); sel.meR=false; sel.me=k[Math.floor(Math.random()*k.length)]; tab=CH[sel.me].cls; slot='me'; drawSel(); save(); toast('내 캐릭터 · '+CH[sel.me].name.split(', ')[1]); };
+
+/* ═════ 조작키 모아 보기 ═════ 멈춤 메뉴와 설정의 도구에서 연다 */
+function keysScreen(){ const pc=matchMedia('(pointer:fine)').matches,row=(k,d)=>'<div style="display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line)"><b style="flex:0 0 38%;font:700 13px/1.4 var(--body);color:var(--gold);word-break:keep-all">'+k+'</b><span style="flex:1;min-width:0;font:400 13.5px/1.5 var(--body);color:#d5dbf5;text-align:left;word-break:keep-all">'+d+'</span></div>',tb=L=>'<div>'+L.map(x=>row(x[0],x[1])).join('')+'</div>';
+  const K=[['W A S D · 방향키','이동'],['마우스','조준 (스킬과 기본 공격이 마우스 쪽으로 나간다)'],['좌클릭 · J','기본 공격 (누르고 있으면 이어서 친다)'],['1 · 2','일반 스킬 ① ②'],['3','각성 스킬'],['4','궁극기'],['5 · 6 · 7 · 8','추가 스킬 (무기 · 권능 · 일부 캐릭터)'],['Shift','웅크리기 (캐릭터에 따라 전용 스킬)'],['Space','점프'],['Esc','멈춤 메뉴'],['T','채팅 열기 (친구와 함께 할 때) · Enter 보내기 · Esc 닫기'],['숫자패드 1~4','스킬 ①②③④와 같다']];
+  const M=[['왼쪽 화면','누른 자리가 이동 스틱이 된다 (설정에서 제자리 스틱으로 바꿀 수 있다)'],['스킬 단추','누르면 가장 가까운 적 쪽으로 나간다'],['스킬 단추를 누른 채 끌기','끄는 방향으로 조준해서 쓴다 (손을 떼면 나간다)'],['기본 공격 단추','누르고 있으면 이어서 친다. 끌면 그 방향으로 친다'],['점프 · 웅크리기','오른쪽 위 단추'],['≡','멈춤 메뉴 (스킬 보기 · 그만두기)'],['뒤로 가기','열린 창을 닫는다']];
+  $('tw-body').innerHTML=head('CONTROLS','조작',pc?'지금은 컴퓨터로 보고 있다':'지금은 휴대폰으로 보고 있다')+(pc?'<h2>컴퓨터 (자판 · 마우스)</h2>'+tb(K)+'<h2>휴대폰 (터치)</h2>'+tb(M):'<h2>휴대폰 (터치)</h2>'+tb(M)+'<h2>컴퓨터 (자판 · 마우스)</h2>'+tb(K))+'<p class="note" style="white-space:pre-line">· 스킬 단추 색: 일반 하늘색 · 각성 보라 · 궁극 금색 · 권능 주황 · 무기 연두.\n· 궁극기는 한 판에 한 번이고, 조건을 채우면 단추가 금빛으로 뛴다.\n· 단추 크기와 왼손 배치는 설정 → 조작에서 바꾼다.</p><div class="dock"><button class="go" id="tw-out" type="button">닫기</button></div>'; $('tower').style.zIndex=9; $('tower').hidden=false; $('tower').scrollTop=0; }
+{ const pr=$('p-me'); if(pr){ const b=document.createElement('button'); b.className='ghost'; b.id='p-keys'; b.type='button'; b.textContent='조작키 보기'; pr.parentNode.insertBefore(b,pr); }
+  const tl=$('tools'); if(tl){ const b=document.createElement('button'); b.className='tool'; b.id='keysb'; b.type='button'; b.innerHTML='<b>조작키</b><small>자판 · 터치 조작 모아 보기</small>'; tl.insertBefore(b,tl.children[3]||null); }
+  document.addEventListener('click',e=>{ if(e.target.closest('#p-keys,#keysb')) keysScreen(); else if(e.target.closest('#tw-out')) $('tower').style.zIndex=''; }); }
