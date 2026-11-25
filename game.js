@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.7.2';
+const VER='1.8.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -439,7 +439,7 @@ for(const k of Object.keys(CH)){ const c=CH[k]; if(!c.re||!CH[c.base]) continue;
 /* ── 뽑기: 캐릭터 대신 파편이 3~5개 나온다. 파편 10개가 모이면 캐릭터가 되고, 이미 가진 캐릭터라면 '중복' 하나가 된다(재림에 쓴다).
    확률은 고화 60 · 서사 30 · 전설 10. 신화와 히든은 나오지 않는다. ── */
 PF.shard=PF.shard||{}; PF.dup=PF.dup||{};
-GRATE.length=0; GRATE.push(['고화',60],['서사',30],['전설',10]);
+GRATE.length=0; GRATE.push(['고화',75],['서사',22],['전설',3]);
 const SHARDN=10, RDUP={고화:3,서사:2,전설:1,히든:0,신화:0};
 pullOne=function(minIdx){ PF.pity=(PF.pity||0)+1; const force=PF.pity>=PITY?2:(minIdx||0),L=GRATE.slice(Math.min(force,GRATE.length-1)); let tot=L.reduce((a,x)=>a+x[1],0),x=Math.random()*tot,g=L[L.length-1][0]; for(const q of L){ if((x-=q[1])<0){ g=q[0]; break; } }
   const pool=gachaPool(g),k=pool[Math.floor(Math.random()*pool.length)]; if(!k) return null;
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.8.0','2026-11',['모든 플레이 기록을 한 번 초기화했다(코인 · 캐릭터 · 전적 · 업적 · 등반 · 이야기 · 닉네임). 조합 캐릭터와 화면 · 소리 설정은 남는다.','뽑기 확률: 고화 75 · 서사 22 · 전설 3.','닉네임은 처음 한 번 정하면 바꿀 수 없다.']],
  ['1.7.2','2026-11',['별무리의 흔적으로 원하는 캐릭터를 골라 데려오던 것을 없앴다.','대신 「별무리 뽑기」: 등급을 고르면 그 등급에서 아직 없는 캐릭터 하나가 무작위로 나온다. 값은 고화 30 · 서사 90 · 전설 240(예전 5 · 15 · 40). 가방 → 별무리 뽑기.']],
  ['1.7.1','2026-11',['채팅을 보기 편하게: 함께 하는 동안 큰 단추 바로 위에 채팅 줄(최신 메시지 · 안 읽은 수)이 늘 보이고, 누르면 채팅 창(말풍선 기록 · 빠른 문구 · 입력)이 열린다. 결과 화면이나 가방 · 기록 · 설정 탭에서 온 채팅은 알림으로도 뜬다. 싸우는 중 💬에 「직접 쓰기」 추가.','함께 하기 손질: 태그매치에서 그만둔 손님의 대기 캐릭터가 멈춰 서던 것, 방장 마우스가 손님 캐릭터의 조준을 움직이던 것, 방장 전적이 손님 캐릭터로 세지던 것, 함께 레이드를 누르면 인원이 줄던 것, 바꾼 편이 판 시작 때 되돌아가던 것, 판이 시작돼도 손님의 가방 · 업적 창이 화면을 가리던 것, PC Q · E 표시가 실제와 다르던 것, 레이드에서 손님이 상대 편으로 보이던 것을 고쳤다. 교대 요청이 거절되면 손님에게 까닭을 알린다.','첫 판 안내 손질: 끝낸 뒤 방식이 연습으로 남던 것, 「계속 연습」이 기록에 남는 판이 되던 것, 샌드백 설정이 저장되던 것, 두 번 눌러 시작하면 설정을 잃던 것, 안내 칸이 샌드백을 가리던 것을 고쳤다. 보상은 건너뛰지 않고 넷 이상 해내야 받는다. 왼손 배치 · 가로 화면 안내 글을 맞췄다.','그 밖: 오늘의 도전 보상을 그날 첫 승리에 준다. 레이드 승리에 1대1 평가(S)가 붙지 않는다. 첫 화면에서 뒤로 · Esc가 숨은 안내를 닫지 않는다. 옛 저장에서 잠긴 캐릭터가 골라져 있던 것, 싸우기를 누른 직후 다른 단추가 눌리던 것을 막았다.']],
  ['1.7.0','2026-11',['함께 하기를 편하게: 방에 있는 동안 모든 탭 위쪽에 방 정보 띠가 뜬다(방 코드 · 방장이 정한 판 · 준비 수 · 편마다 사람과 고른 캐릭터 · 태그 셋). 내 칸을 누르면 캐릭터 탭으로, 방장은 다른 사람을 눌러 편을 바꾼다.','대전 탭에 「함께 하는 방」 칸: 방장이 정한 판, 채팅(빠른 문구 · 입력), 방장의 빠른 동작(편 고루 나누기 · 모두 같은 편 · 함께 레이드 · 함께 등반 · 초대 링크). 방에 있는 동안 쓸 수 없는 모험 칸은 숨기고, 손님에게는 자기 방식 설정 대신 방장이 정한 판을 보여 준다.','손님의 큰 단추가 「준비하기」가 됐다. 방장은 아직 준비 안 한 사람이 있으면 한 번 더 눌러야 시작한다. 결과 화면의 「다시」도 같다. 모두 준비되면 방장에게 알린다.','들어옴 · 나감 · 캐릭터 · 편 · 준비가 바뀌면 알림이 뜬다. 다른 사람이 고른 캐릭터에는 캐릭터 목록에 이름표가 붙고, 방장 화면의 상대 칸에는 상대 편 사람의 캐릭터가 뜬다.','싸우는 중에도 💬 단추로 빠른 채팅(휴대폰 · PC). 방 코드를 누르면 복사된다.','가로 화면 고르기 화면의 큰 단추가 지나치게 길어지던 것을 고쳤다.']],
@@ -491,8 +492,8 @@ const PATCH=[
  ['1.0.0','2026-11',['뽑기가 파편 방식으로 바뀌었다. 한 번에 파편 1~3개, 10개를 모으면 캐릭터. 확률은 고화 60 · 서사 30 · 전설 10 (신화 · 히든은 나오지 않는다).','재림 조건: 원래 캐릭터로 15승 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적. 재림 캐릭터는 체력 +50, 기본 공격 +2.','레이드에 난이도가 생겼다: 소란 · 집결 · 결속 · 군주 · 위신. 데스카운트는 1 · 2 · 2 · 3 · 3이고 편 전체가 나눠 쓴다.','처음 들어오면 닉네임을 정한다. 싸움 중 체력 줄 위에 닉네임과 (캐릭터명)이 뜬다.','정신 집중(캐스팅)과 고유 자원이 캐릭터 아래에 막대로 보인다.','가나안의 기본 공격이 좁은 부채꼴(6.5칸)이 되었다. 메릴다의 선회 8칸, 사냥개는 느려지고 5초 뒤 사라진다.']]
 ];
 function patchScreen(){ const d=document.createElement('div'); d.className='overlay'; d.style.zIndex=44; d.id='patchv'; d.innerHTML='<div class="wrap">'+head('PATCH NOTES','버전 '+VER,'바뀐 것')+PATCH.slice(0,4).map(p=>'<h2>'+p[0]+' <small style="color:var(--muted);font-weight:400">'+p[1]+'</small></h2>'+p[2].map(l=>'<p class="note" style="margin:6px 0">'+esc(l)+'</p>').join('')).join('')+'<div class="dock"><button class="go" id="pv-ok" type="button">확인</button></div></div>'; document.body.appendChild(d); d.querySelector('#pv-ok').onclick=()=>d.remove(); }
-function nickScreen(done){ const d=document.createElement('div'); d.className='overlay'; d.id='nickv'; d.style.zIndex=46; d.innerHTML='<div class="wrap">'+head('WELCOME','닉네임을 정한다','싸움 중 내 캐릭터 위에 뜨고, 친구와 함께 할 때 보인다')+'<div class="row"><input type="text" id="nk-in" maxlength="8" placeholder="닉네임 (8자까지)" autocomplete="off" style="flex:1;height:52px;font-size:17px;text-align:center"></div><p class="note">나중에 \'함께\' 화면의 내 이름 칸에서 바꿀 수 있다.</p><div class="dock"><button class="go" id="nk-ok" type="button">정했다</button></div></div>'; document.body.appendChild(d);
-  const inp=d.querySelector('#nk-in'),ok=()=>{ const v=inp.value.trim().slice(0,8); if(!v) return toast('닉네임을 적는다'); try{ localStorage.setItem('aetherName',v); }catch(x){} if($('n-name')) $('n-name').value=v; d.remove(); toast(v+' · 반갑다'); done&&done(); }; d.querySelector('#nk-ok').onclick=ok; inp.addEventListener('keydown',e=>{ if(e.key==='Enter') ok(); e.stopPropagation(); }); setTimeout(()=>inp.focus(),300); }
+function nickScreen(done){ const d=document.createElement('div'); d.className='overlay'; d.id='nickv'; d.style.zIndex=46; d.innerHTML='<div class="wrap">'+head('WELCOME','닉네임을 정한다','싸움 중 내 캐릭터 위에 뜨고, 친구와 함께 할 때 보인다')+'<div class="row"><input type="text" id="nk-in" maxlength="8" placeholder="닉네임 (8자까지)" autocomplete="off" style="flex:1;height:52px;font-size:17px;text-align:center"></div><p class="note">한 번 정하면 바꿀 수 없다. 2~8자로 신중히 정한다.</p><div class="dock"><button class="go" id="nk-ok" type="button">정했다</button></div></div>'; document.body.appendChild(d);
+  const inp=d.querySelector('#nk-in'),ok=()=>{ const v=inp.value.trim().slice(0,8); if(v.length<2) return toast('닉네임은 2자 이상'); try{ localStorage.setItem('aetherName',v); }catch(x){} if($('n-name')) $('n-name').value=v; d.remove(); toast(v+' · 반갑다'); done&&done(); }; d.querySelector('#nk-ok').onclick=ok; inp.addEventListener('keydown',e=>{ if(e.key==='Enter') ok(); e.stopPropagation(); }); setTimeout(()=>inp.focus(),300); }
 /* 들어올 때: (제목 화면) → 닉네임이 없으면 정하기 → 버전과 패치 내역 */
 { const room=/[?&]room=/.test(location.search),flow=()=>{ let has=false; try{ has=!!localStorage.getItem('aetherName'); }catch(x){} if(!has) nickScreen(room?null:patchScreen); else if(!room) patchScreen(); };
   if(!navigator.webdriver&&!/[?&]bc\b/.test(location.search)){ if(document.getElementById('title')){ const iv=setInterval(()=>{ if(!document.getElementById('title')){ clearInterval(iv); flow(); } },200); } else flow(); } }
@@ -1189,3 +1190,9 @@ const SGG=['고화','서사','전설'],SDRAW={고화:30,서사:90,전설:240};
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-sg],[data-sb]'); if(!b) return; e.stopImmediatePropagation(); if(b.dataset.sb){ toast('골라서 데려오기는 없어졌다 · 가방 → 별무리 뽑기',2200); return; }
   const g=b.dataset.sg,L=gachaPool(g).filter(k=>!PF.own[k]); if(!L.length) return toast(g+' 캐릭터는 모두 가졌다'); if(PF.star<SDRAW[g]) return toast('별무리의 흔적이 모자라다 ('+PF.star+' / '+SDRAW[g]+')');
   const k=L[Math.floor(Math.random()*L.length)]; PF.star-=SDRAW[g]; PF.own[k]=Date.now(); pfSave(); sfx('win'); const v=document.getElementById('bagv'); if(v) v.remove(); drawSel(); gachaScreen([{k,g,dup:false}]); },true);
+
+/* ════ 1.8.0 닉네임 고정 ════ 처음 한 번 정하면 바꿀 수 없다(함께 탭의 이름 칸은 읽기만) */
+{ const lock=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} const i=$('n-name'); if(!i) return; if(v){ i.value=v; i.readOnly=true; i.title='닉네임은 바꿀 수 없다'; i.classList.add('locked'); } };
+  lock(); $('n-name').addEventListener('change',()=>setTimeout(lock,0)); document.addEventListener('click',e=>{ if(e.target.id==='n-name'&&e.target.readOnly) toast('닉네임은 한 번 정하면 바꿀 수 없다',1800); });
+  new MutationObserver(lock).observe(document.body,{childList:true}); /* 닉네임 창이 닫히면 바로 잠근다 */
+  const st=document.createElement('style'); st.textContent='#n-name.locked{opacity:.75;cursor:not-allowed}'; document.head.appendChild(st); }
