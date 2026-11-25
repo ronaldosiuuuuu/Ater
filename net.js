@@ -15,7 +15,7 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=122;
+const APPV=123;
 /* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
 const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
@@ -64,7 +64,7 @@ NET.start=()=>{ NET.live=others().length>0; NET.acc=0; NET.n=0; NET.known=new Se
 /* 보내는 양 줄이기: 자리·체력처럼 늘 바뀌는 것만 매번 보내고, 이름·최대 체력·상태 줄처럼 잘 안 바뀌는 것은 세 번에 한 번만 보낸다.
    피해 숫자·기록 줄은 새로 생긴 것만 보낸다. 5대5에서 손님 한 명당 초당 93KB쯤 나가던 것이 3분의 1쯤으로 준다 */
 function entS(e,full,mid){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2(e.y),z:r2(e.z),hp:r2(e.hp),max:e.max,atk:e.atk,dead:!!e.dead,aim:[r2(e.aim.x),r2(e.aim.y)],busy:r2(e.busy),chant:r2(e.chant),slot:e.slot||0,
-    st:e.st.map(s=>({k:s.k,until:r2(s.until),v:typeof s.v==='number'||typeof s.v==='string'?s.v:undefined})),sh:e.sh.map(s=>({v:r2(s.v),until:r2(s.until)})),cd:{}};
+    st:e.st.map(s=>({k:s.k,until:r2(s.until),v:typeof s.v==='number'||typeof s.v==='string'?s.v:undefined,d0:typeof s.d0==='number'?r2(s.d0):undefined})),sh:e.sh.map(s=>({v:r2(s.v),until:r2(s.until)})),cd:{}};
   for(const k in e.cd) if(e.cd[k]>0) o.cd[k]=r2(e.cd[k]); if(e.dash) o.dash=[r2(e.dash.vx),r2(e.dash.vy),r2(e.dash.until)]; if(e.castFx) o.cf=[r2(e.castFx.t0),e.castFx.ult?1:0]; if(e.flash!==undefined) o.fl=r2(e.flash); if(e.swingT!==undefined){ o.sw=r2(e.swingT); o.sn=e.swingN||0; } if(e.shotT!==undefined) o.so=r2(e.shotT);
   if(e.ultUsed) o.uu=1; if(e.boss) o.boss=1; if(e.launched) o.la=1; if(e.sand) o.sand=1; if(e.tag) o.tag=[e.tag.n,r2(e.tag.t0)]; if(e.pname) o.pn=e.pname;
   if(mid) try{ o.r=ser(e.r,0); o.hud=e.c.hud(e); o.sl=stateList(e); const cn={}; for(const s in e.c.skills){ const k=e.c.skills[s]; if(k.can) cn[s]=!!k.can(e); } o.can=cn; }catch(x){}
