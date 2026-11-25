@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.6.0';
+const VER='1.7.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.7.0','2026-11',['함께 하기를 편하게: 방에 있는 동안 모든 탭 위쪽에 방 정보 띠가 뜬다(방 코드 · 방장이 정한 판 · 준비 수 · 편마다 사람과 고른 캐릭터 · 태그 셋). 내 칸을 누르면 캐릭터 탭으로, 방장은 다른 사람을 눌러 편을 바꾼다.','대전 탭에 「함께 하는 방」 칸: 방장이 정한 판, 채팅(빠른 문구 · 입력), 방장의 빠른 동작(편 고루 나누기 · 모두 같은 편 · 함께 레이드 · 함께 등반 · 초대 링크). 방에 있는 동안 쓸 수 없는 모험 칸은 숨기고, 손님에게는 자기 방식 설정 대신 방장이 정한 판을 보여 준다.','손님의 큰 단추가 「준비하기」가 됐다. 방장은 아직 준비 안 한 사람이 있으면 한 번 더 눌러야 시작한다. 결과 화면의 「다시」도 같다. 모두 준비되면 방장에게 알린다.','들어옴 · 나감 · 캐릭터 · 편 · 준비가 바뀌면 알림이 뜬다. 다른 사람이 고른 캐릭터에는 캐릭터 목록에 이름표가 붙고, 방장 화면의 상대 칸에는 상대 편 사람의 캐릭터가 뜬다.','싸우는 중에도 💬 단추로 빠른 채팅(휴대폰 · PC). 방 코드를 누르면 복사된다.','가로 화면 고르기 화면의 큰 단추가 지나치게 길어지던 것을 고쳤다.']],
  ['1.6.0','2026-11',['태그매치를 친구와 함께 할 수 있다. 방장이 방식에서 태그매치를 고르면 손님도 캐릭터 탭에서 우리 팀 칸 둘을 더 고른다.','편마다 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 나눠 맡는다(남는 칸은 그 편의 첫 사람). 같은 편이 되어 컴퓨터와 겨루는 협동 태그도 된다.','교대: 싸우는 캐릭터의 주인은 원하는 캐릭터로 바꾸고, 대기 중인 캐릭터의 주인은 자기 캐릭터를 들여보낸다. 교대 대기시간은 편마다 하나. 동료 차례에는 「동료 차례」가 뜨고 조작 단추가 숨는다.','손님이 끊기면 그 캐릭터는 컴퓨터가 맡고, 다시 들어오면 돌려받는다. 손님도 쓰러뜨린 캐릭터 수만큼 코인을 받는다.','첫 판 안내: 에이로 샌드백을 상대하며 움직이기 → 기본 공격 → 스킬 → 점프 → 궁극기 → 멈춤을 하나씩 해 본다(1분). 처음 끝내면 코인 1,000. 첫 방문 화면 · 대전 화면의 모험 칸 · 설정 → 도구에서 시작한다.']],
  ['1.5.3','2026-11',['태그매치: 물러난 캐릭터가 남은 지속 피해로 쓰러져 지던 것, 물러난 캐릭터의 장판 · 연속 스킬이 계속 싸우던 것, 쓰러진 사이 고른 캐릭터가 교대 대기시간을 쓰던 것을 고쳤다. 1대1 업적 · S 평가가 붙지 않게 했다. 대기 중인 우리 팀 캐릭터에도 완성이 붙는다.','다시 서는 캐릭터(등반 보스 층 부활 · 킬 선취 · 점령전 · 연습)가 등반 권능 · 장비 · 완성 효과를 잃던 것을 고쳤다. 등반에서 완성 체력이 최대 체력에 제대로 들어간다.','업적 경험치로 레벨이 올라도 레벨 보상을 준다. 여럿이 하는 레이드에서 보스 처치가 가끔 안 세지던 것, 쓰러진 채 이겨도 기사회생이 붙던 것, 등반 · 이야기 중 설정을 바꾸면 빌린 캐릭터 · 방식이 저장되던 것을 고쳤다.','화면: 가로 화면 메뉴에서 알림이 화면 밖에 뜨던 것, 좁은 휴대폰에서 스킬 이름이 잘리던 것(이제 133명 모두 들어간다), 가로 화면 창의 아래 단추가 화면 절반을 덮던 것을 고쳤다. 교대 단추를 낮게, 싸움 중 알림을 한 줄로 했다.','왼손 배치에서 단추 묶음도 거울처럼 놓는다(기본 공격이 바깥쪽). 노치 · 홈 막대(안전 영역)를 피한다. 좁은 화면의 캐릭터 찾기 줄 · 뽑기 결과(네 칸)를 정리했다.','PC: Esc로 창을 닫고 멈춤을 푼다. 겹친 창은 맨 위부터 닫는다. 소리 · 음악 끄기가 다음에도 그대로다. 뽑기 연출은 카드를 누르면 한 번에 넘어간다.']],
  ['1.5.2','2026-11',['최적화: 효과음 잡음 버퍼를 돌려 쓰고, 캐릭터 이름표를 미리 그려 둔 그림으로 붙여 싸움 중 그리기 부담을 줄였다.','옛 휴대폰(iOS 15 등)에서 떠오르는 글자 상자를 그리다 싸움이 멈출 수 있던 것을 막았다.','함께 하기: 자리가 모자란 손님은 그 판을 관전한다(조작 단추를 숨기고 코인 · 전적은 세지 않는다).','잠긴 캐릭터 안내 문구를 지금 방식(뽑기에서 처음 나오면 바로 얻는다)에 맞췄다.']],
@@ -632,7 +633,7 @@ drawBag();
 
 /* ════════════════ 1.3.0 함께 하기: 준비 표시 · 함께 등반에서 고를 것 추천 ════════════════ */
 /* ── 준비: 들어온 사람이 '준비'를 누르면 방장 명단에 ✔가 뜬다. 판이 시작되면 모두 풀린다 ── */
-lobbyOut=function(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host,ready:!!p.ready,done:p.done||'',tag:p.host?[sel.al[0],sel.al[1]].filter(k=>k&&okKey(k)):(p.tag||[])})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid,hm:practice?0:mode}); drawNet(); };
+lobbyOut=function(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host,ready:!!p.ready,done:p.done||'',tag:p.host?[sel.al[0],sel.al[1]].filter(k=>k&&okKey(k)):(p.tag||[])})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid,hm:practice?0:mode,hs:roomHS()}); drawNet(); };
 const readyN=()=>{ const L=NET.players.filter(p=>!p.host); return [L.filter(p=>p.ready).length,L.length]; };
 { const dn1=drawNet; drawNet=function(){ dn1(); const on=NET.host||NET.client; let rb=$('n-ready'); if(!rb){ const lst=$('n-list'); lst.insertAdjacentHTML('beforebegin','<div class="row" id="n-rdyrow"><button type="button" id="n-ready">준비</button></div>'); rb=$('n-ready'); }
     $('n-rdyrow').style.display=on&&NET.client?'flex':'none'; const mine=NET.players.find(p=>p.pid===NET.pid); rb.setAttribute('aria-pressed',!!(mine&&mine.ready)); rb.textContent=mine&&mine.ready?'✔ 준비 완료 · 눌러서 풀기':'준비';
@@ -857,7 +858,7 @@ function onRespawn(n,t){ const b=t.base0; if(!b) return; n.base0=b; n.c=b.c; n.m
   'body:not(.land):not(.pc) #pad{padding-bottom:calc(10px + env(safe-area-inset-bottom));height:calc(196px*var(--ui) + env(safe-area-inset-bottom))}body.xs:not(.land):not(.pc) #pad{height:calc(268px*var(--ui) + env(safe-area-inset-bottom))}',
   '.overlay .wrap{padding-top:calc(16px + env(safe-area-inset-top))}.overlay .dock{padding-bottom:calc(12px + env(safe-area-inset-bottom))}.shell{padding-top:env(safe-area-inset-top)}',
   /* 가로 화면의 창: 아래 단추들을 한 줄로 나란히(세로로 쌓이면 화면 절반을 덮는다) */
-  'body.land .overlay .dock{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}body.land .overlay .dock>button{flex:1 1 150px;width:auto;margin:0;min-height:44px}body.land .overlay .dock>.go{flex:2 1 220px}',
+  'body.land .overlay:not(#sel) .dock{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}body.land .overlay:not(#sel) .dock>button{flex:1 1 150px;width:auto;margin:0;min-height:44px}body.land .overlay:not(#sel) .dock>.go{flex:2 1 220px}',
   /* 좁은 세로 화면의 캐릭터 고르기: 찾기 줄을 한 줄로 */
   '@media (max-width:420px){.crow{flex-wrap:nowrap;gap:6px}.crow #q{flex:1 1 0;min-width:0}.crow button{flex:none;max-width:28vw;padding:0 8px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}',
   /* 좁은 화면의 뽑기 결과: 네 칸씩 */
@@ -992,3 +993,110 @@ document.addEventListener('click',e=>{ if(TUT.on&&e.target.closest('#p-resume')&
   const wd=$('w-close'); if(wd){ wd.className='ghost'; wd.textContent='나중에'; wd.insertAdjacentHTML('beforebegin','<button class="go" id="w-tut" type="button">첫 판 안내로 시작 (1분)</button>'); }
   const tl=$('tools'); if(tl){ const b=document.createElement('button'); b.className='tool'; b.id='tutb'; b.type='button'; b.innerHTML='<b>첫 판 안내</b><small>조작을 한 판 안에서 배운다</small>'; tl.insertBefore(b,tl.firstChild); }
   document.addEventListener('click',e=>{ const t=e.target.closest('#hub-tut,#w-tut,#tutb'); if(!t) return; if(t.id==='w-tut'){ $('welcome').hidden=true; try{ localStorage.setItem('aetherSeen','1'); }catch(x){} } tutStart(); }); }
+
+/* ════════════════ 1.7.0 함께 하기를 편하게 ════════════════
+   ① 모든 탭에 방 정보 띠: 방 코드 · 방장이 정한 판 · 준비 수 · 편마다 사람(이름 · 고른 캐릭터 · 태그 셋 · 준비)
+   ② 대전 탭의 '함께 하는 방' 칸: 방장이 정한 판 · 채팅(빠른 문구) · 방장의 빠른 동작. 방에 있는 동안은 쓸 수 없는 모험 칸을 숨긴다
+   ③ 손님의 큰 단추 = 준비. 방장은 아직 준비 안 한 사람이 있으면 한 번 더 눌러 시작. 결과 화면의 '다시'도 같다
+   ④ 들어옴 · 나감 · 캐릭터 · 편 · 준비가 바뀌면 알린다. 모두 준비되면 방장에게 알린다
+   ⑤ 싸움 중 빠른 채팅 단추 · 방 코드 눌러 복사 · 다른 사람이 고른 캐릭터 표시 · 방장은 사람을 눌러 편을 바꾼다 */
+const inRoom=()=>!!(NET.host||NET.client)&&NET.players.length>0;
+const myP=()=>NET.players.find(p=>NET.host?p.host:p.pid===NET.pid);
+const pName=k=>CH[k]?CH[k].name.split(', ').pop():'';
+function roomHS(){ return {sum:($('sumline')&&$('sumline').textContent)||'',m:practice?0:mode,n:teamN,mon:mode===6&&CH[OPT.mon]?pName(OPT.mon):''}; }
+const RQ=['ㄱㄱ','잠깐만','한 판 더?','좋은 판!','캐릭터 바꿀게','준비됐다'];
+NET.chatLog=[];
+function chatSend(text){ const t=String(text||'').trim().slice(0,80); if(!t||!NET.tx) return; if(NET.host){ const m={t:'chat',name:NET.name(),team:0,text:t}; sendAll(m); chatShow(m); } else NET.tx.send({t:'chat',text:t}); }
+function readyToggle(){ if(!NET.client||!NET.tx) return; const mine=myP(),on=!(mine&&mine.ready); if(mine) mine.ready=on; NET.tx.send({t:'rdy',on}); sfx('ui'); drawNet(); }
+/* 방 정보 띠 */
+function roomDraw(){ let el=document.getElementById('roomb'); const on=inRoom()&&!running; document.body.classList.toggle('inroom',on); document.body.classList.toggle('guest',on&&!!NET.client);
+  if(!el){ const vs=document.querySelector('#sel .main .vs'); if(!vs) return; el=document.createElement('div'); el.id='roomb'; vs.insertAdjacentElement('afterend',el); el.addEventListener('click',roomClick); }
+  el.hidden=!on; if(!on) return; const mine=myP(),my=mine?mine.team:0,hs=NET.host?roomHS():(NET.hs||{}),tagOn=NET.host?(mode===7&&!practice):NET.hm===7,[r,n]=readyN();
+  const chip=p=>{ const k=p.re&&CH[p.key+'_r']?p.key+'_r':p.key,tl=(p.host&&NET.host?[sel.al[0],sel.al[1]]:(p.tag||[])).filter(x=>x&&CH[x]); return '<button type="button" class="rchip'+(p===mine?' me':'')+(p.host||p.ready?' ok':'')+'" data-pid="'+esc(p.pid||'host')+'"><b>'+(p.host?'♛ ':'')+esc(p.name||'손님')+(p===mine?' · 나':'')+'</b><span>'+esc(pName(k))+(p.done&&p.done===p.key&&!p.re?' ★':'')+(tagOn?' + '+(tl.length?tl.map(pName).join(' + '):'무작위 둘'):'')+'</span><i>'+(p.host?'방장':p.ready?'✔ 준비':'준비 중')+'</i></button>'; };
+  const row=t=>{ const L=NET.players.filter(p=>p.team===t),cpu=hs.m===6?(t===my?'':'보스'+(hs.mon?' · '+esc(hs.mon):'')):'컴퓨터'; return '<div class="rrow2'+(t!==my?' foe':'')+'"><em>'+(t===my?'우리 편':'상대 편')+'</em>'+(L.length?L.map(chip).join(''):'')+(!L.length&&cpu?'<span class="rcpu">'+cpu+'</span>':'')+'</div>'; };
+  const h='<div class="rhd"><b>방 '+esc(NET.code||'')+'</b><span>'+esc(hs.sum||'')+'</span><span class="rr">'+(n?'준비 '+r+'/'+n:'혼자 있다 · 초대 링크로 부른다')+'</span></div>'+row(my)+row(1-my);
+  if(el.__h!==h){ el.__h=h; el.innerHTML=h; } roomCard(); }
+function roomClick(e){ const b=e.target.closest('.rchip'); if(!b) return; const pid=b.dataset.pid,mine=myP(),p=NET.players.find(q=>(q.pid||'host')===pid); if(!p) return;
+  if(p===mine){ slot='me'; goPage('chars'); return; }
+  if(NET.host&&!p.host){ p.team=p.team?0:1; lobbyOut(); toast((p.name||'손님')+' → '+(p.team?'상대 편':'방장 편'),1800); sfx('ui'); return; }
+  toast(NET.host?'방장은 자기 편을 바꿀 수 없다':'캐릭터와 편은 그 사람(편은 방장)이 고른다',1800); }
+/* 대전 탭의 '함께 하는 방' 칸 */
+function roomCard(){ const sec=document.querySelector('section[data-page="play"]'); if(!sec) return; let el=document.getElementById('roomc'); const on=inRoom()&&!running;
+  if(!el){ el=document.createElement('div'); el.id='roomc'; el.className='bcard'; const tw=$('twcard'); (tw||sec.firstChild).insertAdjacentElement('beforebegin',el);
+    el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.rq!==undefined){ chatSend(RQ[+b.dataset.rq]); return; } if(b.id==='rc-go'){ const i=$('rc-in'); chatSend(i.value); i.value=''; return; }
+      const qa=b.dataset.qa; if(!qa||!NET.host) return; if(qa==='invite'){ const sh=$('n-share'); if(sh) sh.click(); return; } if(qa==='raid') $('n-qraid').click(); else if(qa==='tower') $('n-qtower').click(); else if(qa==='split'){ NET.players.forEach((p,i)=>{ p.team=i%2; }); lobbyOut(); toast('편을 고루 나눴다',1600); } else if(qa==='same'){ NET.players.forEach(p=>{ p.team=0; }); lobbyOut(); toast('모두 같은 편 · 컴퓨터와 겨룬다',1800); } });
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='rc-in'){ e.preventDefault(); chatSend(e.target.value); e.target.value=''; } }); }
+  el.hidden=!on; if(!on) return; const hs=NET.host?roomHS():(NET.hs||{}),log=NET.chatLog.slice(-4),mine=myP();
+  const h='<div class="rch"><b>함께 하는 방</b><span>'+(NET.host?'방식 · 맵은 아래에서 내가 고른다':'방장이 정한 판')+'</span></div><p class="rsum">'+esc(hs.sum||'')+'</p>'
+   +(NET.host&&NET.players.length<2?'<div class="row rqa"><button type="button" data-qa="invite" class="go" style="min-height:44px;font-size:15px;letter-spacing:.1em">초대 링크 보내기</button></div>':'')
+   +(NET.host?'<div class="row rqa"><button type="button" data-qa="split">편 고루 나누기</button><button type="button" data-qa="same">모두 같은 편</button><button type="button" data-qa="raid">함께 레이드</button><button type="button" data-qa="tower">함께 등반</button></div>':'<p class="note" style="margin:6px 0 0">아래 「준비하기」를 누르면 방장 화면에 ✔가 뜬다. 캐릭터는 캐릭터 탭에서 바꾼다.</p>')
+   +'<div class="rlog">'+(log.length?log.map(m=>'<div><b style="color:rgb('+TC[mine&&m.team!==mine.team?1:0]+')">'+esc(m.name||'')+'</b> '+esc(m.text)+'</div>').join(''):'<div class="none">채팅이 여기에 뜬다</div>')+'</div>'
+   +'<div class="rqk">'+RQ.map((t,i)=>'<button type="button" data-rq="'+i+'">'+t+'</button>').join('')+'</div>'
+   +'<div class="row rin"><input id="rc-in" type="text" maxlength="80" placeholder="채팅 · Enter로 보낸다" autocomplete="off"><button type="button" id="rc-go">보내기</button></div>';
+  /* 입력 중이면 칸을 다시 그리지 않는다(쓰던 글이 지워지지 않게) */ const typing=document.activeElement&&document.activeElement.id==='rc-in';
+  if(el.__h!==h&&!typing){ const v=$('rc-in')?$('rc-in').value:''; el.__h=h; el.innerHTML=h; if(v) $('rc-in').value=v; } else if(typing&&el.__h!==h){ const lg=el.querySelector('.rlog'),tmp=document.createElement('div'); tmp.innerHTML=h; const nl=tmp.querySelector('.rlog'); if(lg&&nl) lg.innerHTML=nl.innerHTML; } }
+/* 채팅: 대기실에서는 '함께 하는 방' 칸에, 싸우는 중에는 왼쪽 아래에 뜬다 */
+{ const cs0=window.chatShow; window.chatShow=m=>{ if(!m||!m.text) return; NET.chatLog.push({name:m.name,text:String(m.text).slice(0,80),team:m.team}); if(NET.chatLog.length>30) NET.chatLog.shift(); if(running) cs0(m); else { roomCard(); if(page!=='play'){ toast('💬 '+(m.name||'')+': '+String(m.text).slice(0,40),2400); } sfx('ui'); } }; }
+/* 알림: 대기실 명단이 바뀌면(들어옴 · 나감 · 캐릭터 · 편 · 준비) */
+function roomDiff(){ const cur=new Map(NET.players.map(p=>[p.pid||'host',{name:p.name||'손님',key:p.key,team:p.team,ready:!!p.ready}])),prev=roomDiff.prev,mine=myP(),me0=mine?(mine.pid||'host'):''; roomDiff.prev=cur; const fresh=roomDiff.code!==NET.code; roomDiff.code=NET.code; if(!prev||fresh||!prev.size||running) return; const out=[]; { const a=prev.get(me0),b=cur.get(me0); if(a&&b&&a.team!==b.team) out.push('내 편이 바뀌었다 → '+(b.team===0?'방장 편':'상대 편')); }
+  for(const [id,p] of cur){ if(id===me0) continue; const q=prev.get(id); if(!q){ out.push(p.name+' 들어왔다'); continue; } if(q.key!==p.key) out.push(p.name+' → '+pName(p.key)); if(q.team!==p.team) out.push(p.name+' → '+(mine&&p.team===mine.team?'우리 편':'상대 편')); if(!q.ready&&p.ready&&!NET.host) out.push(p.name+' 준비 완료'); }
+  for(const [id,q] of prev) if(!cur.has(id)&&id!==me0) out.push(q.name+' 나갔다');
+  if(out.length){ toast(out.join(' · '),2600); sfx('ui'); } }
+{ const dn4=drawNet; drawNet=function(){ dn4(); const on=NET.host||NET.client; if(!on){ roomDiff.prev=null; roomDraw(); return; } roomDiff(); roomDraw();
+    /* 큰 단추 · 결과 화면 단추 이름 */ if(!running){ const mine=myP(),[r,n]=readyN(); if(NET.client){ $('start').textContent=mine&&mine.ready?'✔ 준비 완료':'준비하기'; $('netbar').textContent+=mine&&mine.ready?' · 방장이 시작하면 함께 들어간다':' · 준비하기를 눌러 알린다'; $('again').textContent=mine&&mine.ready?'✔ 준비 완료':'한 판 더 · 준비'; } else if(NET.host&&n){ $('again').textContent='다시 · 준비 '+r+'/'+n; } }
+    /* 함께 탭 명단: 방장은 사람을 눌러 편을 바꾼다 */ if(NET.host){ const L=$('n-list'); if(L&&!L.dataset.rt){ L.dataset.rt=1; L.addEventListener('click',e=>{ const row=e.target.closest('.pl'); if(!row||!NET.host) return; const i=[...L.querySelectorAll('.pl')].indexOf(row),p=NET.players[i]; if(!p||p.host) return; p.team=p.team?0:1; lobbyOut(); toast((p.name||'손님')+' → '+(p.team?'상대 편':'방장 편'),1800); }); } if(L&&!$('n-lhint')) L.insertAdjacentHTML('afterend','<p class="note" id="n-lhint" style="margin-top:4px">방장은 사람을 눌러 편을 바꾼다.</p>'); } }; }
+/* 손님: 방장이 정한 판 정보를 받는다 */
+{ const cm3=clientMsg; clientMsg=function(d){ if(d&&d.t==='lobby') NET.hs=d.hs||NET.hs; const r=cm3(d); if(d&&d.t==='lobby'&&NET.client) try{ drawSum(); }catch(x){} return r; }; }
+/* 방장: 방식 · 맵 · 실력을 바꾸면 손님에게 바로 알린다 */
+{ const sv2=save; save=function(){ const r=sv2(); if(NET.host&&NET.tx&&!running){ clearTimeout(save.t); save.t=setTimeout(()=>{ try{ lobbyOut(); }catch(x){} },150); } return r; }; }
+/* 모두 준비되면 방장에게 알린다 */
+{ const hm5=hostMsg; hostMsg=function(pid,d){ const r=hm5(pid,d); if(d&&d.t==='rdy'&&NET.host&&!running){ const [a,n]=readyN(); if(n&&a===n) setTimeout(()=>{ toast('모두 준비됐다 · 싸우기를 누른다',2800); sfx('win'); },300); } return r; }; }
+/* 큰 단추: 손님 = 준비, 방장 = 아직 준비 안 한 사람이 있으면 한 번 더 눌러 시작 */
+{ let arm=0; const confirmStart=()=>{ const [r,n]=readyN(); if(n&&r<n&&performance.now()>arm){ arm=performance.now()+2600; toast('아직 준비 안 한 사람이 있다 ('+r+'/'+n+') · 한 번 더 누르면 시작',2600); return false; } arm=0; return true; };
+  const st0=$('start').onclick; $('start').onclick=function(e){ if(NET.client&&inRoom()){ readyToggle(); return; } if(NET.host&&inRoom()&&!practice&&!confirmStart()) return; return st0.call(this,e); };
+  const ag0=$('again').onclick; $('again').onclick=function(e){ if(NET.client&&inRoom()){ readyToggle(); return; } if(NET.host&&inRoom()&&!confirmStart()) return; return ag0.call(this,e); }; }
+/* 방장 화면의 '상대' 칸: 상대 편에 사람이 있으면 그 사람의 캐릭터를 보여 준다(누르면 안내) */
+{ const ds2=drawSel; drawSel=function(){ ds2(); const f=$('slot-foe'); if(!f) return; f.classList.remove('humanfoe'); if(NET.host&&inRoom()){ const L=NET.players.filter(p=>p.team===1); if(L.length&&f.querySelector('b')){ f.classList.add('humanfoe'); f.querySelector('em').textContent='상대 편 · 사람'; f.querySelector('b').textContent=L.map(p=>pName(p.key)).join(' · '); f.querySelector('span').textContent=L.map(p=>p.name||'손님').join(' · '); } }
+    /* 다른 사람이 고른 캐릭터에 이름표 */ if(inRoom()){ const mine=myP(); for(const p of NET.players){ if(p===mine||!p.key) continue; document.querySelectorAll('#list .ch button.pick[data-k="'+p.key+'"] .ttl').forEach(t=>{ if(!t.querySelector('.rpick')) t.insertAdjacentHTML('beforeend','<span class="rpick">'+esc(p.name||'손님')+'</span>'); }); } } };
+  document.addEventListener('click',e=>{ if(!e.target.closest('#slot-foe')||!$('slot-foe').classList.contains('humanfoe')) return; e.stopImmediatePropagation(); e.preventDefault(); toast('상대 편은 그 사람이 직접 고른다',1800); },true); }
+/* 방 코드를 누르면 복사 */
+{ const c=$('n-code'); if(c){ c.style.cursor='pointer'; c.title='눌러서 복사'; c.addEventListener('click',()=>{ const t=NET.code; if(!t) return; try{ navigator.clipboard.writeText(t).then(()=>toast('방 코드 '+t+' 복사했다',1600),()=>toast('방 코드 · '+t,2000)); }catch(x){ toast('방 코드 · '+t,2000); } }); } }
+/* 싸우는 중 빠른 채팅(휴대폰 · PC 모두) */
+{ const b=document.createElement('button'); b.id='qcb'; b.type='button'; b.textContent='💬'; b.setAttribute('aria-label','빠른 채팅'); document.body.appendChild(b); const pop=document.createElement('div'); pop.id='qcp'; pop.hidden=true; pop.innerHTML=RQ.map((t,i)=>'<button type="button" data-q="'+i+'">'+t+'</button>').join(''); document.body.appendChild(pop);
+  b.addEventListener('click',e=>{ e.stopPropagation(); pop.hidden=!pop.hidden; }); pop.addEventListener('click',e=>{ const q=e.target.closest('[data-q]'); if(!q) return; e.stopPropagation(); chatSend(RQ[+q.dataset.q]); pop.hidden=true; });
+  document.addEventListener('pointerdown',e=>{ if(!pop.hidden&&!e.target.closest('#qcp,#qcb')) pop.hidden=true; },true);
+  setInterval(()=>{ const on=running&&!over&&inRoom(); b.style.display=on?'block':'none'; if(!on) pop.hidden=true; },300); }
+{ const st=document.createElement('style'); st.textContent=[
+  '#roomb{margin:8px 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(6,9,23,.55)}#roomb[hidden]{display:none}',
+  '#roomb .rhd{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:var(--muted)}#roomb .rhd b{color:var(--gold);font:700 12.5px var(--mono);letter-spacing:.08em}#roomb .rhd .rr{margin-left:auto;color:var(--ok);font-weight:700}',
+  '#roomb .rrow2{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}#roomb .rrow2 em{font-style:normal;font:700 11px var(--body);color:#8fe9ff;min-width:42px}#roomb .rrow2.foe em{color:#ff9aa5}',
+  '.rchip{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:4px 9px;border:1px solid var(--line);border-left:3px solid #8fe9ff;border-radius:3px 10px 10px 3px;background:var(--panel);color:var(--ink);font:inherit;min-height:42px;max-width:100%;text-align:left}.foe .rchip{border-left-color:#ff7d8c}',
+  '.rchip.me{box-shadow:0 0 0 1px var(--aether) inset}.rchip b{font:700 12.5px var(--body)}.rchip span{font-size:11.5px;color:#cfd6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}.rchip i{font-style:normal;font-size:10.5px;color:var(--muted)}.rchip.ok i{color:var(--ok)}',
+  '.rcpu{font-size:12px;color:var(--muted);padding:6px 10px;border:1px dashed var(--line);border-radius:8px}',
+  'body.land.inroom .main{grid-template-rows:auto auto 1fr}body.land #roomb{grid-column:1 / -1;grid-row:2;margin:0 12px 6px}body.land.inroom .pages{grid-row:3}body.land.inroom.guest #roomb{grid-column:1;grid-row:1;margin:8px 8px 6px 12px}body.land.inroom.guest .main{grid-template-rows:auto 1fr}body.land.inroom.guest .pages{grid-row:2}'
+  +'body.land #roomb{padding:6px 8px}body.land #roomb .rrow2{margin-top:4px}body.land .rchip{min-height:36px;flex-direction:row;align-items:baseline;gap:6px}',
+  'body.inroom #twcard{display:none}body.inroom.guest #sel .vs{display:none}body.inroom.guest details.acc,body.inroom.guest #freeh{display:none}',
+  '#roomc{margin-top:14px}#roomc[hidden]{display:none}#roomc .rch{display:flex;align-items:baseline;gap:8px}#roomc .rch b{font:700 15px var(--display)}#roomc .rch span{font-size:12px;color:var(--muted)}#roomc .rsum{margin:6px 0 0;font:700 14px var(--body);color:#fff3cf}',
+  '#roomc .rqa{margin-top:8px;flex-wrap:wrap}#roomc .rqa button{flex:1 1 40%}',
+  '#roomc .rlog{margin-top:10px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:rgba(6,9,23,.5);font-size:13px;line-height:1.5;min-height:34px;max-height:96px;overflow:auto}#roomc .rlog .none{color:var(--muted);font-size:12px}#roomc .rlog b{margin-right:4px}',
+  '#roomc .rqk{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}#roomc .rqk button{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);font:600 12.5px var(--body);padding:6px 12px;min-height:34px}',
+  '#roomc .rin{margin-top:8px;flex-wrap:nowrap}#roomc .rin input{flex:1 1 0;min-width:0;min-height:40px}#roomc .rin button{flex:none;padding:0 14px}',
+  '.rpick{margin-left:6px;font:700 10.5px var(--body);color:#1b1404;background:#e3c377;border-radius:8px;padding:1px 6px}',
+  '#slot-foe.humanfoe{border-style:dashed}',
+  '#qcb{position:fixed;display:none;top:calc(8px + env(safe-area-inset-top));right:calc(max(8px,calc((100vw - 520px)/2 + 8px)) + 52px);z-index:3;width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:18px}',
+  'body.pc #qcb{right:calc(max(8px,calc((100vw - 1180px)/2 + 8px)) + 52px)}body.land #qcb{right:auto;left:calc(50% + 28px);top:calc(5px + env(safe-area-inset-top));background:rgba(23,32,71,.8)}',
+  '#qcp{position:fixed;z-index:6;top:calc(58px + env(safe-area-inset-top));right:max(8px,calc((100vw - 520px)/2 + 8px));display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:10px;background:rgba(10,15,36,.96)}#qcp[hidden]{display:none}body.pc #qcp{right:max(8px,calc((100vw - 1180px)/2 + 8px))}body.land #qcp{right:auto;left:calc(50% - 40px);top:calc(54px + env(safe-area-inset-top))}',
+  '#qcp button{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:600 13px var(--body);padding:7px 14px;min-height:36px;text-align:left}'
+ ].join(''); document.head.appendChild(st); }
+/* 방에서 나가면 띠 · 칸을 정리하고, 탭을 옮길 때마다 새로 그린다 */
+{ const gp5=goPage; goPage=function(p){ gp5(p); roomDraw(); }; roomDraw(); }
+
+/* 결과 화면이 뜰 때도 '다시' 단추에 준비 상태를 붙인다 */
+{ const sr11=showResult; showResult=function(){ const r=sr11(); if(inRoom()) setTimeout(()=>{ if(!running) drawNet(); },0); return r; }; }
+/* 손님 아래쪽 요약 줄은 방장이 정한 판으로 */
+{ const dsm=drawSum; drawSum=function(){ dsm(); if(NET.client&&inRoom()&&NET.hs&&NET.hs.sum){ const el=$('sumline'); if(el) el.textContent='방장이 정한 판 · '+NET.hs.sum; } }; }
+/* 싸움 중 빠른 채팅 단추 자리만큼 체력 줄을 비켜 준다 */
+setInterval(()=>{ const q=document.getElementById('qcb'); document.body.classList.toggle('qchat',!!q&&q.style.display==='block'); },300);
+{ const st=document.createElement('style'); st.textContent='body.qchat:not(.land) #hud{padding-right:106px}body.land.qchat #hud{column-gap:104px}body.land.qchat #menu{margin-left:-48px}body.land.qchat #qcb{left:calc(50% + 4px)}'; document.head.appendChild(st); }
+/* 방에서 나가면 채팅 기록 · 방 정보를 비운다 */
+{ const nl2=netLeave; netLeave=function(q){ const r=nl2(q); NET.chatLog=[]; NET.hs=null; NET.hm=0; roomDiff.prev=null; roomDraw(); try{ drawSum(); hubCard(); }catch(x){} return r; }; }
