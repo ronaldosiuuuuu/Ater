@@ -310,10 +310,11 @@ function begin(){ loop.err=null; bgmStop(); chaosUntil=0; banner=null; parts=[];
   landSet(); LAND=arenaLand(); mapSet();
   { const a=home(0,practice?3:(MAP.spawn||6)),b=home(1,practice?3:(MAP.spawn||6)); me=mk(kOf('me'),0,a.x,a.y); foe=mk(RAID()?OPT.mon:kOf('foe'),1,b.x,b.y); if(RAID()){ foe.max=foe.hp=monHp(OPT.mon); msg([['보스 ','#ff7d8c'],[short(foe),'#fff6d6'],[' · 체력 '+foe.max,'#97a1cf']],1,true); } } ents=[me,foe]; me.slot=0; foe.slot=0; if(TN()>1){ const pick=(tm,i)=>{ const k=(tm?sel.fo:sel.al)[i-1]; return k&&CH[k]&&!CH[k].re?k:null; },used=new Set([sel.me,sel.foe]); for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const k=pick(tm,i); if(k) used.add(k); }
     const pool=randPool(used).sort(()=>Math.random()-.5); while(pool.length<10) pool.push(...Object.keys(CH).filter(k=>!CH[k].re&&CH[k].cls!=='신화').sort(()=>Math.random()-.5));
-    /* 1.8.5 우리 편의 빈 칸(무작위)은 가진 캐릭터 가운데서 고른다. 모자라면 가진 캐릭터를 겹쳐 쓴다. 상대 편 · 연습은 모든 캐릭터에서 */
-    const owned=(!practice&&typeof locked==='function')?Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.mon&&!c.mob&&!c.kit&&!c.built&&!c.custom&&c.cls!=='신화'&&!locked(k); }):null,okG=k=>OPT.rg.split(',').includes(CH[k].grade);
-    const mine=owned&&owned.length?owned.filter(k=>!used.has(k)).sort(()=>Math.random()-.5).sort((a,b)=>okG(b)-okG(a)):null,ourK=()=>mine.length?mine.shift():owned[Math.floor(Math.random()*owned.length)];
-    for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const q=spawnAt(tm,i),n=mk(pick(tm,i)||(tm===0&&mine?ourK():pool.pop()),tm,q.x,q.y); n.slot=i; ents.push(n); } ents.forEach(x=>x.busy=1.5); } dlog=[]; total=0; best=0; combo.n=0; pFree=false; $('p-free').textContent='궁극기 조건 무시: 끔';
+    /* 1.8.6 자유 대전(혼자 · 연습 아님 · 등반 같은 콘텐츠 아님)의 빈 칸 무작위는 양쪽 편 모두 가진 캐릭터 가운데서, 한 편 안에서는 겹치지 않게 고른다.
+       모자라면 판을 열기 전에 막는다(game/v1.8.6.js). 멀티 · 연습 · 콘텐츠는 예전처럼 모든 캐릭터에서 */
+    const free=typeof freePlay==='function'&&freePlay(),own=free?ownedKeys():null,okG=k=>OPT.rg.split(',').includes(CH[k].grade);
+    const mineP=tm=>{ const taken=new Set([tm?sel.foe:sel.me]); for(let i=1;i<sideN(tm);i++){ const k=pick(tm,i); if(k) taken.add(k); } return own.filter(k=>!taken.has(k)).sort(()=>Math.random()-.5).sort((a,b)=>okG(b)-okG(a)); },P=free?[mineP(0),mineP(1)]:null;
+    for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const q=spawnAt(tm,i),n=mk(pick(tm,i)||(P&&P[tm].length?P[tm].shift():pool.pop()),tm,q.x,q.y); n.slot=i; ents.push(n); } ents.forEach(x=>x.busy=1.5); } dlog=[]; total=0; best=0; combo.n=0; pFree=false; $('p-free').textContent='궁극기 조건 무시: 끔';
   if(practice) sand(foe); else { me.busy=foe.busy=1.5; }
   if(NET.host&&!practice) NET.afterSpawn();
   if(mode===5&&!practice){ const bz=raidBoss()?me:foe; bz.boss=true; bz.max=bz.hp=bz.c.hp*5; msg([['마왕 ','#ff7d8c'],[short(bz),'#fff6d6'],[' · 체력 '+bz.max,'#97a1cf']],bz.team,true); }

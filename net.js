@@ -25,7 +25,7 @@ function uniqName(n,p){ const used=new Set(NET.players.filter(x=>x!==p).map(x=>x
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=185;
+const APPV=186;
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리면 중계 서버(TURN)를 거친다.
    중계 서버는 사이트에 마련해 둔 relay.json(Metered 앱 이름 · API Key)으로, 이을 때마다 그쪽에서 접속 정보를 받아 온다. 따로 적을 것은 없다.
    API Key는 공개돼도 되는 열쇠다(접속 정보만 받아 올 수 있고 계정은 건드리지 못한다). relay.json이 없으면 직접 연결만 쓴다.

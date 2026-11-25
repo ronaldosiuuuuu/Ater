@@ -84,7 +84,7 @@ function tagSwap(tm,nx,forced){ if(!TG||over) return false; const cur=ents.find(
   const ad0=add; add=function(e,k,t,v,extra){ if(e&&e.tagInv>now&&!(extra&&extra.self)&&DEBUFFS.includes(k)) return; return ad0(e,k,t,v,extra); }; }
 /* 판 시작: begin이 3대3으로 세운 캐릭터 가운데 한 명씩만 남기고 나머지는 대기로 뺀다 */
 { const bg0=begin; begin=function(){ if(!isTag()) { TG=null; return bg0(); } teamN=3;
-    /* 내 쪽 두 칸은 가진 캐릭터로 채운다(모자라면 엔진이 가진 캐릭터를 겹쳐 쓴다) */ const keep=sel.al.slice(),own=k=>CH[k]&&!CH[k].re&&!CH[k].mon&&!CH[k].mob&&!CH[k].built&&!CH[k].custom&&!CH[k].kit&&CH[k].grade!=='히든'&&!locked(k),used=new Set([sel.me]);
+    /* 내 쪽 두 칸은 가진 캐릭터로 채운다(모자라면 판을 열기 전에 막는다 · game/v1.8.6.js) */ const keep=sel.al.slice(),own=k=>CH[k]&&!CH[k].re&&!CH[k].mon&&!CH[k].mob&&!CH[k].built&&!CH[k].custom&&!CH[k].kit&&CH[k].grade!=='히든'&&!locked(k),used=new Set([sel.me]);
     for(let i=0;i<2;i++){ const k=sel.al[i]; if(k&&own(k)&&!used.has(k)){ used.add(k); continue; } sel.al[i]=null; } let pool=Object.keys(CH).filter(k=>own(k)&&!used.has(k)).sort(()=>Math.random()-.5);
     for(let i=0;i<2;i++) if(!sel.al[i]){ const k=pool.pop(); if(k){ sel.al[i]=k; used.add(k); } }
     try{ bg0(); } finally { sel.al=keep; } }; }
