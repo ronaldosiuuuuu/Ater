@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.8.1';
+const VER='1.8.2';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -468,9 +468,10 @@ gachaScreen=function(res){ if(res) res.forEach(r=>{ if(r.n===undefined){ r.n=0; 
 document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); if(!t) return; const k=t.dataset.re2,n=reNeed(k); if(!n.ok) return toast('조건이 모자라다'); PF.star-=n.st; PF.dup[k]=(PF.dup[k]||0)-n.nd; PF.re[k]=Date.now(); pfSave(); sfx('win'); toast(CH[k+'_r'].name+' · 재림했다',3600); achCheck({}); drawSel(); gachaScreen(); });
 
 /* ── 닉네임 ── */
-const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
+const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,13)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.8.2','2026-11',['보상 코드 「(지운 코드)」: 닉네임을 한 번 다시 정할 수 있다(최대 13자).']],
  ['1.8.1','2026-11',['레이드 보스가 받는 체력 비례(%) 피해: 소란 · 집결 50% · 결속 · 군주 25% · 위신 12.5%만 들어간다. 스킬 안의 체력 비례분과 따로 계산되는 최체비 · 잃체비 · 현체비 피해 모두 해당.']],
  ['1.8.0','2026-11',['모든 플레이 기록을 한 번 초기화했다(코인 · 캐릭터 · 전적 · 업적 · 등반 · 이야기 · 닉네임). 조합 캐릭터와 화면 · 소리 설정은 남는다.','뽑기 확률: 고화 75 · 서사 22 · 전설 3.','닉네임은 처음 한 번 정하면 바꿀 수 없다.']],
  ['1.7.2','2026-11',['별무리의 흔적으로 원하는 캐릭터를 골라 데려오던 것을 없앴다.','대신 「별무리 뽑기」: 등급을 고르면 그 등급에서 아직 없는 캐릭터 하나가 무작위로 나온다. 값은 고화 30 · 서사 90 · 전설 240(예전 5 · 15 · 40). 가방 → 별무리 뽑기.']],
@@ -767,7 +768,7 @@ function netQuit(){ try{ if(NET.host&&NET.live){ snap(); NET.live=false; sendAll
     if(d&&NET.host&&d.t==='in'){ const e=ents.find(o=>o.net&&o.net.pid===pid); if(e) e.net.tt=performance.now(); }
     if(d&&NET.host&&d.t==='quit'){ const e=ents.find(o=>o.net&&o.net.pid===pid); if(p&&NET.live){ if(e){ e.net=null; e.left=p.name; e.pname=null; if(e.tagOwner) e.tagOwner='ai'; } if(typeof tagRelease==='function') tagRelease(pid,p.name); toast((p.name||'손님')+' 그만뒀다 · 컴퓨터가 대신 움직인다',2600); } return; }
     /* 같은 이름으로 다시 들어왔는데 예전 연결이 아직 안 닫혔으면(2초 넘게 소식 없음) 예전 것을 먼저 내보내 자리를 넘긴다 */
-    if(d&&NET.host&&d.t==='hello'&&NET.live&&!p){ const nm=String(d.name||'손님').slice(0,8),old=NET.players.find(x=>!x.host&&x.pid!==pid&&x.name===nm&&performance.now()-(x.seen||0)>2000); if(old) hostGone(old.pid); }
+    if(d&&NET.host&&d.t==='hello'&&NET.live&&!p){ const nm=String(d.name||'손님').slice(0,13),old=NET.players.find(x=>!x.host&&x.pid!==pid&&x.name===nm&&performance.now()-(x.seen||0)>2000); if(old) hostGone(old.pid); }
     return hm3(pid,d); };
   /* 손님 조작이 0.6초 넘게 안 오면(탭을 내렸거나 끊김) 멈춰 세운다 */
   on('step',()=>{ if(!NET.host) return; const t=performance.now(); for(const e of ents) if(e.net&&e.net.tt&&t-e.net.tt>600){ e.net.mv={x:0,y:0}; e.net.held={}; } });
@@ -1197,3 +1198,14 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-sg],[data
   lock(); $('n-name').addEventListener('change',()=>setTimeout(lock,0)); document.addEventListener('click',e=>{ if(e.target.id==='n-name'&&e.target.readOnly) toast('닉네임은 한 번 정하면 바꿀 수 없다',1800); });
   new MutationObserver(lock).observe(document.body,{childList:true}); /* 닉네임 창이 닫히면 바로 잠근다 */
   const st=document.createElement('style'); st.textContent='#n-name.locked{opacity:.75;cursor:not-allowed}'; document.head.appendChild(st); }
+
+/* ════ 1.8.2 보상 코드 · (지운 코드): 닉네임을 한 번 다시 정한다(2~13자). 새 이름을 정해야 코드가 쓰인 것으로 친다 ════ */
+CODES['(지운 코드)']={rename:1};
+function renameScreen(){ const old=document.getElementById('renv'); if(old) old.remove(); const d=document.createElement('div'); d.className='overlay'; d.id='renv'; d.style.zIndex=46; const cur=nickOf();
+  d.innerHTML='<div class="wrap">'+head('RENAME','닉네임 다시 정하기','지금 · '+esc(cur))+'<div class="row"><input type="text" id="rn-in" maxlength="13" placeholder="새 닉네임 (2~13자)" autocomplete="off" style="flex:1;height:52px;font-size:17px;text-align:center"></div><p class="note">이 코드로 딱 한 번 바꿀 수 있다. 바꾼 뒤에는 다시 바꿀 수 없다.</p><div class="dock"><button class="go" id="rn-ok" type="button">이 이름으로 바꾼다</button><button class="ghost" id="rn-no" type="button">그만둔다</button></div></div>';
+  document.body.appendChild(d); const inp=d.querySelector('#rn-in');
+  d.querySelector('#rn-no').onclick=()=>d.remove();
+  d.querySelector('#rn-ok').onclick=()=>{ const v=inp.value.trim().slice(0,13); if(v.length<2) return toast('닉네임은 2자 이상'); if(v===cur) return toast('지금 이름과 같다'); try{ localStorage.setItem('aetherName',v); }catch(x){} PF.codes=PF.codes||{}; PF.codes['(지운 코드)']=Date.now(); pfSave(); const n=$('n-name'); if(n){ n.value=v; n.readOnly=true; } if(NET.client||NET.host) try{ NET.pick(); }catch(x){} d.remove(); sfx('win'); toast('닉네임을 바꿨다 · '+v,3000); };
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing) d.querySelector('#rn-ok').click(); }); setTimeout(()=>inp.focus(),50); }
+{ const rd2=redeem; redeem=function(v){ const k=String(v||'').replace(/\s+/g,''); if(k!=='(지운 코드)') return rd2(v); PF.codes=PF.codes||{}; if(PF.codes[k]){ toast('이미 쓴 코드다'); return true; } renameScreen(); return true; };
+  const bs6=backStep; backStep=function(){ const r=document.getElementById('renv'); if(r){ r.remove(); return true; } return bs6(); }; }
