@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.2.3';
+const VER='1.3.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -468,6 +468,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.3.0','2026-11',['함께 하기: 들어온 사람이 「준비」를 누르면 방장 명단에 ✔ 준비 완료가 뜨고, 방장의 싸우기 단추에 준비한 사람 수가 나온다. 판이 시작되면 준비는 풀린다.','함께 등반: 방장이 고르는 보상 · 길 · 상점 물건이 모두의 화면에 보이고, 하나를 「추천」할 수 있다. 방장 화면의 그 칸에 누가 추천했는지 뜬다.']],
  ['1.2.3','2026-11',['뽑기 한 번에 나오는 파편이 1~3개에서 3~5개로 늘었다.','함께 하기에서 방장이 아닌 사람 화면에 집중(시전) 막대가 안 보이던 것을 고쳤다.']],
  ['1.2.2','2026-11',['달리기 배율을 1.3배에서 1.2배로 낮췄다.','가방 탭을 다시 짰다: 보유 · 뽑기를 맨 위에 두고, 파편 · 재림 · 숙련 · 데려오기 · 중복 · 확률은 칸을 눌러 창으로 본다.','가방 · 기록 · 설정 탭에서는 나/상대 칸과 싸우기 단추를 숨겨 화면을 넓게 쓴다.','멈춤 메뉴의 단추를 두 줄로 묶고, 그만두기를 따로 눈에 띄게 했다.','대전 화면의 「뽑기」 칸 이름을 「가방」으로 바꿨다.']],
  ['1.2.1','2026-11',['달리기: 바라보는 쪽으로(60도 안쪽) 걸으면 걸음이 1.3배 빨라진다. 마인크래프트의 달리기처럼 앞으로 갈 때만이고, 옆걸음 · 뒷걸음은 그대로다. 보스 몬스터는 빼고 모두에게 적용된다.','잡몹 소환 공통 규칙: 살아 있는 소환 잡몹은 넷까지. 꽉 차 있으면 보스는 소환을 쉬고 나머지 스킬이 30% 빨리 돈다.','소환된 잡몹의 체력을 30% 낮췄다.','보스 이름: 해적 선장 포워트 · 유사의 군주.']],
@@ -619,3 +620,30 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-bag],#bag
   if(t.dataset.sb){ v&&v.remove(); return; } if(t.dataset.re2) setTimeout(()=>{ if(document.getElementById('bagv')) bagPop('re'); },30); });
 { const bs2=backStep; backStep=function(){ const k=document.getElementById('bagv'); if(k){ k.remove(); return true; } return bs2(); }; }
 drawBag();
+
+/* ════════════════ 1.3.0 함께 하기: 준비 표시 · 함께 등반에서 고를 것 추천 ════════════════ */
+/* ── 준비: 들어온 사람이 '준비'를 누르면 방장 명단에 ✔가 뜬다. 판이 시작되면 모두 풀린다 ── */
+lobbyOut=function(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host,ready:!!p.ready})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid}); drawNet(); };
+const readyN=()=>{ const L=NET.players.filter(p=>!p.host); return [L.filter(p=>p.ready).length,L.length]; };
+{ const dn1=drawNet; drawNet=function(){ dn1(); const on=NET.host||NET.client; let rb=$('n-ready'); if(!rb){ const lst=$('n-list'); lst.insertAdjacentHTML('beforebegin','<div class="row" id="n-rdyrow"><button type="button" id="n-ready">준비</button></div>'); rb=$('n-ready'); }
+    $('n-rdyrow').style.display=on&&NET.client?'flex':'none'; const mine=NET.players.find(p=>p.pid===NET.pid); rb.setAttribute('aria-pressed',!!(mine&&mine.ready)); rb.textContent=mine&&mine.ready?'✔ 준비 완료 · 눌러서 풀기':'준비';
+    if(!on) return; $('n-list').querySelectorAll('.pl').forEach((el,i)=>{ const p=NET.players[i]; if(!p||p.host) return; el.insertAdjacentHTML('beforeend','<span style="flex-basis:100%;font-size:12px;font-weight:700;color:'+(p.ready?'var(--ok)':'var(--muted)')+'">'+(p.ready?'✔ 준비 완료':'준비 안 함')+'</span>'); if(p.ready) el.style.borderLeftColor='var(--ok)'; });
+    if(NET.host&&!running){ const [r,n]=readyN(); if(n){ $('start').textContent='싸우기 · 준비 '+r+' / '+n; $('netbar').textContent+=' · 준비 '+r+'/'+n; } } };
+  document.addEventListener('click',e=>{ if(!e.target.closest('#n-ready')||!NET.client||!NET.tx) return; const mine=NET.players.find(p=>p.pid===NET.pid),on=!(mine&&mine.ready); if(mine) mine.ready=on; NET.tx.send({t:'rdy',on}); sfx('ui'); drawNet(); });
+  on('begin',()=>{ if(NET.host&&NET.players.some(p=>p.ready)){ NET.players.forEach(p=>{ p.ready=false; }); setTimeout(lobbyOut,0); } }); }
+
+/* ── 함께 등반: 방장이 고르는 보상 · 길 · 상점을 모두가 보고, 하나를 '추천'할 수 있다. 방장 화면에 누가 무엇을 추천했는지 뜬다 ── */
+const TV={sig:'',v:{}};   /* 지금 고르는 것의 표시 · pid → 추천한 칸 번호 */
+const tvName=pid=>{ const p=NET.players.find(x=>x.pid===pid); return p?(p.name||'손님'):'손님'; };
+function tvChoices(){ return [...$('tw-body').querySelectorAll('.bcard[data-rw],.bcard[data-path],.bcard[data-buy]')].map(b=>({a:b.dataset.rw!==undefined?'rw':b.dataset.path!==undefined?'path':'buy',t:b.querySelector('b')?b.querySelector('b').innerHTML:'',p:b.querySelector('p')?b.querySelector('p').textContent:'',col:b.style.borderLeftColor||'',dis:!!b.disabled})); }
+function tvBadges(){ if(!NET.host) return; const cards=[...$('tw-body').querySelectorAll('.bcard[data-rw],.bcard[data-path],.bcard[data-buy]')]; cards.forEach((b,i)=>{ const o=b.querySelector('.tvb'); if(o) o.remove(); const who=Object.keys(TV.v).filter(k=>TV.v[k]===i).map(tvName); if(who.length) b.insertAdjacentHTML('beforeend','<span class="tvb" style="display:inline-block;margin-top:6px;padding:2px 8px;border-radius:9px;background:var(--gold);color:var(--night);font-size:11.5px;font-weight:700">추천 · '+who.map(esc).join(', ')+'</span>'); }); }
+{ const cs0=coopSend; coopSend=function(end){ if(!NET.host||!NET.tx||coopN()<2) return; const ch=end||!TW?[]:tvChoices(),sig=(TW?TW.floor:0)+'|'+ch.map(c=>c.a+c.t).join('|'); if(sig!==TV.sig){ TV.sig=sig; TV.v={}; } tvBadges();
+    const T=TW; sendAll({t:'tw',end:end||'',floor:T?T.floor:0,what:T?(T.rew?'방장이 보상을 고르는 중':T.shop?'방장이 상인과 거래하는 중':T.fork?'방장이 길을 고르는 중':T.next?'다음 상대 · '+foeLine(T.next):''):'',pw:T?T.pw.map(id=>POWERS[id].name+' '+POWERS[id].lv):[],gear:T?['w','a','t'].filter(s=>GEAR[T.gear[s]]).map(s=>GEAR[T.gear[s]].name):[],best:PF.tw.best,ch,sig,votes:Object.keys(TV.v).map(k=>[TV.v[k],tvName(k),k])}); };
+  const hm1=hostMsg; hostMsg=function(pid,d){ if(d&&NET.host&&(d.t==='rdy'||d.t==='twv')){ const p=NET.players.find(x=>x.pid===pid); if(!p) return;
+      if(d.t==='rdy'){ p.ready=!!d.on; if(p.ready) toast((p.name||'손님')+' · 준비 완료',1800); lobbyOut(); return; }
+      if(d.sig!==TV.sig||!(d.i>=0)) return; if(TV.v[pid]===d.i) delete TV.v[pid]; else { TV.v[pid]=d.i; const c=tvChoices()[d.i]; toast((p.name||'손님')+' 추천 · '+(c?(()=>{ const d=document.createElement('div'); d.innerHTML=c.t; return d.textContent; })():''),2200); } coopSend(); return; }
+    return hm1(pid,d); };
+  const ci0=coopInfo; coopInfo=function(d){ ci0(d); if(d.end||!d.ch||!d.ch.length) return; coopInfo.last=d; const mineV=(d.votes.find(v=>v[2]===NET.pid)||[])[0];
+    const html='<h2>방장이 고를 것 · 하나를 추천할 수 있다</h2>'+d.ch.map((c,i)=>{ const who=d.votes.filter(v=>v[0]===i).map(v=>v[1]); return '<div class="bcard" style="display:block;width:100%;text-align:left;color:var(--ink);border-left-color:'+(c.col||'var(--gold)')+(c.dis?';opacity:.45':'')+'"><b>'+c.t+'</b><p class="note" style="white-space:pre-line">'+esc(c.p)+'</p>'+(who.length?'<span style="display:inline-block;margin:4px 0;padding:2px 8px;border-radius:9px;background:var(--gold);color:var(--night);font-size:11.5px;font-weight:700">추천 · '+who.map(esc).join(', ')+'</span>':'')+(c.dis?'':'<div class="row" style="margin-top:6px"><button type="button" data-tv="'+i+'" aria-pressed="'+(mineV===i)+'">'+(mineV===i?'✔ 내가 추천함 · 눌러서 풀기':'이것을 추천')+'</button></div>')+'</div>'; }).join('');
+    const sub=$('tw-body').querySelector('.sub:last-of-type'); if(sub) sub.insertAdjacentHTML('beforebegin',html); else $('tw-body').insertAdjacentHTML('beforeend',html); };
+  document.addEventListener('click',e=>{ const b=e.target.closest('[data-tv]'); if(!b||!NET.client||!NET.tx||!coopInfo.last) return; NET.tx.send({t:'twv',i:+b.dataset.tv,sig:coopInfo.last.sig}); sfx('ui'); b.disabled=true; b.textContent='보내는 중…'; }); }
