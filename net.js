@@ -15,7 +15,7 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=172;
+const APPV=180;
 /* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
 const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
