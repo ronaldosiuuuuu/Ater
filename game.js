@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.2.1';
+const VER='1.2.2';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -276,7 +276,7 @@ hubCard=function(){ const el=$('twcard'); if(!el) return; const s=twLoad(),d=PF.
    +'<button type="button" class="tool" id="hub-tw"><em>▲</em><b>등반</b><small>'+(s?'이어서 '+s.floor+'층':'최고 '+PF.tw.best+'층')+'</small></button>'
    +'<button type="button" class="tool" id="hub-st"><em>✦</em><b>이야기</b><small>★ '+st+' / '+sm+'</small></button>'
    +'<button type="button" class="tool" id="hub-dy"><em>☀</em><b>오늘의 도전</b><small>'+(d?(PF.daily.win?'이겼다 '+PF.daily.rank:'졌다'):'아직 안 했다')+'</small></button>'
-   +'<button type="button" class="tool" id="hub-ga"><em>◈</em><b>뽑기</b><small>캐릭터 '+own+'명'+(PF.coin>=PULL?' · 뽑을 수 있다':'')+'</small></button></div>'; };
+   +'<button type="button" class="tool" id="hub-ga"><em>◈</em><b>가방</b><small>캐릭터 '+own+'명'+(PF.coin>=PULL?' · 뽑을 수 있다':'')+'</small></button></div>'; };
 hubCard();
 
 /* ═════ 뽑기 연출과 천장 ═════
@@ -468,6 +468,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.2.2','2026-11',['달리기 배율을 1.3배에서 1.2배로 낮췄다.','가방 탭을 다시 짰다: 보유 · 뽑기를 맨 위에 두고, 파편 · 재림 · 숙련 · 데려오기 · 중복 · 확률은 칸을 눌러 창으로 본다.','가방 · 기록 · 설정 탭에서는 나/상대 칸과 싸우기 단추를 숨겨 화면을 넓게 쓴다.','멈춤 메뉴의 단추를 두 줄로 묶고, 그만두기를 따로 눈에 띄게 했다.','대전 화면의 「뽑기」 칸 이름을 「가방」으로 바꿨다.']],
  ['1.2.1','2026-11',['달리기: 바라보는 쪽으로(60도 안쪽) 걸으면 걸음이 1.3배 빨라진다. 마인크래프트의 달리기처럼 앞으로 갈 때만이고, 옆걸음 · 뒷걸음은 그대로다. 보스 몬스터는 빼고 모두에게 적용된다.','잡몹 소환 공통 규칙: 살아 있는 소환 잡몹은 넷까지. 꽉 차 있으면 보스는 소환을 쉬고 나머지 스킬이 30% 빨리 돈다.','소환된 잡몹의 체력을 30% 낮췄다.','보스 이름: 해적 선장 포워트 · 유사의 군주.']],
  ['1.2.0','2026-11',['새 탭 「가방」: 뽑기 · 파편 가방 · 중복 캐릭터 · 재림 · 숙련 · 골라서 데려오기를 한곳에 모았다.','「모두 열기」 단추를 없앴다. 이제 뽑기 방식이 기본이다.','보상 코드는 셋이다. 기록 화면 맨 아래에 적는다.','맵 여덟 개 추가: 무너진 유적 · 오아시스 · 바람골 · 가시 정원 · 차원문 회랑 · 대투기장 · 수렁 늪지 · 협곡. 등반은 층마다 맵이 바뀐다.','이야기는 (임시로) 지금 고른 내 캐릭터로 싸운다.','보상 정리: 레이드는 난이도별 코인 · 별무리와 첫 처치 보상(파편 포함), 등반은 층마다 코인과 5층 단위 첫 돌파 보상, 이야기는 첫 승리 · ★★ · 완주 보상, 오늘의 도전은 그날 첫 승리 보상.','업적을 유형별(전투 · 수집 · 레이드 · 등반 · 이야기 · 함께)로 나눠 본다. 군주 · 위신 사냥 업적 추가.','문서 보스의 「미친척 모드」를 「광폭화 모드」로 바꾸고, 보스 이름과 기술 이름을 새로 지었다.']],
  ['1.1.0','2026-11',['구글 문서 「보스 문서」의 보스 여덟이 레이드에 들어왔다. 결속: 우르사온 · 드리아드 · 미노타우로스 / 군주: 진흙 거인 · 박준형 · 여왕 개미 / 위신: 숭배받는 신 · 모래 왕.','새 보스는 체력이 절반 아래로 내려가면 「미친척 모드」가 되어 패턴이 강해진다.','비어 있던 레이드 난이도 군주 · 위신에 보스가 생겼다(데스카운트 3).','문서에 수치가 없어 체력 · 피해 · 범위 · 대기시간은 시험장에서 정했다. 보스 설명에 정한 것을 적어 두었다.','등반의 보스 차례 뒤쪽에 새 보스가 이어진다.']],
@@ -586,3 +587,34 @@ achScreen=function(){ const old=document.getElementById('achv'); if(old) old.rem
     d.querySelector('#ach-out').onclick=()=>d.remove(); d.querySelector('#ach-tab').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; tab=achScreen.tab=b.dataset.t; render(); d.scrollTop=0; }; d.querySelector('#ach-cat').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; cat=achScreen.cat=+b.dataset.c; render(); d.scrollTop=0; }; };
   render(); document.body.appendChild(d); };
 achCheck({}); hubCard();
+
+/* ════════════════ 1.2.2 화면 정리 ════════════════ */
+{ const gp4=goPage; goPage=function(p){ gp4(p); $('sel').dataset.pg=page; }; $('sel').dataset.pg=page; }
+/* ── 가방: 위에는 보유와 뽑기만. 나머지는 칸을 눌러 창으로 본다 ── */
+const bagData=()=>{ const base=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom),own=base.filter(k=>PF.own[k]);
+  return {base,own,S:Object.keys(PF.shard||{}).filter(k=>CH[k]&&PF.shard[k]>0).sort((a,b)=>PF.shard[b]-PF.shard[a]),D:Object.keys(PF.dup||{}).filter(k=>CH[k]&&PF.dup[k]>0),
+   R:own.filter(k=>CH[k+'_r']&&!PF.re[k]).sort((a,b)=>(reNeed(b).ok-reNeed(a).ok)||(((PF.ch[b]||{}).w||0)+(PF.dup[b]||0)*5)-(((PF.ch[a]||{}).w||0)+(PF.dup[a]||0)*5)),L:Object.entries(PF.ch).filter(x=>CH[x[0]]).sort((a,b)=>b[1].w-a[1].w)}; };
+drawBag=function(){ const el=$('bag'); if(!el) return; const B=bagData(),t=(id,name,sub,n)=>'<button type="button" class="tool" data-bag="'+id+'">'+(n?'<i>'+n+'</i>':'')+'<b>'+name+'</b><small>'+sub+'</small></button>';
+  el.innerHTML='<div class="wal"><div><b>'+PF.coin.toLocaleString()+'</b><small>코인</small></div><div><b>'+PF.star+'</b><small>별무리의 흔적</small></div><div><b>'+B.own.length+' / '+B.base.length+'</b><small>캐릭터</small></div></div>'
+   +(PF.open?'<p class="note">만마의 궁전이 열려 있다. 지금은 모든 캐릭터를 쓸 수 있다.</p>':'')
+   +'<h2>뽑기</h2><div class="pullrow"><button type="button" data-pull="1"'+(PF.coin<PULL?' class="low"':'')+'><b>1번 뽑기</b><small>코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' class="low"':'')+'><b>10번 뽑기</b><small>코인 '+PULL10.toLocaleString()+' · 서사 이상 보장</small></button></div>'
+   +'<p class="sub" style="margin:8px 2px 0">한 번에 파편 1~3개 · '+SHARDN+'개가 모이면 캐릭터 · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번</p>'
+   +'<h2>가방</h2><div class="bagg">'+t('sh','파편',B.S.length?B.S.length+'명의 파편을 모으는 중':'아직 없다',B.S.filter(k=>PF.shard[k]>=SHARDN-2).length?'곧 '+B.S.filter(k=>PF.shard[k]>=SHARDN-2).length:'')
+   +t('re','재림',B.R.length?'조건을 보고 재림한다':'재림할 캐릭터가 없다',B.R.filter(k=>reNeed(k).ok).length?'가능 '+B.R.filter(k=>reNeed(k).ok).length:'')
+   +t('ms','숙련',B.L.length?B.L.length+'명으로 싸웠다':'아직 기록이 없다')+t('get','데려오기','별무리의 흔적으로 골라서')
+   +t('dup','중복 캐릭터',B.D.length?B.D.reduce((a,k)=>a+PF.dup[k],0)+'개 · 재림에 쓴다':'아직 없다')+t('rate','확률 · 규칙','뽑기가 어떻게 되는지')+'</div>'; };
+function bagPop(kind){ const old=document.getElementById('bagv'); if(old) old.remove(); const d=document.createElement('div'); d.className='overlay'; d.id='bagv'; d.dataset.kind=kind; d.style.zIndex=9;
+  const B=bagData(),nm=k=>esc(CH[k].name.split(', ')[1]),pb=(v,m,col)=>'<div class="mbar"><i style="width:'+Math.min(100,Math.round(100*v/m))+'%;background:'+(col||'var(--aether)')+'"></i></div>'; let h='';
+  if(kind==='sh'){ const f=bagPop.f||'all',L=B.S.filter(k=>f==='all'||(f==='own')===!!PF.own[k]); h=head('SHARDS','파편 가방',B.S.length+'명 · 파편 '+SHARDN+'개가 모이면 캐릭터를 얻는다')+'<div class="row" id="sh-f"><button type="button" data-f="all" aria-pressed="'+(f==='all')+'">전체 '+B.S.length+'</button><button type="button" data-f="new" aria-pressed="'+(f==='new')+'">없는 캐릭터</button><button type="button" data-f="own" aria-pressed="'+(f==='own')+'">가진 캐릭터</button></div>'
+     +(L.length?'<div class="shg" style="margin-top:10px">'+L.map(k=>{ const c=CH[k]; return '<div class="shc" style="border-top-color:'+GCOL[c.grade]+'"><span class="n">'+PF.shard[k]+' / '+SHARDN+'</span><b>'+nm(k)+'</b><small>'+c.grade+' '+c.cls+(PF.own[k]?' · 가짐':'')+'</small>'+pb(PF.shard[k],SHARDN,GCOL[c.grade])+'</div>'; }).join('')+'</div>':'<p class="sub" style="margin-top:12px">여기에는 아직 없다. 파편은 뽑기와 레이드에서 나온다.</p>')+'<p class="note" style="margin-top:12px">가진 캐릭터의 파편 '+SHARDN+'개는 \'중복\' 하나가 되어 재림에 쓰인다.</p>'; }
+  else if(kind==='re'){ h=head('RETURN','재림','체력 +50 · 기본 공격 +2')+'<p class="note">원래 캐릭터로 '+REWIN+'승 이상 + 중복 캐릭터(고화 3 · 서사 2 · 전설 1) + 별무리의 흔적.</p>'+(B.R.length?B.R.map(k=>{ const c=CH[k],n=reNeed(k),ck=(a,b)=>'<span style="color:'+(a>=b?'var(--ok)':'var(--muted)')+'">'; return '<div class="pl" style="border-left-color:'+GCOL[c.grade]+'"><b>'+nm(k)+' <small style="color:var(--muted)">'+esc(CH[k+'_r'].name.split(', ')[0])+'</small></b>'+(n.ok?'<button type="button" data-re2="'+k+'" style="height:34px;border:1px solid var(--gold);border-radius:8px;background:var(--panel);color:var(--gold);padding:0 12px;font-weight:700">재림</button>':'')+'<div style="flex-basis:100%;font-size:12px">'+ck(n.w,REWIN)+'승 '+n.w+'/'+REWIN+'</span> · '+ck(n.d,n.nd)+'중복 '+n.d+'/'+n.nd+'</span> · '+ck(PF.star,n.st)+'별무리 '+n.st+'</span></div></div>'; }).join(''):'<p class="sub">재림할 수 있는 캐릭터가 아직 없다.</p>'); }
+  else if(kind==='ms'){ h=head('MASTERY','숙련','★ 1승 · ★★ 5승 · ★★★ 15승')+(B.L.length?B.L.map(([k,c])=>{ const nx=c.w>=15?0:c.w>=5?15:c.w>=1?5:1; return '<div class="pl"><b>'+nm(k)+mastery(k)+'</b><span style="color:var(--muted)">'+c.w+'승 '+c.l+'패'+(nx?' · 다음 ★까지 '+(nx-c.w)+'승':' · 숙련 끝')+'</span>'+(nx?pb(c.w,nx,'var(--gold)'):'')+'</div>'; }).join(''):'<p class="sub">아직 싸운 기록이 없다.</p>'); }
+  else if(kind==='get'){ const GG=['고화','서사','전설','신화']; h=head('INVITE','골라서 데려오기','별무리의 흔적 '+PF.star)+GG.map(g=>{ const all=gachaPool(g),hv=all.filter(k=>PF.own[k]).length; return '<div class="pl" style="border-left-color:'+GCOL[g]+'"><b>'+g+' '+hv+' / '+all.length+'</b><span style="color:var(--muted)">별무리의 흔적 '+SBUY[g]+'</span>'+(hv<all.length?'<button type="button" data-sb="'+g+'" style="height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 10px">고르기</button>':'')+'</div>'; }).join(''); }
+  else if(kind==='dup'){ h=head('DUPLICATES','중복 캐릭터','재림에 쓴다')+(B.D.length?B.D.map(k=>'<div class="pl" style="border-left-color:'+GCOL[CH[k].grade]+'"><b>'+nm(k)+' <small style="color:var(--muted)">'+CH[k].grade+' '+CH[k].cls+'</small></b><span style="color:var(--muted)">중복 '+PF.dup[k]+' / 재림에 '+(RDUP[CH[k].grade]||0)+'</span></div>').join(''):'<p class="sub">아직 없다. 가진 캐릭터의 파편 '+SHARDN+'개가 모이면 중복 하나가 된다.</p>'); }
+  else { h=head('RULES','확률 · 규칙','뽑기가 어떻게 되는지')+GRATE.map(g=>'<div class="pl" style="border-left-color:'+GCOL[g[0]]+'"><b>'+g[0]+'</b><span style="color:var(--muted)">'+g[1]+'%</span></div>').join('')+'<p class="note" style="white-space:pre-line">신화 · 히든은 뽑기에서 나오지 않는다.\n한 번에 캐릭터 하나의 파편이 1~3개 나온다. 파편 '+SHARDN+'개가 모이면 그 캐릭터를 얻는다.\n이미 가진 캐릭터의 파편 '+SHARDN+'개는 \'중복\' 하나가 되고, 재림에 쓴다.\n'+PITY+'번 안에 전설 파편이 한 번은 나온다(지금 '+Math.max(0,PITY-(PF.pity||0))+'번 남음).\n10번 뽑기는 서사 이상이 하나는 나온다.</p>'; }
+  d.innerHTML='<div class="wrap">'+h+'<div class="dock"><button class="go" id="bag-out" type="button">닫기</button></div></div>'; document.body.appendChild(d); }
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-bag],#bag-out,#sh-f button,#bagv [data-sb],#bagv [data-re2]'); if(!t) return; const v=document.getElementById('bagv');
+  if(t.dataset.bag) return bagPop(t.dataset.bag); if(t.id==='bag-out'){ v&&v.remove(); return drawBag(); } if(t.dataset.f){ bagPop.f=t.dataset.f; return bagPop('sh'); }
+  if(t.dataset.sb){ v&&v.remove(); return; } if(t.dataset.re2) setTimeout(()=>{ if(document.getElementById('bagv')) bagPop('re'); },30); });
+{ const bs2=backStep; backStep=function(){ const k=document.getElementById('bagv'); if(k){ k.remove(); return true; } return bs2(); }; }
+drawBag();

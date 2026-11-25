@@ -267,6 +267,18 @@ textarea{width:100%;min-height:210px;margin:12px 0 8px;padding:12px;border:1px s
 .bf input,.bf select,#build select.big{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:13px var(--body);padding:0 8px;min-width:0;height:38px!important;box-sizing:border-box;user-select:text;-webkit-user-select:text;touch-action:auto}
 .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
 .tool{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:12px 12px;text-align:left;min-height:62px;display:flex;flex-direction:column;gap:3px;font:inherit}
+/* 1.2.2 화면 정리: 가방·기록·설정 탭에서는 나/상대 칸과 싸우기 단추를 숨긴다 */
+#sel[data-pg="bag"] .vs,#sel[data-pg="rec"] .vs,#sel[data-pg="opts"] .vs,#sel[data-pg="bag"] .main>.dock,#sel[data-pg="rec"] .main>.dock,#sel[data-pg="opts"] .main>.dock{display:none}
+#sel[data-pg="bag"] .pages,#sel[data-pg="rec"] .pages,#sel[data-pg="opts"] .pages{padding-top:14px}
+.wal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.wal div{border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:10px 8px;text-align:center;min-width:0}
+.wal b{display:block;font:700 17px var(--display);color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wal small{color:var(--muted);font-size:11px}
+.pullrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pullrow button{border:1px solid var(--gold);border-radius:12px;background:linear-gradient(180deg,rgba(227,195,119,.16),rgba(227,195,119,.05));color:var(--ink);padding:12px 8px;font:inherit;min-height:64px}
+.pullrow button b{display:block;font:700 16px var(--display)}.pullrow button small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.pullrow button.low{opacity:.5}
+.bagg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.bagg .tool{position:relative;min-height:72px}.bagg .tool i{position:absolute;right:10px;top:10px;font-style:normal;font:700 11px var(--mono);color:var(--night);background:var(--gold);border-radius:9px;padding:1px 7px}
+.shg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.shc{border:1px solid var(--line);border-top:3px solid var(--aether);border-radius:10px;background:var(--deep);padding:9px 10px;min-width:0}
+.shc b{display:block;font:600 14px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shc small{color:var(--muted);font-size:11px}.shc .n{float:right;font:700 13px var(--mono)}.shc .mbar{margin-top:6px}
+#pause .wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}#pause .wrap>.title,#pause .wrap>.sub,#pause .wrap>.dock,#pause .wrap>details,#pause .wrap>p,#pause .wrap>#p-quit{grid-column:1 / -1}#pause .wrap>.ghost{margin:0}
+#pause .wrap>#p-quit{margin-top:10px;border-color:rgba(255,125,140,.5);color:#ff9aa5}
 .tool b{font:600 14px var(--display)}.tool small{color:var(--muted);font-size:11.5px}.tool[hidden]{display:none}
 details.og{border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:0 12px;margin:0 0 8px}details.og>summary{font:600 14px var(--display);padding:13px 0;cursor:pointer;list-style:none}details.og>summary::after{content:"＋";float:right;color:var(--muted)}details.og[open]>summary::after{content:"－"}details.og[open]{padding-bottom:12px}
 section[data-page="play"] .brand p,section[data-page="play"] .brand .rule{display:none}section[data-page="play"] .brand{padding:6px 0 0}section[data-page="play"] .brand h1{font-size:26px}
@@ -483,7 +495,7 @@ body.xs .sk[data-s^="x"]{border-color:color-mix(in srgb,var(--kc) 38%,var(--line
 <div id="toast" role="status" aria-live="polite"></div>
 
 <div class="overlay" id="pause" hidden><div class="wrap">
-  <p class="title">잠깐 멈춤</p><p class="sub">카드 원문을 보고 돌아올 수 있다.</p>
+  <p class="title">잠깐 멈춤</p><p class="sub">스킬과 조작키를 보고 돌아올 수 있다.</p>
   <div class="dock" style="position:static"><button class="go" id="p-resume" type="button">계속</button></div>
   <button class="ghost" id="p-me" type="button">내 캐릭터 스킬 보기</button>
   <button class="ghost" id="p-foe" type="button">상대 스킬 보기</button>
@@ -719,7 +731,7 @@ const rm=(e,k)=>{e.st=e.st.filter(s=>s.k!==k)};
 const canAct=e=>!e.dead&&!has(e,'stun')&&e.busy<=now&&!e.dash;
 const canMove=e=>canAct(e)&&!has(e,'root')&&!has(e,'grab');
 const canUse=e=>canAct(e)&&!has(e,'silence')&&e.chant<=now;
-const RUNSPD=1.3,RUNDOT=.5;   /* 달리기 속도 배수 · 달리기로 치는 각도(조준과 걷는 방향이 60도 안쪽일 때) */
+const RUNSPD=1.2,RUNDOT=.5;   /* 달리기 속도 배수 · 달리기로 치는 각도(조준과 걷는 방향이 60도 안쪽일 때) */
 function speed(e){ if(e.c.steady&&e.chant>now) return CFG.speed; let h=0,sl=0; for(const s of e.st){ if(s.k==='haste') h+=s.v; if(s.k==='slow') sl=Math.max(sl,s.v);} return CFG.speed*(1+h)*(1-sl)*(e.c.speedMod?e.c.speedMod(e):1)*mapSpeed(e); }
 function say(e,txt,col){ let lane=0; for(const f of floats) if(f.own===e&&!f.s&&now-f.t0<.6) lane++; floats.push({own:e,x:e.x,y:e.y-1.15-e.z*.45-Math.min(lane,5)*.5,txt,col:col||'#eef1ff',t0:now}); }
 function shield(e,v,t){ e.sh.push({v,until:now+t}); say(e,'보호막 '+v,'#cfd6ff'); sfx('shield'); }
