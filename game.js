@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.5.3';
+const VER='1.6.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -56,7 +56,7 @@ let KEEP=null;
 function keepSet(){ if(KEEP) return; KEEP={practice,mode,teamN,diff,me:sel.me,meR:sel.meR,foe:sel.foe,foeR:sel.foeR,al:sel.al.slice(),fo:sel.fo.slice(),mon:OPT.mon,monhp:OPT.monhp,raid:OPT.raid,myth:OPT.myth,map:OPT.map}; }
 function keepBack(){ if(!KEEP) return; const k=KEEP; KEEP=null; practice=k.practice; mode=k.mode; teamN=k.teamN; diff=k.diff; sel.me=k.me; sel.meR=k.meR; sel.foe=k.foe; sel.foeR=k.foeR; sel.al=k.al; sel.fo=k.fo; OPT.mon=k.mon; OPT.monhp=k.monhp; OPT.raid=k.raid; OPT.myth=k.myth; OPT.map=k.map; drawSel(); modeNote(); hubCard(); }
 /* 빌려 쓴 설정이 싸움 없이 남아 있으면(도중에 화면이 닫힌 경우) 되돌린다 */
-function keepFix(){ if(KEEP&&!running&&!(TW&&TW.on)&&!SPM) keepBack(); }
+function keepFix(){ if(KEEP&&!running&&!(TW&&TW.on)&&!SPM&&!(typeof TUT!=='undefined'&&TUT.on)) keepBack(); }
 function setup(x){ keepSet(); practice=false; mode=x.mode||1; teamN=x.teamN||1; diff=x.diff==null?1:x.diff; const c=CH[x.me]; sel.me=c.re?c.base:x.me; sel.meR=!!c.re||!!x.meR; if(x.mon){ OPT.mon=x.mon; OPT.monhp='fit'; } else { const f=CH[x.foe]; sel.foe=f.re?f.base:x.foe; sel.foeR=!!f.re||!!x.foeR; }
   sel.al=[0,1,2,3].map(j=>(x.al||[])[j]||null); sel.fo=[0,1,2,3].map(j=>(x.fo||[])[j]||null); if(x.raid) OPT.raid=x.raid; OPT.myth=x.myth?1:0; if(x.map&&MAPS[x.map]) OPT.map=x.map; }
 
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.6.0','2026-11',['태그매치를 친구와 함께 할 수 있다. 방장이 방식에서 태그매치를 고르면 손님도 캐릭터 탭에서 우리 팀 칸 둘을 더 고른다.','편마다 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 나눠 맡는다(남는 칸은 그 편의 첫 사람). 같은 편이 되어 컴퓨터와 겨루는 협동 태그도 된다.','교대: 싸우는 캐릭터의 주인은 원하는 캐릭터로 바꾸고, 대기 중인 캐릭터의 주인은 자기 캐릭터를 들여보낸다. 교대 대기시간은 편마다 하나. 동료 차례에는 「동료 차례」가 뜨고 조작 단추가 숨는다.','손님이 끊기면 그 캐릭터는 컴퓨터가 맡고, 다시 들어오면 돌려받는다. 손님도 쓰러뜨린 캐릭터 수만큼 코인을 받는다.','첫 판 안내: 에이로 샌드백을 상대하며 움직이기 → 기본 공격 → 스킬 → 점프 → 궁극기 → 멈춤을 하나씩 해 본다(1분). 처음 끝내면 코인 1,000. 첫 방문 화면 · 대전 화면의 모험 칸 · 설정 → 도구에서 시작한다.']],
  ['1.5.3','2026-11',['태그매치: 물러난 캐릭터가 남은 지속 피해로 쓰러져 지던 것, 물러난 캐릭터의 장판 · 연속 스킬이 계속 싸우던 것, 쓰러진 사이 고른 캐릭터가 교대 대기시간을 쓰던 것을 고쳤다. 1대1 업적 · S 평가가 붙지 않게 했다. 대기 중인 우리 팀 캐릭터에도 완성이 붙는다.','다시 서는 캐릭터(등반 보스 층 부활 · 킬 선취 · 점령전 · 연습)가 등반 권능 · 장비 · 완성 효과를 잃던 것을 고쳤다. 등반에서 완성 체력이 최대 체력에 제대로 들어간다.','업적 경험치로 레벨이 올라도 레벨 보상을 준다. 여럿이 하는 레이드에서 보스 처치가 가끔 안 세지던 것, 쓰러진 채 이겨도 기사회생이 붙던 것, 등반 · 이야기 중 설정을 바꾸면 빌린 캐릭터 · 방식이 저장되던 것을 고쳤다.','화면: 가로 화면 메뉴에서 알림이 화면 밖에 뜨던 것, 좁은 휴대폰에서 스킬 이름이 잘리던 것(이제 133명 모두 들어간다), 가로 화면 창의 아래 단추가 화면 절반을 덮던 것을 고쳤다. 교대 단추를 낮게, 싸움 중 알림을 한 줄로 했다.','왼손 배치에서 단추 묶음도 거울처럼 놓는다(기본 공격이 바깥쪽). 노치 · 홈 막대(안전 영역)를 피한다. 좁은 화면의 캐릭터 찾기 줄 · 뽑기 결과(네 칸)를 정리했다.','PC: Esc로 창을 닫고 멈춤을 푼다. 겹친 창은 맨 위부터 닫는다. 소리 · 음악 끄기가 다음에도 그대로다. 뽑기 연출은 카드를 누르면 한 번에 넘어간다.']],
  ['1.5.2','2026-11',['최적화: 효과음 잡음 버퍼를 돌려 쓰고, 캐릭터 이름표를 미리 그려 둔 그림으로 붙여 싸움 중 그리기 부담을 줄였다.','옛 휴대폰(iOS 15 등)에서 떠오르는 글자 상자를 그리다 싸움이 멈출 수 있던 것을 막았다.','함께 하기: 자리가 모자란 손님은 그 판을 관전한다(조작 단추를 숨기고 코인 · 전적은 세지 않는다).','잠긴 캐릭터 안내 문구를 지금 방식(뽑기에서 처음 나오면 바로 얻는다)에 맞췄다.']],
  ['1.5.1','2026-11',['태그매치: 교대 재사용 대기시간 15초 → 45초, 대신 싸우는 중에도 교대할 수 있다.','겹침 정리: 싸우는 중 알림 · 교대 단추 · 데스카운트 · 메뉴 알림을 체력 줄 아래에 차례로 쌓고, 왼쪽 기록 줄은 그 아래에서 화면에 들어갈 만큼만 보인다. 고르는 화면과 창에서는 알림이 아래 단추 위에 뜬다. 레이드 · 대돌격 아래쪽 안내 글이 이름표와 겹치던 것을 뺐다.','함께 하기 손질: 방장이 그만두면 손님 화면이 멈춘 채 남던 것, 손님이 그만두기를 한 번만 눌러도 화면이 멈추던 것, 그만둔 손님의 캐릭터를 컴퓨터가 이어 받지 않던 것을 고쳤다.','쓰러진 채 끊긴 손님이 다시 들어와도 자리를 못 찾던 것, 다시 이을 때 빌린 캐릭터가 바뀌던 것, 메뉴 알림이 계속 남던 것을 고쳤다.','손님이 탭을 내리면 그 캐릭터가 마지막 방향으로 계속 걷던 것을 멈추게 했다.','레이드 전리품 · 손님 코인 배수가 방장 기준을 따르게 했다. 함께 레이드 · 등반 뒤 다른 방식으로 싸우면 원래 편으로 돌아간다.']],
@@ -631,7 +632,7 @@ drawBag();
 
 /* ════════════════ 1.3.0 함께 하기: 준비 표시 · 함께 등반에서 고를 것 추천 ════════════════ */
 /* ── 준비: 들어온 사람이 '준비'를 누르면 방장 명단에 ✔가 뜬다. 판이 시작되면 모두 풀린다 ── */
-lobbyOut=function(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host,ready:!!p.ready,done:p.done||''})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid}); drawNet(); };
+lobbyOut=function(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host,ready:!!p.ready,done:p.done||'',tag:p.host?[sel.al[0],sel.al[1]].filter(k=>k&&okKey(k)):(p.tag||[])})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid,hm:practice?0:mode}); drawNet(); };
 const readyN=()=>{ const L=NET.players.filter(p=>!p.host); return [L.filter(p=>p.ready).length,L.length]; };
 { const dn1=drawNet; drawNet=function(){ dn1(); const on=NET.host||NET.client; let rb=$('n-ready'); if(!rb){ const lst=$('n-list'); lst.insertAdjacentHTML('beforebegin','<div class="row" id="n-rdyrow"><button type="button" id="n-ready">준비</button></div>'); rb=$('n-ready'); }
     $('n-rdyrow').style.display=on&&NET.client?'flex':'none'; const mine=NET.players.find(p=>p.pid===NET.pid); rb.setAttribute('aria-pressed',!!(mine&&mine.ready)); rb.textContent=mine&&mine.ready?'✔ 준비 완료 · 눌러서 풀기':'준비';
@@ -717,7 +718,7 @@ function tagSwap(tm,nx,forced){ if(!TG||over) return false; const cur=ents.find(
     for(let i=0;i<2;i++){ const k=sel.al[i]; if(k&&own(k)&&!used.has(k)){ used.add(k); continue; } sel.al[i]=null; } let pool=Object.keys(CH).filter(k=>own(k)&&!used.has(k)).sort(()=>Math.random()-.5);
     for(let i=0;i<2;i++) if(!sel.al[i]){ const k=pool.pop(); if(k){ sel.al[i]=k; used.add(k); } }
     try{ bg0(); } finally { sel.al=keep; } }; }
-on('begin',()=>{ if(!isTag()){ TG=null; tagUi(); return; } TG={bench:[[],[]],last:[-99,-99],cd:[0,0],kills:[0,0]};
+on('begin',()=>{ if(NET.client||!isTag()){ TG=null; tagUi(); return; } TG={bench:[[],[]],last:[-99,-99],cd:[0,0],kills:[0,0],pick:[null,null]};
   for(const tm of [0,1]){ const L=ents.filter(o=>o.team===tm).sort((a,b)=>(a.slot||0)-(b.slot||0)); L.forEach((o,i)=>{ if(i===0){ o.tagOn=true; return; } o.tagOn=false; TG.bench[tm].push(o); }); }
   ents=ents.filter(o=>o.tagOn); msg([['3대3 태그매치 ','#e3c377'],['언제든 교대할 수 있다 · 재사용 대기시간 '+TAG.cd+'초','#fff6d6']],0,true); tagUi(); });
 /* 누가 쓰러지면: 대기가 남았으면 1초 뒤 다음 캐릭터가 들어오고, 없으면 진다 */
@@ -726,11 +727,11 @@ on('begin',()=>{ if(!isTag()){ TG=null; tagUi(); return; } TG={bench:[[],[]],las
     fire('kill',src,t); if(src.c.onKill&&!src.dead) src.c.onKill(src,t); score[src.team]++; TG.kills[src.team]++;
     const left=TG.bench[t.team].filter(o=>!o.dead); msg(short(src)+'(이)가 '+short(t)+'(을)를 쓰러뜨렸다 · '+(t.team?'상대':'우리')+' 남은 캐릭터 '+left.length,src.team,true);
     if(!left.length){ finish(src); return; }
-    after(TAG.next,()=>{ if(over||!TG) return; const cur=ents.find(o=>o.team===t.team&&o.tagOn); if(cur&&!cur.dead) return; const nx=t.team===0?(TG.pick0&&!TG.pick0.dead&&TG.bench[0].includes(TG.pick0)?TG.pick0:TG.bench[0].filter(o=>!o.dead)[0]):TG.bench[1].filter(o=>!o.dead).sort((a,b)=>b.hp/b.max-a.hp/a.max)[0]; TG.pick0=null; if(nx) tagSwap(t.team,nx,true); }); }; }
+    after(TAG.next,()=>{ if(over||!TG) return; const cur=ents.find(o=>o.team===t.team&&o.tagOn); if(cur&&!cur.dead) return; const nx=tagNext(t.team); TG.pick[t.team]=null; if(nx) tagSwap(t.team,nx,true); }); }; }
 on('hit',(s,t,amt)=>{ if(!TG||!(amt>0)||s===t) return; TG.last[s.team]=now; TG.last[t.team]=now; });
 /* 대기 중인 캐릭터의 재사용 대기시간은 계속 돈다 · 컴퓨터 편은 위험하면 교대한다 */
 on('step',dt=>{ if(!TG) return; for(const tm of [0,1]) for(const o of TG.bench[tm]){ if(o.dead) continue; for(const k in o.cd) if(o.cd[k]>0) o.cd[k]=Math.max(0,o.cd[k]-dt); }
-  TG.aiT=(TG.aiT||0)-dt; if(TG.aiT<=0){ TG.aiT=.5; const cur=ents.find(o=>o.team===1&&o.tagOn); if(cur&&!cur.dead&&!tagWhy(1)){ const best=TG.bench[1].filter(o=>!o.dead).sort((a,b)=>b.hp/b.max-a.hp/a.max)[0]; if(best&&cur.hp/cur.max<.4&&best.hp/best.max>cur.hp/cur.max+.25) tagSwap(1,best); } }
+  TG.aiT=(TG.aiT||0)-dt; if(TG.aiT<=0){ TG.aiT=.5; for(const tm of [0,1]){ if(tagHuman(tm)) continue; const cur=ents.find(o=>o.team===tm&&o.tagOn); if(cur&&!cur.dead&&!tagWhy(tm)){ const best=TG.bench[tm].filter(o=>!o.dead).sort((a,b)=>b.hp/b.max-a.hp/a.max)[0]; if(best&&cur.hp/cur.max<.4&&best.hp/best.max>cur.hp/cur.max+.25) tagSwap(tm,best); } } }
   TG.uiT=(TG.uiT||0)-dt; if(TG.uiT<=0){ TG.uiT=.2; tagUi(); } });
 on('end',()=>{ setTimeout(tagUi,0); });
 /* 교대 단추: 화면 위쪽 가운데. PC는 Q · E */
@@ -746,9 +747,9 @@ function tagUi(){ let el=document.getElementById('tagbar'); if(!TG||!running&&!o
   document.addEventListener('keydown',e=>{ if(!TG||!running||over||paused) return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')) return; const i=e.code==='KeyQ'?0:e.code==='KeyE'?1:-1; if(i<0) return; const o=TG.bench[0][i]; if(!o||o.dead) return; const w=tagWhy(0); if(w){ toast('지금은 교대할 수 없다 · '+w,1400); return; } tagSwap(0,o); }); }
 /* 고르는 화면: 태그매치는 3대3 고정, 함께 하기에서는 못 한다 */
 { let prevN=null; const mn0=modeNote; modeNote=function(){ if(mode===7&&!practice){ if(teamN!==3){ prevN=teamN; teamN=3; } } else if(prevN!=null&&teamN===3){ teamN=prevN; prevN=null; } mn0(); $('size').style.display=mode===7&&!practice?'none':'';
-    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 싸우는 중에도 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 '+TAG.cd+'초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위.'; } };
-  const sm0=setMode; setMode=function(m){ if(m===7&&(NET.host||NET.client)&&NET.players.length>1) return toast('태그매치는 아직 혼자(컴퓨터와)만 할 수 있다'); sm0(m); };
-  const la0=launch; launch=function(){ if(mode===7&&!practice&&(NET.host||NET.client)&&NET.players.length>1) return toast('태그매치는 아직 혼자(컴퓨터와)만 할 수 있다'); return la0(); };
+    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 싸우는 중에도 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 '+TAG.cd+'초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위. 친구와 함께: 편마다 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 나눠 맡는다(남는 칸은 그 편의 첫 사람).'; } };
+  const sm0=setMode; setMode=function(m){ sm0(m); };
+  
   modeNote(); }
 /* 보상: 쓰러뜨린 캐릭터 수만큼 */
 { const en1=earn; earn=function(win){ const g=en1(win); if(!(mode===7&&!practice&&TG)||TW&&TW.on||SPM) return g; PF.coin-=g.c; PF.star-=g.st; const m=DIFFPAY[diff]==null?1:DIFFPAY[diff],k=TG.kills[0]; g.c=Math.round(k*TAG.pay*m); g.st=k>=3?1:0; PF.coin+=g.c; PF.star+=g.st; g.note='캐릭터 '+k+'명 쓰러뜨림'; return g; }; }
@@ -787,7 +788,8 @@ let HUDY=0,HUDLIM=0;
 function layoutTop(){ const tst=$('toast'),onT=tst.classList.contains('on'),game=$('sel').hidden&&running||$('sel').hidden&&!!over&&$('res').hidden;
   const vis=el=>{ if(!el||el.hidden) return false; const s=getComputedStyle(el); return s.display!=='none'&&s.visibility!=='hidden'&&el.offsetHeight>0; };
   if(game&&!vis($('pause'))){ const hr=$('hud').getBoundingClientRect(); let y=Math.max(hr.bottom,0)+6; const cvr=cv.getBoundingClientRect();
-    for(const el of [document.getElementById('pzs'),document.getElementById('dcb'),document.getElementById('tagbar')]){ if(!el) continue; if(el.id==='pzs'&&!el.children.length) continue; if(!vis(el)) continue; el.style.top=y+'px'; y+=el.offsetHeight+5; }
+    const land=document.body.classList.contains('land'),co=document.getElementById('coach'); if(co&&land) co.style.top=(Math.max(hr.bottom,0)+6)+'px'; /* 가로 화면의 첫 판 안내 칸은 오른쪽 위에 따로 둔다(가운데의 내 캐릭터를 가리지 않게) */
+    for(const el of [document.getElementById('pzs'),document.getElementById('dcb'),document.getElementById('tagbar'),land?null:co]){ if(!el) continue; if(el.id==='pzs'&&!el.children.length) continue; if(!vis(el)) continue; el.style.top=y+'px'; y+=el.offsetHeight+5; }
     tst.classList.add('ingame'); tst.style.top=y+'px'; tst.style.bottom='auto'; if(onT) y+=tst.offsetHeight+5;
     HUDY=y>hr.bottom+8?(y-cvr.top)/cell+.55:0;
     /* 기록 줄이 내려갈 수 있는 끝: 가로 화면은 왼쪽 아래 이동 스틱 위까지, 세로 화면은 아래 점수 줄 위까지 */ let lim=VH-2.1; for(const el of [$('stick'),$('btns')]){ const r=el.getBoundingClientRect(); if(r.width&&r.left<innerWidth*.4&&r.top>cvr.top&&r.top<cvr.bottom) lim=Math.min(lim,(r.top-cvr.top)/cell-.35); } HUDLIM=lim; return; }
@@ -886,3 +888,107 @@ function fitSk(){ document.querySelectorAll('#btns .sk .nm').forEach(el=>{ el.st
 { const fn0=finish; finish=function(w){ if(!over&&mode===6&&!practice){ const bz=ents.find(o=>o.c&&o.c.mon); if(bz) foe=bz; } return fn0(w); }; }
 /* 뽑기 연출: 카드 쪽을 누르면 한 번에 모두 뒤집고, 한 번 더 누르면 결과로 */
 { const gs1=gachaShow; gachaShow=function(res,done){ const r=gs1(res,done); const g0=$('tw-body').querySelector('.gst'); if(g0) g0.addEventListener('click',()=>{ const cs=[...g0.querySelectorAll('.gc')]; if(cs.some(c=>!c.classList.contains('on'))) cs.forEach(c=>c.classList.add('on')); else { const b=$('ga-skip'); if(b) b.click(); } }); return r; }; }
+
+/* ════════════════ 1.6.0 태그매치를 친구와 함께 ════════════════
+   캐릭터마다 주인이 있다: 'host'(방장 · 혼자 할 때의 나) · 손님 pid · 'ai'(컴퓨터).
+   한 편에 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 맡는다(남는 칸은 그 편의 첫 사람 몫).
+   교대는 싸우는 캐릭터의 주인이 원하는 캐릭터로 바꾸거나, 대기 중인 캐릭터의 주인이 자기 캐릭터를 들여보낸다(교대 대기시간은 편마다 하나).
+   방장이 교대 상태를 상태 묶음(tg)에 실어 보내고, 손님은 교대 요청('tag')을 보낸다. */
+const tagAct=tm=>ents.find(o=>o.team===tm&&o.tagOn);
+function tagOwn(o){ if(!o) return 'ai'; if(o.net) return o.net.pid; return o.tagOwner||'ai'; }
+function tagHuman(tm){ return !!TG&&tagAll(tm).some(o=>tagOwn(o)!=='ai'); }
+function tagMay(who,tm,o){ return tagOwn(tagAct(tm))===who||tagOwn(o)===who; }
+function tagNext(tm){ const L=TG.bench[tm].filter(o=>!o.dead),p=TG.pick&&TG.pick[tm]; if(p&&!p.dead&&L.includes(p)) return p; return tagHuman(tm)?L[0]:L.sort((a,b)=>b.hp/b.max-a.hp/a.max)[0]; }
+/* 주인 정하기: 혼자 할 때는 우리 편이 내 것, 상대 편은 컴퓨터. 함께일 때는 아래 자리 배치에서 정한 대로 */
+on('begin',()=>{ if(!TG) return; const solo=!(NET.host&&NET.players.length>1); for(const tm of [0,1]) for(const o of tagAll(tm)){ if(o.tagOwner) continue; o.tagOwner=o.net?o.net.pid:solo&&tm===0?'host':(!solo&&o===me?'host':'ai'); } tagUi(); });
+/* 자리 배치(방장): 태그매치에서는 편마다 세 칸을 사람에게 나눠 준다 */
+{ const as0=NET.afterSpawn; NET.afterSpawn=function(){ if(!(mode===7&&!practice)) return as0(); if(me&&NET.players.length>1) me.pname=NET.name(); for(const p of others()) p.eid=0;
+    for(const tm of [0,1]){ const L=ents.filter(o=>o.team===tm).sort((a,b)=>(a.slot||0)-(b.slot||0)),hum=NET.players.filter(p=>p.team===tm); if(!hum.length) continue;
+      const hasHost=hum.some(p=>p.host),gs=hum.filter(p=>!p.host),own=[]; if(hasHost){ own[0]='host'; gs.slice(0,2).forEach((g,i)=>own[i+1]=g.pid); } else if(gs.length===1) own.push(gs[0].pid,gs[0].pid,gs[0].pid); else gs.slice(0,3).forEach((g,i)=>own[i]=g.pid);
+      const cap=hasHost?'host':gs[0].pid; for(let i=0;i<L.length;i++) if(!own[i]) own[i]=cap;
+      L.forEach((o,i)=>{ const w=own[i]; if(w==='host'){ o.tagOwner='host'; return; } const p=NET.players.find(q=>q.pid===w); if(!p) return; const nth=own.slice(0,i).filter(x=>x===w).length;
+        let key=nth===0?(p.re&&CH[p.key+'_r']?p.key+'_r':p.key):(p.tag||[])[nth-1]; if(!key||!CH[key]||!(okKey(key)||CH[key].re&&okKey(CH[key].base))) key=o.key;
+        const n=mk(key,tm,o.x,o.y); n.slot=o.slot; n.busy=o.busy; n.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; n.pname=p.name; n.tagOwner=p.pid; ents[ents.indexOf(o)]=n; if(o===foe) foe=n; if(o===me) me=n; if(nth===0) p.eid=n.id; }); } }; }
+/* 방장이 손님에게 보내는 교대 상태 */
+function tagNet(){ if(!TG) return undefined; const one=o=>[o.id,o.key,Math.round(o.hp),o.max,o.dead?1:0,tagOwn(o)];
+  return {a:[0,1].map(tm=>{ const a=tagAct(tm); return a?a.id:0; }),ao:[0,1].map(tm=>tagOwn(tagAct(tm))),b:[TG.bench[0].map(one),TG.bench[1].map(one)],w:[tagWhy(0),tagWhy(1)],k:TG.kills.slice(),p:[0,1].map(tm=>TG.pick[tm]&&!TG.pick[tm].dead?TG.pick[tm].id:0)}; }
+/* 교대 요청 처리(방장): 자격 · 대기시간을 보고 바꾼다. 싸우던 캐릭터가 쓰러진 1초 사이면 '다음에 나설 캐릭터'로 정해 둔다 */
+function tagAsk(who,id){ if(!TG||over) return ''; let tm=-1,o=null; for(const t of [0,1]){ const x=TG.bench[t].find(q=>q.id===id); if(x){ tm=t; o=x; } } if(!o||o.dead) return '';
+  if(!tagMay(who,tm,o)) return '그 캐릭터는 다른 사람 몫이다'; const cur=tagAct(tm); if(!cur||cur.dead){ TG.pick[tm]=o; return '다음에 나설 캐릭터 · '+short(o); } const w=tagWhy(tm); if(w) return '지금은 교대할 수 없다 · '+w; tagSwap(tm,o); return ''; }
+{ const hm4=hostMsg; hostMsg=function(pid,d){ if(d&&NET.host&&d.t==='tag'){ tagAsk(pid,+d.id); return; } if(d&&NET.host&&d.t==='pick'){ const p=NET.players.find(x=>x.pid===pid); if(p) p.tag=(Array.isArray(d.tag)?d.tag:[]).filter(k=>okKey(k)).slice(0,2); } return hm4(pid,d); };
+  /* 들어온 캐릭터는 다음 상태 묶음에서 모든 정보를 보낸다(손님 화면에 바로 보이게) */
+  const ts1=tagSwap; tagSwap=function(tm,nx,forced){ const r=ts1(tm,nx,forced); if(r&&NET.known) NET.known.delete(nx.id); return r; };
+  /* 끊긴 손님의 대기 캐릭터는 컴퓨터가 맡고, 다시 들어오면 돌려준다 */
+  const hg0=hostGone; hostGone=function(pid){ const p=NET.players.find(x=>x.pid===pid&&!x.host); hg0(pid); if(TG&&p) for(const tm of [0,1]) for(const o of TG.bench[tm]) if(o.net&&o.net.pid===pid){ o.net=null; o.left=p.name; o.pname=null; } };
+  const rs0=reseat; reseat=function(p){ let got=0; if(TG) for(const tm of [0,1]) for(const o of TG.bench[tm]) if(o.left&&o.left===p.name&&!o.net){ o.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; o.pname=p.name; o.left=null; o.tagOwner=p.pid; got=got||o.id; }
+    const had=p.eid; rs0(p); if(TG&&got&&p.eid===had){ p.eid=got; NET.known=new Set(); NET.n=0; NET.mSig=''; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic',o=tagAll(0).concat(tagAll(1)).find(x=>x.id===got); NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:got,team:o?o.team:(p.team===0?0:1),cap:CAPGOAL,diff,mon:''}); toast((p.name||'손님')+' 다시 들어왔다'); } }; }
+/* 손님: 받은 교대 상태로 '지금 내가 모는 캐릭터'를 정하고, 아니면 기다린다 */
+{ const ap1=apply; apply=function(S){ if(S&&S.tg){ NET.tg=S.tg; const raw=NET.flip?1:0,a=S.tg.a[raw]; NET.you=a&&S.tg.ao[raw]===NET.pid?a:0; } else if(S) NET.tg=null; const prev=me; ap1(S); if(NET.tg&&me&&(!prev||me.id!==prev.id)&&!NET.first) uiBegin(); tagUi(); }; }
+/* 교대 칸(방장 · 손님 · 혼자 모두) */
+function tagView(){ if(TG&&!NET.client){ const one=o=>({id:o.id,name:short(o),hp:o.hp,max:o.max,dead:!!o.dead,own:tagOwn(o)}); return {mine:TG.bench[0].map(one),foes:TG.bench[1].map(one),why:tagWhy(0),aOwn:tagOwn(tagAct(0)),who:'host',pick:TG.pick[0]&&TG.pick[0].id,wait:!!(me&&me.net)}; }
+  if(NET.client&&NET.tg){ const t=NET.tg,raw=NET.flip?1:0,one=x=>({id:x[0],name:CH[x[1]]?CH[x[1]].name.split(', ').pop():x[1],hp:x[2],max:x[3],dead:!!x[4],own:x[5]}); return {mine:t.b[raw].map(one),foes:t.b[1-raw].map(one),why:t.w[raw],aOwn:t.ao[raw],who:NET.pid,pick:t.p[raw],wait:!NET.you}; } return null; }
+tagUi=function(){ let el=document.getElementById('tagbar'); const V=(running||over)?tagView():null; document.body.classList.toggle('tagwait',!!V&&V.wait&&!over&&!NET.spect); if(!V){ if(el) el.hidden=true; return; }
+  if(!el){ el=document.createElement('div'); el.id='tagbar'; document.body.appendChild(el); } el.hidden=!!over; const pc=matchMedia('(pointer:fine)').matches;
+  const h=(V.wait?'<span class="tgw">동료 차례</span>':'')+V.mine.map((o,i)=>{ const may=V.aOwn===V.who||o.own===V.who,f=Math.max(0,o.hp/o.max),st=o.dead?'쓰러짐':V.pick===o.id?'다음':!may?'동료 몫':(V.why||'교대'); return '<button type="button" data-tid="'+o.id+'"'+(o.dead||!may||V.why&&V.pick!==o.id?' class="off"':'')+'><b>'+(pc&&may?(i?'E':'Q')+' · ':'')+esc(o.name)+' <small>'+st+'</small></b><i><u style="width:'+Math.round(f*100)+'%"></u></i></button>'; }).join('')
+   +'<span class="tgf">'+V.foes.map(o=>'<em'+(o.dead?' class="off"':'')+'>'+esc(o.name)+' '+(o.dead?'✕':Math.round(o.hp/o.max*100)+'%')+'</em>').join('')+'</span>';
+  if(el.__h!==h){ el.__h=h; el.innerHTML=h; } };
+{ const st=document.createElement('style'); st.textContent='body.tagwait #btns,body.tagwait #stick{visibility:hidden}#tagbar .tgw{align-self:center;font:700 11px var(--body);color:#fff3cf;background:rgba(40,30,6,.82);border:1px solid var(--gold);border-radius:9px;padding:3px 7px;white-space:nowrap}'; document.head.appendChild(st);
+  const ask=id=>{ if(NET.client){ if(NET.tx) NET.tx.send({t:'tag',id}); sfx('ui'); return; } const r=tagAsk('host',id); if(r) toast(r,1600); };
+  window.addEventListener('click',e=>{ const b=e.target.closest('#tagbar [data-tid]'); if(!b) return; e.stopImmediatePropagation(); if(!running||over||paused) return; ask(+b.dataset.tid); },true);
+  window.addEventListener('keydown',e=>{ if(e.code!=='KeyQ'&&e.code!=='KeyE') return; const V=running&&!over&&!paused?tagView():null; if(!V) return; const a=document.activeElement; if(a&&/INPUT|TEXTAREA/.test(a.tagName)) return; e.stopImmediatePropagation(); const may=V.mine.filter(o=>V.aOwn===V.who||o.own===V.who),o=may[e.code==='KeyQ'?0:1]; if(o&&!o.dead) ask(o.id); },true); }
+/* 손님의 보상: 쓰러뜨린 캐릭터 수만큼(방장이 보낸 수로 센다) */
+{ const en3=earn; earn=function(win){ if(!(NET.client&&mode===7&&NET.tg)) return en3(win); const g=en3(win); PF.coin-=g.c; PF.star-=g.st; const m=DIFFPAY[typeof NET.hdiff==='number'?NET.hdiff:diff]||1,k=NET.tg.k[NET.flip?1:0]||0; g.c=Math.round(k*TAG.pay*m); g.st=k>=3?1:0; PF.coin+=g.c; PF.star+=g.st; g.note='캐릭터 '+k+'명 쓰러뜨림'; return g; }; }
+/* 손님: 방장이 태그매치를 고르면 내 쪽도 3대3으로 맞춰 '우리 팀' 칸 둘을 고를 수 있게 한다(방을 나가면 원래대로) */
+{ const cm2=clientMsg; clientMsg=function(d){ cm2(d); if(!d||d.t!=='lobby'||!NET.client) return; NET.hm=d.hm;
+    if(d.hm===7&&!(mode===7&&!practice)){ if(!NET.gkeep) NET.gkeep={mode,teamN,practice}; NET.tagSync=true; practice=false; mode=7; teamN=3; try{ modeNote(); drawSel(); }catch(x){} toast('방장이 태그매치를 골랐다 · 캐릭터 탭에서 우리 팀 칸 둘도 고른다',4200); NET.pick(); }
+    else if(d.hm!==7&&NET.tagSync){ NET.tagSync=false; const k=NET.gkeep; if(k){ mode=k.mode; teamN=k.teamN; practice=k.practice; try{ modeNote(); drawSel(); }catch(x){} } } };
+  const pc0=pickCh; pickCh=function(k){ const r=pc0(k); if((NET.client||NET.host)&&typeof slot==='string'&&slot.slice(0,2)==='al') NET.pick(); return r; };
+  /* 모인 사람 명단에 태그 캐릭터 셋을 보여 준다 */
+  const dn3=drawNet; drawNet=function(){ dn3(); const tg=NET.host?mode===7&&!practice:NET.client&&NET.hm===7; if(!tg||!(NET.host||NET.client)) return; $('n-list').querySelectorAll('.pl').forEach((el,i)=>{ const p=NET.players[i]; if(!p) return; const L=(p.host&&NET.host?[sel.al[0],sel.al[1]]:(p.tag||[])).filter(k=>k&&CH[k]); const sp=el.querySelectorAll('span')[0]; if(sp&&!sp.dataset.tg){ sp.dataset.tg=1; sp.insertAdjacentHTML('beforeend',' <small style="color:var(--muted)">+ '+(L.length?L.map(k=>CH[k].name.split(', ')[1]).join(' + '):'칸 비움(가진 캐릭터 무작위)')+'</small>'); } }); }; }
+
+/* ════════════════ 1.6.0 첫 판 안내 ════════════════
+   에이로 샌드백(비라)을 상대하며 움직이기 → 기본 공격 → 스킬 → 점프 → 궁극기 → 멈춤을 한 단계씩 해 본다.
+   단계마다 해당 단추가 빛난다. 처음 끝내면 코인 1,000. 언제든 그만둘 수 있고, 설정 → 도구에서 다시 할 수 있다. */
+const TUT={on:false};
+const tutPC=()=>matchMedia('(pointer:fine)').matches;
+const TSTEP=[
+ {t:'움직이기',d:()=>tutPC()?'W · A · S · D로 이리저리 움직여 본다.':'화면 왼쪽 아래를 누르고 밀면 그쪽으로 걷는다. 이리저리 움직여 본다.',hi:'#stick',ok:()=>TUT.mv>=6},
+ {t:'기본 공격',d:()=>tutPC()?'샌드백 가까이 가서 왼쪽 클릭(또는 J)으로 세 번 친다.':'샌드백 가까이 가서 「기본 공격」 단추로 세 번 친다. 누르고 있으면 계속 친다.',hi:'.sk[data-s="b"]',ok:()=>TUT.hits>=3},
+ {t:'스킬',d:()=>'스킬 단추를 하나 써 본다. 단추의 숫자는 다시 쓰기까지 기다리는 초다.'+(tutPC()?' (1 · 2 · 3, 마우스로 조준)':' 단추를 누른 채 밀면 쓸 방향을 정한다.'),hi:'.sk[data-s="n1"]',ok:()=>TUT.sk},
+ {t:'점프',d:()=>(tutPC()?'Space로':'「점프」 단추로')+' 뛰어 본다. 땅을 타고 오는 공격은 뛰어서 피할 수 있다.',hi:'.sk[data-s="jump"]',ok:()=>TUT.jp},
+ {t:'궁극기',d:()=>'궁극기는 단추 아래 적힌 조건을 채워야 쓸 수 있고, 발밑의 금색 고리가 차면 준비된 것이다. 지금은 조건 없이 한 번 써 본다.'+(tutPC()?' (4)':''),hi:'.sk[data-s="ult"]',ok:()=>TUT.ult,enter:()=>{ pFree=true; $('p-free').textContent='궁극기 조건 무시: 켬'; }},
+ {t:'멈춤',d:()=>'오른쪽 위 ≡ 단추'+(tutPC()?'(또는 Esc)':'')+'로 언제든 멈추고 내 · 상대 스킬 원문을 볼 수 있다. 한 번 열었다가 「계속」으로 돌아온다.',hi:'#menu',ok:()=>TUT.menu&&$('pause').hidden}
+];
+function tutStart(){ if(NET.host||NET.client) return toast('친구와 함께 하는 중에는 할 수 없다'); if(running) return;
+  keepSet(); TUT.keep={sandHp,sandInf,sandAct}; setMode(0); sel.me='ei'; sel.meR=false; sel.foe='vira'; sel.foeR=false; sandInf=true; sandAct=0; OPT.map='basic';
+  Object.assign(TUT,{on:true,i:0,mv:0,hits:0,sk:false,jp:false,ult:false,menu:false,menuOpen:false,lx:null,ly:null,doneT:0}); $('tower').hidden=true; launch(); }
+function tutEnd(){ if(!TUT.on) return; TUT.on=false; const c=document.getElementById('coach'); if(c) c.remove(); document.querySelectorAll('.coach-hi').forEach(x=>x.classList.remove('coach-hi')); if(TUT.keep){ sandHp=TUT.keep.sandHp; sandInf=TUT.keep.sandInf; sandAct=TUT.keep.sandAct; TUT.keep=null; } keepBack(); }
+function tutDraw(){ let el=document.getElementById('coach'); if(!TUT.on||!running){ if(el) el.remove(); return; } if(!el){ el=document.createElement('div'); el.id='coach'; document.body.appendChild(el);
+    el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; e.stopPropagation(); if(b.dataset.c==='skip'){ tutNext(); } else if(b.dataset.c==='quit'||b.dataset.c==='done'){ tutQuit(); } else if(b.dataset.c==='more'){ tutEnd(); toast('계속 연습한다 · ≡ 단추의 그만두기로 끝낸다',3000); } }); }
+  document.querySelectorAll('.coach-hi').forEach(x=>x.classList.remove('coach-hi'));
+  if(TUT.i>=TSTEP.length){ const h='<b>다 해 봤다!</b><p>이제 대전 화면에서 「싸우기」를 누르면 컴퓨터와 겨룬다. 3대3 태그매치(셋이서 교대), 레이드(보스), 등반(층 오르기), 이야기도 있다.'+(TUT.paid?' <em>코인 +1,000</em>':'')+'</p><div><button type="button" data-c="done" class="cg">끝내기</button><button type="button" data-c="more">계속 연습</button></div>'; if(el.__h!==h){ el.__h=h; el.innerHTML=h; } return; }
+  const S=TSTEP[TUT.i],hi=document.querySelector(S.hi); if(hi) hi.classList.add('coach-hi');
+  const h='<small>첫 판 안내 · '+(TUT.i+1)+' / '+TSTEP.length+'</small><b>'+S.t+'</b><p>'+S.d()+'</p><div><button type="button" data-c="skip">건너뛰기</button><button type="button" data-c="quit">그만두기</button></div>'; if(el.__h!==h){ el.__h=h; el.innerHTML=h; } }
+function tutNext(){ TUT.i++; sfx('win'); if(TUT.i<TSTEP.length&&TSTEP[TUT.i].enter) TSTEP[TUT.i].enter(); if(TUT.i>=TSTEP.length&&!PF.tut){ PF.tut=Date.now(); PF.coin+=1000; TUT.paid=true; pfSave(); } tutDraw(); }
+function tutQuit(){ if(!TUT.on) return; const wasRun=running; tutEnd(); if(wasRun){ $('pause').hidden=true; paused=false; over={winner:null,t:now}; showResult(); $('res').hidden=true; $('sel').hidden=false; goPage('play'); hubCard(); } }
+on('begin',()=>{ if(!TUT.on) return; if(typeof GD!=='undefined') GD.on=false; TUT.lx=me.x; TUT.ly=me.y; tutDraw(); });
+on('hit',(s,t,amt,label,o)=>{ if(TUT.on&&s===me&&o&&o.basic) TUT.hits++; });
+on('cast',(e,slot)=>{ if(!TUT.on||e!==me) return; if(slot==='ult') TUT.ult=true; else if(['n1','n2','aw','x1','x2','x3','x4'].includes(slot)) TUT.sk=true; });
+on('step',()=>{ if(!TUT.on||!me) return; if(Math.hypot(stick.x,stick.y)>.2&&TUT.lx!=null) TUT.mv+=Math.hypot(me.x-TUT.lx,me.y-TUT.ly); TUT.lx=me.x; TUT.ly=me.y; if(me.z>.3&&!me.launched) TUT.jp=true;
+  if(TUT.i<TSTEP.length&&TSTEP[TUT.i].ok()) tutNext(); TUT.uT=(TUT.uT||0)-1; if(TUT.uT<=0){ TUT.uT=10; tutDraw(); } });
+document.addEventListener('click',e=>{ if(TUT.on&&e.target.closest('#menu')) TUT.menu=true; },true);
+/* 멈춤 화면에서 「계속」으로 돌아오면 멈춤 단계가 끝난다 */
+document.addEventListener('click',e=>{ if(TUT.on&&e.target.closest('#p-resume')&&TUT.menu&&TUT.i<TSTEP.length&&TSTEP[TUT.i].t==='멈춤') setTimeout(()=>{ if(TUT.on&&TSTEP[TUT.i]&&TSTEP[TUT.i].ok()) tutNext(); },50); });
+{ const sr10=showResult; showResult=function(){ if(TUT.on) tutEnd(); return sr10(); }; }
+{ const st=document.createElement('style'); st.textContent='body.land #coach{left:auto;right:max(12px,env(safe-area-inset-right));transform:none;width:min(42vw,330px);padding:8px 10px}body.land #coach b{font-size:14.5px}body.land #coach p{font-size:12px}'
+   +'#coach{position:fixed;left:50%;transform:translateX(-50%);z-index:4;width:min(92vw,420px);padding:10px 12px 9px;border:1px solid var(--gold);border-radius:6px 16px 6px 16px;background:rgba(10,15,36,.94);box-shadow:0 0 30px rgba(227,195,119,.2);color:var(--ink)}'
+   +'#coach small{display:block;font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--gold)}#coach b{display:block;font:700 16px var(--display);margin:2px 0 3px}#coach p{margin:0;font-size:13px;line-height:1.5;color:#d5dbf5}#coach p em{font-style:normal;color:var(--gold);font-weight:700}'
+   +'#coach div{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}#coach button{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:600 12.5px var(--body);padding:6px 12px;min-height:34px}#coach button.cg{border-color:var(--gold);background:linear-gradient(180deg,#f0d696,var(--gold));color:#1b1404;font-weight:800}'
+   +'.coach-hi{outline:3px solid #ffd36b!important;outline-offset:3px;animation:coachp 1s ease-in-out infinite}@keyframes coachp{50%{outline-color:rgba(255,211,107,.25)}}'
+   +'.hub .tut{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 10px;padding:10px 12px;border:1px solid var(--gold);border-radius:10px;background:linear-gradient(90deg,rgba(227,195,119,.18),rgba(227,195,119,.04));color:var(--ink);font:inherit;text-align:left}.hub .tut b{font:700 14.5px var(--display);color:#fff3cf}.hub .tut small{color:var(--muted);font-size:11.5px;display:block}.hub .tut i{margin-left:auto;font-style:normal;color:var(--gold);font-size:18px}';
+  document.head.appendChild(st);
+  /* 들어가는 곳: 모험 칸 맨 위(처음 끝낼 때까지) · 첫 방문 안내 화면 · 설정 → 도구 */
+  const hc2=hubCard; hubCard=function(){ hc2(); const el=$('twcard'); if(!el||PF.tut) return; const h=el.querySelector('.hubh'); if(h&&!el.querySelector('#hub-tut')) h.insertAdjacentHTML('afterend','<button type="button" class="tut" id="hub-tut"><span><b>처음이라면 · 첫 판 안내</b><small>1분 · 조작을 한 판 안에서 하나씩 해 본다 · 코인 1,000</small></span><i>▶</i></button>'); }; hubCard();
+  const wd=$('w-close'); if(wd){ wd.className='ghost'; wd.textContent='나중에'; wd.insertAdjacentHTML('beforebegin','<button class="go" id="w-tut" type="button">첫 판 안내로 시작 (1분)</button>'); }
+  const tl=$('tools'); if(tl){ const b=document.createElement('button'); b.className='tool'; b.id='tutb'; b.type='button'; b.innerHTML='<b>첫 판 안내</b><small>조작을 한 판 안에서 배운다</small>'; tl.insertBefore(b,tl.firstChild); }
+  document.addEventListener('click',e=>{ const t=e.target.closest('#hub-tut,#w-tut,#tutb'); if(!t) return; if(t.id==='w-tut'){ $('welcome').hidden=true; try{ localStorage.setItem('aetherSeen','1'); }catch(x){} } tutStart(); }); }

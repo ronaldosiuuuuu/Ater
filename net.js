@@ -15,7 +15,7 @@ function ser(v,d){ if(v===null||v===undefined) return undefined; const t=typeof 
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=153;
+const APPV=160;
 /* Metered(무료 몫이 있는 중계 서비스)의 주소 묶음. 아이디·비밀번호만 적으면 이 주소가 들어간다 */
 const METERED='turn:standard.relay.metered.ca:80, turn:standard.relay.metered.ca:80?transport=tcp, turn:standard.relay.metered.ca:443, turns:standard.relay.metered.ca:443?transport=tcp';
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리는 경우에는 중계 서버(TURN)가 있어야 하고, '함께' 화면에서 적어 넣을 수 있다 */
@@ -50,7 +50,7 @@ function hostMsg(pid,d){ if(!NET.host||!d) return; let p=NET.players.find(x=>x.p
   else if(d.t==='bye') hostGone(pid);
   else if(d.t==='in'||d.t==='cast'){ const e=ents.find(o=>o.net&&o.net.pid===pid); if(!e||!NET.live) return;
     if(d.t==='in'){ const m=d.mv||[0,0],L=Math.hypot(m[0],m[1])||0; e.net.mv=L>1?{x:m[0]/L,y:m[1]/L}:{x:+m[0]||0,y:+m[1]||0}; e.net.held.b=!!d.hb; e.net.aim=d.aim?norm(+d.aim[0]||0,+d.aim[1]||0):null; }
-    else if(!e.dead&&!over&&typeof d.s==='string'){ if(d.aim&&canAct(e)){ e.aim=norm(+d.aim[0]||0,+d.aim[1]||0); e.aimLock=now+1; e.aimMan=now+.12; } cast(e,d.s); } } }
+    else if(!e.dead&&!over&&typeof d.s==='string'){ if(d.aim&&canAct(e)){ e.aim=norm(+d.aim[0]||0,+d.aim[1]||0); e.aimLock=now+1; e.aimMan=now+.12; } NET.castNet=true; try{ cast(e,d.s); } finally { NET.castNet=false; } } } }
 /* 양쪽에 모두 있는 캐릭터만 고를 수 있다(조합·카드로 만든 캐릭터, 보스, 적은 안 된다) */
 const okKey=k=>!!CH[k]&&!CH[k].re&&!CH[k].built&&!CH[k].custom&&!CH[k].mon&&!CH[k].mob&&!CH[k].kit;
 function hostGone(pid){ const i=NET.players.findIndex(x=>x.pid===pid&&!x.host); if(i<0) return; const p=NET.players[i]; NET.players.splice(i,1); for(const e of ents) if(e.net&&e.net.pid===pid){ e.net=null; e.left=p.name; e.pname=null; } if(NET.host){ lobbyOut(); if(NET.live) toast((p.name||'손님')+' 연결이 끊겼다 · 컴퓨터가 대신 움직인다'); } }
@@ -60,7 +60,7 @@ function reseat(p){ const e=ents.find(o=>o.left&&o.left===p.name&&!o.net); if(!e
 NET.afterSpawn=()=>{ if(me&&NET.players.length>1) me.pname=NET.name(); for(const p of others()){ p.eid=0; const seat=tm=>ents.filter(o=>o.team===tm&&o!==me&&!o.net&&!o.c.mon).sort((a,b)=>(a.slot||0)-(b.slot||0))[0],o=seat(p.team)||seat(1-p.team); if(!o) continue;
     const key=p.re&&CH[p.key+'_r']?p.key+'_r':p.key,n=mk(key,o.team,o.x,o.y); n.slot=o.slot; n.busy=o.busy; n.net={pid:p.pid,mv:{x:0,y:0},held:{},aim:null}; n.pname=p.name; ents[ents.indexOf(o)]=n; if(o===foe) foe=n; p.eid=n.id; } };
 NET.start=()=>{ NET.live=others().length>0; NET.acc=0; NET.n=0; NET.known=new Set(); NET.mSig=''; for(const f of floats) f._s=0; NET.ev={h:[],k:[],c:[]}; if(!NET.live) return; const mapKey=Object.keys(MAPS).find(k=>MAPS[k]===MAP)||'basic';
-  for(const p of others()){ const e=ents.find(o=>o.id===p.eid); NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:p.eid||0,team:e?e.team:1,cap:CAPGOAL,diff,mon:mode===6?OPT.mon:''}); } snap(); };
+  for(const p of others()){ const e=ents.find(o=>o.id===p.eid); NET.tx.send(p.pid,{t:'start',mode,teamN,map:mapKey,land:LAND,W,H,you:p.eid||0,team:e?e.team:(p.team===0?0:1),cap:CAPGOAL,diff,mon:mode===6?OPT.mon:''}); } snap(); };
 /* 보내는 양 줄이기: 자리·체력처럼 늘 바뀌는 것만 매번 보내고, 이름·최대 체력·상태 줄처럼 잘 안 바뀌는 것은 세 번에 한 번만 보낸다.
    피해 숫자·기록 줄은 새로 생긴 것만 보낸다. 5대5에서 손님 한 명당 초당 93KB쯤 나가던 것이 3분의 1쯤으로 준다 */
 function entS(e,full,mid){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2(e.y),z:r2(e.z),hp:r2(e.hp),max:e.max,atk:e.atk,dead:!!e.dead,aim:[r2(e.aim.x),r2(e.aim.y)],busy:r2(e.busy),chant:r2(e.chant),slot:e.slot||0,
@@ -71,7 +71,7 @@ function entS(e,full,mid){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2
   if(full){ o.dealt={}; for(const k in e.dealt) o.dealt[k]=Math.round(e.dealt[k]); } if(!mid){ for(const k of ['key','team','max','atk','slot','uu','boss','sand','pn','cd']) delete o[k]; } return o; }
 function snap(){ if(!NET.live||!NET.tx) return; const full=NET.n++%15===0||!!over,mid=full||NET.n%4===0,ev=NET.ev; NET.ev={h:[],k:[],c:[]}; const K=NET.known||(NET.known=new Set());
   const nf=floats.filter(f=>!f._s),fl=nf.map(plain); nf.forEach(f=>{ f._s=1; }); const ms=msgs.length+':'+(msgs.length?msgs[msgs.length-1].t0:0)+':'+procs.length+':'+(procs.length?procs[procs.length-1].t0:0),chg=full||ms!==NET.mSig; NET.mSig=ms;
-  sendAll({t:'s',n:r2(now),e:ents.map(e=>{ const m2=mid||!K.has(e.id); K.add(e.id); return entS(e,full,m2); }),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl,m:chg?msgs:undefined,pr:chg?procs:undefined,sc:score,cp:cap,dc:mode===6&&typeof raidDC==='number'?raidDC:undefined,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev}); }
+  sendAll({t:'s',n:r2(now),e:ents.map(e=>{ const m2=mid||!K.has(e.id); K.add(e.id); return entS(e,full,m2); }),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl,m:chg?msgs:undefined,pr:chg?procs:undefined,sc:score,cp:cap,dc:mode===6&&typeof raidDC==='number'?raidDC:undefined,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev,tg:typeof tagNet==='function'?tagNet():undefined}); }
 on('step',dt=>{ if(!NET.live) return; NET.acc+=dt; if(NET.acc>=1/NET.HZ){ NET.acc=0; snap(); } });
 on('end',()=>{ if(NET.live){ snap(); NET.live=false; } });
 on('hit',(s,t,amt,label,o)=>{ if(NET.live&&NET.ev.h.length<80) NET.ev.h.push([s.id,t.id,r2(amt),label,(o&&o.basic?1:0)|(o&&o.skill?2:0)|(o&&o.fixed?4:0)|(PH?8:0)]); });
@@ -125,7 +125,7 @@ NET.frame=dt=>{ if(!me) return; if(NET.hp) dt=0;   /* 방장이 메뉴를 연 �
   if(!paused&&!over) for(const s in held) if(held[s]&&s!=='b') NET.cast(s); };
 NET.cast=slot=>{ if(!NET.tx||!me||over) return; const t=performance.now(); if(t-(NET.lastC[slot]||0)<90) return; NET.lastC[slot]=t; NET.tx.send({t:'cast',s:slot,aim:(me.aimMan>now||mAim)?[r2(me.aim.x),r2(me.aim.y)]:0}); };
 NET.wait=()=>{ toast('방장이 싸우기를 누르면 함께 시작한다.'); };
-NET.pick=()=>{ if(NET.host&&NET.tx) lobbyOut(); else if(NET.client&&NET.tx){ const me0=NET.players.find(p=>p.pid===NET.pid); if(!okKey(sel.me)) return toast('만든 캐릭터는 함께에서 쓸 수 없다'); NET.tx.send({t:'pick',key:sel.me,re:!!(sel.meR&&CH[sel.me+'_r']),name:NET.name(),team:me0?me0.team:undefined}); } };
+NET.pick=()=>{ if(NET.host&&NET.tx) lobbyOut(); else if(NET.client&&NET.tx){ const me0=NET.players.find(p=>p.pid===NET.pid); if(!okKey(sel.me)) return toast('만든 캐릭터는 함께에서 쓸 수 없다'); NET.tx.send({t:'pick',key:sel.me,re:!!(sel.meR&&CH[sel.me+'_r']),name:NET.name(),team:me0?me0.team:undefined,tag:[sel.al[0],sel.al[1]].filter(k=>k&&okKey(k))}); } };
 NET.name=()=>($('n-name').value||'').trim().slice(0,8)||(NET.host?'방장':'손님');
 
 /* ───────── 화면 ───────── */
