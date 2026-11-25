@@ -87,15 +87,15 @@ defDoc('d_giant',2900,3,140,{name:'보스, 수렁의 거신',col:'#7a6a4a',rad:2
  {el:'earth',w:'fists',hair:'#4a3a22',acc:['pauldrons']},
  (e,t,d)=>{ e.ai.want=3; if(go(e,'x2')) return true; if(go(e,'x1')) return true; if(d<=13&&go(e,'aw')) return true; if(d<=6&&go(e,'n2')) return true; if(d<=5+t.rad+.4&&go(e,'n1')) return true; });
 
-/* ───── 5. 박준형 (군주) ───── */
-defDoc('d_park',2800,3,160,{name:'보스, 해적 선장 박준형',col:'#c8a04a',rad:1,speedMod:()=>1.05,
+/* ───── 5. 포워트 (군주) ───── */
+defDoc('d_park',2800,3,160,{name:'보스, 해적 선장 포워트',col:'#c8a04a',rad:1,speedMod:()=>1.05,
   skills:{
    n1:{name:'화약 칼날',kind:'기본 공격',cd:2.5,r:3.5,txt:'화약을 묻힌다(6초) · 광폭화: 큰 피해 + 밀치기',cast(e){ SNAME.powder='화약'; const m=e.r.mad; S.arc(e,3.5,m?75:45,'화약 칼날',{knock:m?3:0,v:'cut',post:t=>add(t,'powder',6,0,{by:e})}); }},
    n2:{name:'쌍포 일제 사격',kind:'집중 마법',cd:9,r:18,txt:'좌우의 원숭이가 대포를 쏜다. 화약이 묻은 적은 더 크게 맞는다 · 광폭화: 세 번 연달아',cast(e){ const n=e.r.mad?3:1,d=e.aim,px={x:-d.y,y:d.x}; S.focus(e,.5+n*.45); for(let k=0;k<n;k++) after(.4+k*.45,()=>{ if(e.dead||over) return; for(const s of [-1,1]){ const p0={x:Math.max(1,Math.min(W-1,e.x+px.x*4*s)),y:Math.max(1,Math.min(H-1,e.y+px.y*4*s))},t=dbAny(e); if(!t) continue; const b=norm(t.x-p0.x,t.y-p0.y); puff(p0.x,p0.y,'fire',8,4);
           S.proj(e,b,{x:p0.x,y:p0.y,sx:p0.x,sy:p0.y,speed:19,range:22,dmg:x=>has(x,'powder')?120:55,label:'쌍포 일제 사격',big:true,v:'orb',o:{post:x=>{ if(has(x,'powder')){ rm(x,'powder'); say(x,'화약 폭발','#ffb347'); puff(x.x,x.y,'fire',16,6); } }}}); } }); }},
-   aw:{name:'승선 명령',kind:'집중 마법',cd:28,r:30,txt:'산적 2 · 광폭화: 총원 승선(산적 두목까지)',cast(e){ S.focus(e,.6); if(e.r.mad){ proc(e,'총원 승선','동료가 몰려온다'); summon(e,'m_chief',1); summon(e,'m_bandit',3); } else summon(e,'m_bandit',2); }},
+   aw:{name:'승선 명령',kind:'집중 마법',cd:28,r:30,sum:true,can:e=>!sumFull(e),need:'잡몹 자리',txt:'산적 2 · 광폭화: 총원 승선(산적 두목까지)',cast(e){ S.focus(e,.6); if(e.r.mad){ proc(e,'총원 승선','동료가 몰려온다'); summon(e,'m_chief',1); summon(e,'m_bandit',3); } else summon(e,'m_bandit',2); }},
    x1:{name:'갑판 강타',kind:'집중 마법',cd:11,r:12,txt:'뛰어올라 찍는다 · 광폭화: 삼연 강타(세 번 연달아 + 둔화)',cast(e){ const m=e.r.mad,go=n=>{ const t=n?dbAny(e):dbNear(e); if(!t||e.dead||over) return; const at={x:t.x,y:t.y}; monCast(e,m?.7:.9,3.5,m?'삼연 강타':'갑판 강타',()=>{ dbGo(e,at); S.circle(e,3.5,m?80:90,m?'삼연 강타':'갑판 강타',{air:1.5,knock:1,slow:m?[.4,2]:null,zfree:true,v:'quake'}); if(m&&n<2) after(.15,()=>go(n+1)); },at); }; go(0); }}
-  },note:"문서의 이름 → 바꾼 이름: 칼질 → 화약 칼날 · 대포 → 쌍포 일제 사격 · 동료 소환 → 승선 명령 · 인맥 찬스 → 총원 승선 · 스카이 콩콩 → 삼연 강타 · 점프 찍기 → 갑판 강타. 화약은 6초 동안 남고, 대포에 맞으면 터지며 사라진다(대포 55 → 화약이 묻어 있으면 120). 원숭이는 보스 좌우 4칸 자리에서 쏘는 것으로만 옮겼다(따로 때릴 수는 없다). '승선 명령'은 시험장의 산적을 부른다. 보스 편은 한꺼번에 다섯까지다."},
+  },note:"문서의 보스 이름은 '박준형'이다. 문서의 이름 → 바꾼 이름: 칼질 → 화약 칼날 · 대포 → 쌍포 일제 사격 · 동료 소환 → 승선 명령 · 인맥 찬스 → 총원 승선 · 스카이 콩콩 → 삼연 강타 · 점프 찍기 → 갑판 강타. 화약은 6초 동안 남고, 대포에 맞으면 터지며 사라진다(대포 55 → 화약이 묻어 있으면 120). 원숭이는 보스 좌우 4칸 자리에서 쏘는 것으로만 옮겼다(따로 때릴 수는 없다). '승선 명령'은 시험장의 산적을 부른다. 소환된 잡몹은 한꺼번에 넷까지다."},
  {el:'fire',w:'sword',hair:'#3a2a1a',acc:['cape'],cape:'#7a1f1f'},
  (e,t,d)=>{ e.ai.want=2.4; if(go(e,'aw')) return true; if(d<=17&&go(e,'n2')) return true; if(d<=12&&d>2.5&&go(e,'x1')) return true; if(d<=3.5+t.rad+.4&&go(e,'n1')) return true; });
 
@@ -133,7 +133,7 @@ defDoc('d_god',3600,4,'???',{name:'보스, 잊힌 사막의 신',col:'#d8c890',r
  (e,t,d)=>{ e.ai.want=2.6; if(d<=8&&go(e,'x3')) return true; if(go(e,'x1')) return true; if(d<=10&&go(e,'aw')) return true; if(d<=14&&go(e,'n2')) return true; if(d<=10&&d>3&&go(e,'x2')) return true; if(d<=4+t.rad+.4&&go(e,'n1')) return true; });
 
 /* ───── 8. 모래 왕 (위신) ───── */
-defDoc('d_sandking',4000,4,'???',{name:'보스, 유사의 군주 모래 왕',col:'#e0c06a',rad:1.5,range:10,speedMod:()=>.6,
+defDoc('d_sandking',4000,4,'???',{name:'보스, 유사의 군주',col:'#e0c06a',rad:1.5,range:10,speedMod:()=>.6,
   onMad(e){ msg([['옥좌가 내려간다 ','#e0c06a'],['보스 둘레가 유사로 바뀐다','#fff6d6']],e.team,true); dbGo(e,{x:W/2,y:H/2}); zone(e,{x:e.x,y:e.y,r:6.5,dur:9999,every:1,chase:e,speed:99,label:'유사',tick:(z,inn)=>inn.forEach(t=>{ damage(e,t,8,'유사'); add(t,'slow',1.2,.35,{by:e}); })}); },
   skills:{
    n1:{name:'왕홀의 빛',kind:'기본 공격',cd:5,r:16,txt:'따라가는 빛 3발, 둔화 · 광폭화: 제왕의 홀(5발 + 실명)',cast(e){ const m=e.r.mad,n=m?5:3,a0=Math.atan2(e.aim.y,e.aim.x),t=dbNear(e); for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.5; S.proj(e,{x:Math.cos(a),y:Math.sin(a)},{speed:9,range:60,life:4,home:m?dbAny(e):t,dmg:40,label:m?'제왕의 홀':'왕홀의 빛',v:'orb',o:{slow:[.3,2],blind:m?1:0}}); } }},
@@ -141,9 +141,9 @@ defDoc('d_sandking',4000,4,'???',{name:'보스, 유사의 군주 모래 왕',col
    aw:{name:'유사 해일',kind:'의식/집중 마법',cd:30,r:30,txt:'사암 기둥이 솟고(밑에 있으면 큰 피해) 잠시 뒤 파도가 인다. 기둥 뒤에 숨으면 맞지 않는다 · 광폭화: 기둥 2개, 파도가 빨리 온다',cast(e){ const m=e.r.mad,T=m?2.6:3.8,P=[],n=m?2:3; msg([['⚠ 유사 해일 ','#ff7d8c'],['사암 기둥 뒤에 숨어라','#fff6d6']],e.team,true); S.focus(e,T+1.3);
       for(let i=0;i<n;i++){ const a=Math.random()*6.283,d=5+Math.random()*4,x=Math.max(2,Math.min(W-2,e.x+Math.cos(a)*d)),y=Math.max(2,Math.min(H-2,e.y+Math.sin(a)*d)); dbWarn(e,x,y,1.8,1.2,'사암 열주',p=>{ S.circle(e,1.8,150,'사암 열주',{air:2,knock:0,v:'quake',el:'earth'},p); P.push(p); zone(e,{x:p.x,y:p.y,r:1.2,dur:T+.2,label:'사암 기둥'}); }); }
       after(1.2+T,()=>{ if(e.dead||over) return; fx.push({k:'circle',x:e.x,y:e.y,r:30,t0:now,dur:.5,team:e.team,ring:true,lab:'유사 해일',src:e,v:'nova',el:'earth'}); foes(e).forEach(t=>{ const D=dist(e,t)||1,safe=P.some(p=>{ const u=((p.x-e.x)*(t.x-e.x)+(p.y-e.y)*(t.y-e.y))/(D*D); return u>0&&u<1&&Math.hypot(p.x-(e.x+u*(t.x-e.x)),p.y-(e.y+u*(t.y-e.y)))<=1.7; }); if(safe){ say(t,'기둥 뒤','#8fe9ff'); return; } strike(e,t,130,'유사 해일',{knock:9}); }); }); }},
-   x1:{name:'궁병 배치',kind:'집중 마법',cd:26,r:30,txt:'활 병사 2 · 광폭화: 3',cast(e){ S.focus(e,.5); summon(e,'m_archer',e.r.mad?3:2); }},
+   x1:{name:'궁병 배치',kind:'집중 마법',cd:26,r:30,sum:true,can:e=>!sumFull(e),need:'잡몹 자리',txt:'활 병사 2 · 광폭화: 3',cast(e){ S.focus(e,.5); summon(e,'m_archer',e.r.mad?3:2); }},
    x2:{name:'그림자 자객',kind:'집중 마법',cd:12,r:30,txt:'적의 등 뒤에 나타나 잠시 뒤 기습한다(피할 수 있다) · 광폭화: 왕의 자객(준비가 짧고 아프다)',cast(e){ const m=e.r.mad; foes(e).slice(0,3).forEach(t=>dbWarn(e,t.x-t.aim.x*1.2,t.y-t.aim.y*1.2,2.3,m?.8:1.3,m?'왕의 자객':'그림자 자객',p=>S.circle(e,2.3,m?120:80,m?'왕의 자객':'그림자 자객',{knock:0,v:'cut'},p))); }},
-   x3:{name:'포위섬멸진',kind:'의식/집중 마법',cd:45,r:30,can:e=>e.r.mad,need:'광폭화 모드',txt:'사방에 병사가 나타난다(쓰러뜨릴 수 있다)',cast(e){ const t=dbAny(e); if(!t) return; S.focus(e,.8); msg([['⚠ 포위섬멸진 ','#ff7d8c'],['병사에게 둘러싸였다','#fff6d6']],e.team,true); summon({team:e.team,x:t.x,y:t.y},'m_skel',4); }}
+   x3:{name:'포위섬멸진',kind:'의식/집중 마법',cd:45,r:30,sum:true,can:e=>e.r.mad&&!sumFull(e),need:'광폭화 모드',txt:'사방에 병사가 나타난다(쓰러뜨릴 수 있다)',cast(e){ const t=dbAny(e); if(!t) return; S.focus(e,.8); msg([['⚠ 포위섬멸진 ','#ff7d8c'],['병사에게 둘러싸였다','#fff6d6']],e.team,true); e.sumBoss=true; summon({team:e.team,x:t.x,y:t.y},'m_skel',4); }}
   },note:"문서의 이름 → 바꾼 이름: 제왕홀 → 제왕의 홀 · 왕홀 → 왕홀의 빛 · 근위돌격병 → 근위 돌격 · 근위병 → 근위 진격 · 주상절리 → 사암 열주 · 유사 파도 → 유사 해일 · 원거리병 → 궁병 배치 · 진짜 암살자 → 왕의 자객 · 암살병사 → 그림자 자객. '사암 열주'와 '유사 해일'는 한 패턴으로 묶었다: 사암 기둥이 먼저 솟고(밑에 있으면 150 피해), 3.8초(광폭화 2.6초) 뒤 파도가 온다. 보스와 나 사이에 기둥이 있으면 맞지 않는다. '근위 진격'의 지형 봉쇄는 6초 동안 들어오는 적을 밀어내며 피해를 주는 자리로 옮겼다. 광폭화 모드의 '지형 변동'은 보스가 한가운데로 옮겨 앉고 둘레 6.5칸이 유사(둔화·약한 지속 피해)로 바뀌는 것으로 정했다. '포위섬멸진'은 광폭화 모드에서만 쓴다. 병사는 시험장의 해골 병사·해골 궁수를 쓴다."},
  {el:'earth',w:'ringstaff',hair:'#b08a2a',acc:['cape','pauldrons'],cape:'#7a5a1a'},
  (e,t,d)=>{ e.ai.want=8; if(go(e,'x3')) return true; if(go(e,'aw')) return true; if(go(e,'x1')) return true; if(go(e,'x2')) return true; if(d<=13&&go(e,'n2')) return true; if(d<=16&&go(e,'n1')) return true; });
