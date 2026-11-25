@@ -1,0 +1,38 @@
+name: 버그 알리기
+description: 게임이 이상하게 움직이거나 멈췄을 때
+title: "[버그] "
+labels: ["버그"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 무엇이 잘못됐나
+      description: 어떤 화면에서 무엇을 했더니 어떻게 됐는지
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 다시 해 보는 순서
+      placeholder: "1. 대전 탭에서 태그매치를 고른다\n2. ...\n3. ..."
+  - type: input
+    id: version
+    attributes:
+      label: 게임 판(버전)
+      description: 시작 화면 아래나 설정 탭에 나오는 숫자(예 1.8.2)
+  - type: dropdown
+    id: device
+    attributes:
+      label: 기기
+      options: ["안드로이드 휴대폰", "아이폰", "태블릿", "PC(윈도)", "PC(맥)", "기타"]
+  - type: checkboxes
+    id: multi
+    attributes:
+      label: 함께 하기
+      options:
+        - label: 친구와 함께 하는 중에 생겼다
+  - type: textarea
+    id: shots
+    attributes:
+      label: 화면 사진 · 영상
+      description: 있으면 끌어다 놓는다
