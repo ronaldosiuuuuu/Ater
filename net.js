@@ -25,15 +25,16 @@ function uniqName(n,p){ const used=new Set(NET.players.filter(x=>x!==p).map(x=>x
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=184;
+const APPV=185;
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리면 중계 서버(TURN)를 거친다.
    중계 서버는 사이트에 마련해 둔 relay.json(Metered 앱 이름 · API Key)으로, 이을 때마다 그쪽에서 접속 정보를 받아 온다. 따로 적을 것은 없다.
-   API Key는 공개돼도 되는 열쇠다(접속 정보만 받아 올 수 있고 계정은 건드리지 못한다). relay.json이 없으면 직접 연결만 쓴다 */
+   API Key는 공개돼도 되는 열쇠다(접속 정보만 받아 올 수 있고 계정은 건드리지 못한다). relay.json이 없으면 직접 연결만 쓴다.
+   1.8.5: relay.json에 {"url":"https://…"}가 있으면 그 주소(tools/relay-worker의 Worker)에서 짧게 유효한 접속 정보를 받는다. 이때는 열쇠가 화면 쪽에 없다 */
 let relayP=null;
-const relayGet=()=>relayP||(relayP=fetch('relay.json',{cache:'no-cache',credentials:'same-origin'}).then(q=>q.ok?q.json():null).then(r=>(r&&typeof r.app==='string'&&typeof r.key==='string'&&/^[a-z0-9-]{1,40}$/i.test(r.app)&&/^[A-Za-z0-9_-]{8,100}$/.test(r.key))?{app:r.app,key:r.key}:null).catch(()=>null).then(r=>{ if(!r) relayP=null; return r; }));
+const relayGet=()=>relayP||(relayP=fetch('relay.json',{cache:'no-cache',credentials:'same-origin'}).then(q=>q.ok?q.json():null).then(r=>(r&&typeof r.url==='string'&&/^https:\/\/[A-Za-z0-9.-]+(\/[^\s]*)?$/.test(r.url)&&r.url.length<300)?{url:r.url}:(r&&typeof r.app==='string'&&typeof r.key==='string'&&/^[a-z0-9-]{1,40}$/i.test(r.app)&&/^[A-Za-z0-9_-]{8,100}$/.test(r.key))?{app:r.app,key:r.key}:null).catch(()=>null).then(r=>{ if(!r) relayP=null; return r; }));
 const iceOk=s=>!!(s&&typeof s==='object'&&[].concat(s.urls).every(u=>typeof u==='string'&&/^(stun|turns?):[^\s]{3,200}$/.test(u))&&(s.username===undefined||typeof s.username==='string')&&(s.credential===undefined||typeof s.credential==='string'));
 function relayIce(){ return relayGet().then(r=>{ if(!r){ NET.ice=null; return; } if(NET.ice&&performance.now()-NET.iceAt<6e5) return;
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000); return fetch('https://'+r.app+'.metered.live/api/v1/turn/credentials?apiKey='+encodeURIComponent(r.key),{signal:ctl.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'}).then(q=>q.ok?q.json():Promise.reject(new Error(q.status))).then(L=>{ const ok=Array.isArray(L)?L.filter(iceOk).slice(0,8):[]; if(ok.length){ NET.ice=ok.map(s=>({urls:s.urls,username:s.username,credential:s.credential})); NET.iceAt=performance.now(); } }).catch(x=>{ NET.ice=null; netStat('중계 서버 정보를 받지 못했다 · 직접 연결로 해 본다'); }).finally(()=>clearTimeout(to)); }); }
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000); return fetch(r.url||'https://'+r.app+'.metered.live/api/v1/turn/credentials?apiKey='+encodeURIComponent(r.key),{signal:ctl.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'}).then(q=>q.ok?q.json():Promise.reject(new Error(q.status))).then(L=>{ if(L&&!Array.isArray(L)) L=[].concat(L.iceServers||[]); const ok=Array.isArray(L)?L.filter(iceOk).slice(0,8):[]; if(ok.length){ NET.ice=ok.map(s=>({urls:s.urls,username:s.username,credential:s.credential})); NET.iceAt=performance.now(); } }).catch(x=>{ NET.ice=null; netStat('중계 서버 정보를 받지 못했다 · 직접 연결로 해 본다'); }).finally(()=>clearTimeout(to)); }); }
 function ICE(){ if(NET.ice) return {config:{iceServers:NET.ice.concat([{urls:'stun:stun.l.google.com:19302'}])},debug:0}; return {config:{iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'}]},debug:0}; }
 /* 이어진 길이 직접인지 중계인지 */
 function linkKind(c,cb){ try{ c.peerConnection.getStats().then(st=>{ let pair=null; st.forEach(r=>{ if(r.type==='transport'&&r.selectedCandidatePairId) pair=st.get(r.selectedCandidatePairId); }); if(!pair) st.forEach(r=>{ if(r.type==='candidate-pair'&&r.state==='succeeded'&&(r.nominated||r.selected)) pair=pair||r; }); const loc=pair&&st.get(pair.localCandidateId); cb(loc?(loc.candidateType==='relay'?'중계':'직접'):''); }).catch(()=>cb('')); }catch(x){ cb(''); } }
@@ -66,7 +67,7 @@ const others=()=>NET.players.filter(p=>!p.host);
 function sendAll(d){ if(NET.tx) for(const p of others()) NET.tx.send(p.pid,d); }
 function lobbyOut(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid}); drawNet(); }
 function hostMsg(pid,d){ if(!NET.host||!d) return; let p=NET.players.find(x=>x.pid===pid);
-  if(d.t==='pg'){ NET.tx.send(pid,{t:'pg',ts:d.ts}); return; }
+  if(d.t==='pg'){ const ow=!NET.live&&over&&over.winner?over.winner:null; NET.tx.send(pid,{t:'pg',ts:d.ts,lv:NET.live?1:0,ow:ow?ow.id:0,owt:ow?ow.team:-1}); return; }
   if(d.t==='pz'){ if(p){ const m={t:'pz',who:pid,name:p.name||'손님',on:!!d.on}; for(const q of others()) if(q.pid!==pid) NET.tx.send(q.pid,m); pzShow(m); } return; }
   if(d.t==='chat'){ const t=performance.now(),text=cleanText(d.text,80); if(p&&text&&!(t-(p.chatT||0)<600)){ p.chatT=t; const m={t:'chat',name:p.name||'손님',team:p.team,text,pid}; sendAll(m); chatShow(m); } return; }   /* 채팅은 0.6초에 한 번까지 */
   if(d.t==='hello'){ const bye=(why)=>{ NET.tx.send(pid,{t:'bye',why,final:1}); setTimeout(()=>{ if(NET.drop) NET.drop(pid); },400); };
@@ -103,7 +104,13 @@ function entS(e,full,mid){ const o={id:e.id,key:e.key,team:e.team,x:r2(e.x),y:r2
   if(full){ o.dealt={}; for(const k in e.dealt) o.dealt[k]=Math.round(e.dealt[k]); } if(!mid){ for(const k of ['key','team','max','atk','slot','uu','boss','sand','pn','cd']) delete o[k]; } return o; }
 function snap(){ if(!NET.live||!NET.tx) return; const full=NET.n++%15===0||!!over,mid=full||NET.n%4===0,ev=NET.ev; NET.ev={h:[],k:[],c:[]}; const K=NET.known||(NET.known=new Set());
   const nf=floats.filter(f=>!f._s),fl=nf.map(plain); nf.forEach(f=>{ f._s=1; }); const ms=msgs.length+':'+(msgs.length?msgs[msgs.length-1].t0:0)+':'+procs.length+':'+(procs.length?procs[procs.length-1].t0:0),chg=full||ms!==NET.mSig; NET.mSig=ms;
-  sendAll({t:'s',n:r2(now),e:ents.map(e=>{ const m2=mid||!K.has(e.id); K.add(e.id); return entS(e,full,m2); }),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl,m:chg?msgs:undefined,pr:chg?procs:undefined,sc:score,cp:cap,dc:mode===6&&typeof raidDC==='number'?raidDC:undefined,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev,tg:typeof tagNet==='function'?tagNet():undefined}); }
+  sendAll(fitS({t:'s',n:r2(now),e:ents.map(e=>{ const m2=mid||!K.has(e.id); K.add(e.id); return entS(e,full,m2); }),p:projs.map(plain),f:fx.map(plain),z:zones.filter(z=>!z.hid).map(plain),w:walls.map(plain),fl,m:chg?msgs:undefined,pr:chg?procs:undefined,sc:score,cp:cap,dc:mode===6&&typeof raidDC==='number'?raidDC:undefined,ft:feats.map(plain),ch:[r2(chaosUntil),chaosName],ov:over?{w:over.winner?over.winner.id:0,t:r2(over.t)}:0,ev,tg:typeof tagNet==='function'?tagNet():undefined})); }
+/* PeerJS는 한 메시지가 16,300바이트(UTF-8)를 넘으면 오류만 내고 보내지 않는다. 넘을 것 같으면 꾸밈(떠다니는 숫자 · 효과 · 기록)부터 덜어 낸다 */
+const ENC=typeof TextEncoder!=='undefined'?new TextEncoder():null;
+function fitS(S){ if(!ENC) return S; const sz=()=>ENC.encode(JSON.stringify(S)).byteLength,LIM=15000; if(JSON.stringify(S).length*3<LIM||sz()<LIM) return S;
+  for(const k of ['fl','pr','f','m']){ if(S[k]===undefined) continue; if(k==='m'||k==='pr'){ S[k]=undefined; NET.mSig=''; } else S[k]=[]; if(sz()<LIM) return S; }
+  for(const k of ['p','z','w']){ if(Array.isArray(S[k])&&S[k].length>6){ S[k]=S[k].slice(0,6); if(sz()<LIM) return S; } }
+  if(Array.isArray(S.e)) for(const e of S.e) if(e&&e.dealt&&!S.ov) delete e.dealt; return S; }
 on('step',dt=>{ if(!NET.live) return; NET.acc+=dt; if(NET.acc>=1/NET.HZ){ NET.acc=0; snap(); } });
 on('end',()=>{ if(NET.live){ snap(); NET.live=false; } });
 on('hit',(s,t,amt,label,o)=>{ if(NET.live&&NET.ev.h.length<80) NET.ev.h.push([s.id,t.id,r2(amt),label,(o&&o.basic?1:0)|(o&&o.skill?2:0)|(o&&o.fixed?4:0)|(PH?8:0)]); });
@@ -133,6 +140,9 @@ function unpatchClient(){ const O=NET.orig; if(!O) return; NET.orig=null; stateL
 function clientStart(d){ floats=[]; practice=false; mode=d.mode; teamN=d.teamN; LAND=!!d.land; MAP=hasK(MAPS,d.map)?MAPS[d.map]:MAPS.basic; W=Math.min(200,Math.max(8,+d.W||(LAND?MAP.h:MAP.w)||26)); H=Math.min(200,Math.max(8,+d.H||(LAND?MAP.w:MAP.h)||38)); NET.you=d.you; NET.flip=d.team===1; NET.em.clear(); NET.first=true; NET.playing=true;
   loop.err=null; bgmStop(); chaosUntil=0; banner=null; mini=null; parts=[]; shake=0; procs=[]; msgs=[]; projs=[]; fx=[]; floats=[]; zones=[]; walls=[]; feats=[]; Q=[]; ents=[]; over=null; paused=false; score=[0,0]; cap=[0,0]; now=0; draw.k=9; me=null; foe=null;
   $('info').hidden=true; $('pause').hidden=true; netStat(''); if(window.pzReset) pzReset(); if(typeof d.diff==='number') NET.hdiff=d.diff; NET.hmon=d.mon||''; }
+/* 방장 쪽 말로 적힌 기록(우리 · 상대)을 내 쪽 말로 뒤집는다(내가 상대 편일 때) */
+const PVW=[['상대 팀','우리 팀'],['상대 남은 캐릭터','우리 남은 캐릭터'],['상대 교대 · ','교대 · ']];
+function pv(s){ s=String(s==null?'':s); if(!NET.flip) return s; for(const [a,b] of PVW){ if(s===a){ return b; } if(s===b){ return a; } } return s.replace(/상대 팀|우리 팀|상대 남은 캐릭터|우리 남은 캐릭터/g,x=>{ for(const [a,b] of PVW){ if(x===a) return b; if(x===b) return a; } return x; }); }
 function apply(S){ const E=NET.em,seen=new Set(); now=S.n; const list=[];
   const N=v=>Number.isFinite(+v)?+v:0;
   for(const s of S.e){ if(!s||typeof s!=='object') continue; if(s.key!==undefined&&!hasK(CH,s.key)) s.key='ei'; for(const k of ['x','y','z','hp','max','atk','slot','team']) if(k in s) s[k]=N(s[k]); if(s.key!==undefined) s.aim=Array.isArray(s.aim)?[N(s.aim[0]),N(s.aim[1])]:[0,0]; if('st' in s&&!Array.isArray(s.st)) s.st=[]; if('sh' in s&&!Array.isArray(s.sh)) s.sh=[]; if('pn' in s) s.pn=s.pn?cleanName(s.pn):null; let e=E.get(s.id); if(s.key===undefined){ if(!e) continue; s.key=e.key; s.team=e.teamRaw; s.max=e.max; s.atk=e.atk; s.slot=e.slot; s.uu=e.ultUsed; s.boss=e.boss; s.sand=e.sand; s.pn=e.pname; s.r=e.r; s.hud=e.hudS; s.sl=e.slS; s.can=e.canS; } const fresh=!e||e.key!==s.key; if(fresh){ e={id:s.id,x:s.x,y:s.y,mv:{x:0,y:0},ai:{},dealt:{},r:{},cd:{}}; E.set(s.id,e); } seen.add(s.id);
@@ -143,7 +153,7 @@ function apply(S){ const E=NET.em,seen=new Set(); now=S.n; const list=[];
   ents=list; me=E.get(NET.you)||list.find(e=>e.team===0)||list[0]; pickFoe();
   projs=S.p.map(unplain).filter(p=>p.owner); for(const p of projs) p.hit=new Set(); fx=S.f.map(unplain); zones=S.z.map(unplain).filter(z=>z.owner); walls=S.w.map(unplain);
   floats=floats.filter(f=>now-f.t0<.9).concat(S.fl.map(f=>{ unplain(f); if(f.kd&&f.own) f.col=(f.own.team===0?HURTCOL:NUMCOL)[f.kd]; return f; }));
-  const sw=c=>!NET.flip?c:c==='rgb('+TC[0]+')'?'rgb('+TC[1]+')':c==='rgb('+TC[1]+')'?'rgb('+TC[0]+')':c; if(S.m) msgs=S.m.map(m=>({seg:m.seg.map(x=>[x[0],sw(x[1])]),team:tf(m.team),big:m.big,t0:m.t0})); if(S.pr) procs=S.pr.map(q=>Object.assign({},q,{team:tf(q.team)}));
+  const sw=c=>!NET.flip?c:c==='rgb('+TC[0]+')'?'rgb('+TC[1]+')':c==='rgb('+TC[1]+')'?'rgb('+TC[0]+')':c; if(S.m) msgs=S.m.map(m=>({seg:m.seg.map(x=>[pv(x[0]),sw(x[1])]),team:tf(m.team),big:m.big,t0:m.t0})); if(S.pr) procs=S.pr.map(q=>Object.assign({},q,{team:tf(q.team)}));
   if(S.dc!==undefined&&typeof raidDC==='number') raidDC=S.dc; score=NET.flip?[S.sc[1],S.sc[0]]:S.sc.slice(); cap=NET.flip?[S.cp[1],S.cp[0]]:S.cp.slice(); feats=S.ft.map(f=>{ if(f.t==='cap'&&NET.flip&&(f.own===0||f.own===1)) f.own=1-f.own; f.solid=!!(FEAT[f.t]&&FEAT[f.t].solid); return f; }); chaosUntil=S.ch[0]; chaosName=S.ch[1];
   if(NET.first&&me){ NET.first=false; OPT.raid=me.boss?'boss':'hero'; uiBegin(); $('sel').hidden=true; $('res').hidden=true; $('menu').style.display='block'; if(!running){ running=true; fit(); fire('begin'); last=performance.now(); requestAnimationFrame(loop); } else { fit(); fire('begin'); } }
   /* 방장 쪽에서 일어난 일을 여기서도 한 번씩 울린다: 타격 이펙트·소리·진동 */

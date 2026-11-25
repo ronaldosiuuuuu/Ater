@@ -1,0 +1,23 @@
+name: 자동 점검
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 저장소는 읽기만 한다(점검은 아무것도 쓰지 않는다)
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: 게임을 열고 대전표 · 저장 파일을 확인한다
+        run: python tools/smoke.py --chars 40 --n 1

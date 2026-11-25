@@ -1,6 +1,12 @@
+/* 엔진: 경기장 · 캐릭터 · 스킬 · 판 진행 · 고르는 화면. (1.8.3까지 index.html 안에 있던 것을 옮겼다) */
 "use strict";
 const $=id=>document.getElementById(id);
-const FINE=matchMedia('(pointer:fine)').matches,PC=FINE&&innerWidth>=820; if(PC) document.body.classList.add('pc'); if(FINE) document.body.classList.add('kb');
+/* 화면 방식: 설정의 「화면 방식」(이 기기에만 · aetherView). 자동이면 마우스가 있고 창 너비가 820 이상일 때 컴퓨터 화면이다.
+   창 크기가 바뀌거나 설정을 바꾸면 다시 열지 않고 그 자리에서 바꾼다(방에 있거나 싸우는 중이어도 된다) */
+let VIEW=(()=>{ try{ const v=localStorage.getItem('aetherView'); return v==='pc'||v==='m'?v:''; }catch(x){ return ''; } })();
+const FINE=matchMedia('(pointer:fine)').matches,pcWant=()=>VIEW==='pc'||(VIEW!=='m'&&FINE&&innerWidth>=820); let PC=pcWant(); if(PC) document.body.classList.add('pc'); if(FINE||VIEW==='pc') document.body.classList.add('kb');
+function pcSet(){ const v=pcWant(); document.body.classList.toggle('kb',FINE||VIEW==='pc'); if(v===PC) return; PC=v; document.body.classList.toggle('pc',PC); try{ landSet(); if(running){ fit(); if(me) uiBegin(); draw(); } if(typeof fitSk==='function') requestAnimationFrame(fitSk); }catch(x){} }
+{ let rt=0; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(pcSet,250); }); }
 let W=26,H=38,LAND=false; const R=0.5,G=32; /* LAND = 가로 화면에서 시작한 판. 경기장을 38×26으로 눕히고 내가 왼쪽에 선다. */
 const arenaLand=()=>innerWidth>innerHeight*1.15; const home=(tm,d)=>LAND?{x:W/2+(tm?d:-d),y:H/2}:{x:W/2,y:H/2+(tm?-d:d)};
 function landSet(){ document.body.classList.toggle('land',!PC&&arenaLand()); } landSet();
@@ -15,8 +21,9 @@ const NET={host:false,client:false}; let UID=0;
 const HOOKS={}; const on=(ev,fn)=>{ (HOOKS[ev]=HOOKS[ev]||[]).push(fn); };
 function fire(ev,a,b,c,d,e2){ if(benching) return; const L=HOOKS[ev]; if(L) for(const f of L){ try{ f(a,b,c,d,e2); }catch(x){ console.error('hook '+ev,x); } } }
 /* 설정: SETTINGS에 한 줄 더하면 설정 화면(고르는 화면·멈춤 화면)에 단추 줄이 생기고 기기에 기억된다. 값은 OPT.이름으로 읽는다. */
-const OPT={cap:60,mon:'golem',monhp:'fit',myth:0,guide:1,ui:1,lefty:0,log:'auto',rg:'고화,서사,전설,히든',raid:'hero',imp:1,fst:1,els:1,ori:'auto',full:1,q:'auto',shake:1,stop:1,edge:1,tele:1,nums:1,vib:1,fps:0,map:'basic'};
+const OPT={view:'auto',cap:60,mon:'golem',monhp:'fit',myth:0,guide:1,ui:1,lefty:0,log:'auto',rg:'고화,서사,전설,히든',raid:'hero',imp:1,fst:1,els:1,ori:'auto',full:1,q:'auto',shake:1,stop:1,edge:1,tele:1,nums:1,vib:1,fps:0,map:'basic'};
 const SETTINGS=[
+ {k:'view',name:'화면 방식',opts:[['auto','자동'],['pc','컴퓨터'],['m','휴대폰']],note:'자동은 마우스가 있고 창 너비가 820 이상이면 컴퓨터 화면이다. 컴퓨터인데 휴대폰 화면으로 뜨면 「컴퓨터」를 누른다. 누르면 바로 바뀐다.',apply:()=>{ VIEW=OPT.view==='auto'?'':OPT.view; try{ localStorage.setItem('aetherView',VIEW); }catch(x){} pcSet(); toast(PC?'컴퓨터 화면':'휴대폰 화면',1600); }},
  {k:'ori',name:'화면 방향',opts:[['auto','자동'],['land','가로 고정'],['port','세로 고정']],note:'자동은 기기를 돌리는 대로 따른다. 고정은 전체 화면이 되는 휴대폰에서만 듣는다. 경기장은 판을 시작할 때의 화면 방향을 따라 눕거나 선다.',apply:()=>goOri()},
  {k:'full',name:'전체 화면 (휴대폰)',opts:[[1,'켬'],[0,'끔']]},
  {k:'ui',name:'조작 단추 크기',opts:[[.85,'작게'],[1,'보통'],[1.15,'크게'],[1.3,'아주 크게']],apply:()=>uiApply()},
@@ -302,7 +309,11 @@ function begin(){ loop.err=null; bgmStop(); chaosUntil=0; banner=null; parts=[];
   if(mode===5&&!practice&&!OPT.myth&&CH[raidBoss()?kOf('me'):kOf('foe')].cls==='신화'&&CH[raidBoss()?kOf('foe'):kOf('me')].cls!=='신화'){ OPT.raid=raidBoss()?'hero':'boss'; modeNote(); }
   landSet(); LAND=arenaLand(); mapSet();
   { const a=home(0,practice?3:(MAP.spawn||6)),b=home(1,practice?3:(MAP.spawn||6)); me=mk(kOf('me'),0,a.x,a.y); foe=mk(RAID()?OPT.mon:kOf('foe'),1,b.x,b.y); if(RAID()){ foe.max=foe.hp=monHp(OPT.mon); msg([['보스 ','#ff7d8c'],[short(foe),'#fff6d6'],[' · 체력 '+foe.max,'#97a1cf']],1,true); } } ents=[me,foe]; me.slot=0; foe.slot=0; if(TN()>1){ const pick=(tm,i)=>{ const k=(tm?sel.fo:sel.al)[i-1]; return k&&CH[k]&&!CH[k].re?k:null; },used=new Set([sel.me,sel.foe]); for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const k=pick(tm,i); if(k) used.add(k); }
-    const pool=randPool(used).sort(()=>Math.random()-.5); while(pool.length<10) pool.push(...Object.keys(CH).filter(k=>!CH[k].re&&CH[k].cls!=='신화').sort(()=>Math.random()-.5)); for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const q=spawnAt(tm,i),n=mk(pick(tm,i)||pool.pop(),tm,q.x,q.y); n.slot=i; ents.push(n); } ents.forEach(x=>x.busy=1.5); } dlog=[]; total=0; best=0; combo.n=0; pFree=false; $('p-free').textContent='궁극기 조건 무시: 끔';
+    const pool=randPool(used).sort(()=>Math.random()-.5); while(pool.length<10) pool.push(...Object.keys(CH).filter(k=>!CH[k].re&&CH[k].cls!=='신화').sort(()=>Math.random()-.5));
+    /* 1.8.5 우리 편의 빈 칸(무작위)은 가진 캐릭터 가운데서 고른다. 모자라면 가진 캐릭터를 겹쳐 쓴다. 상대 편 · 연습은 모든 캐릭터에서 */
+    const owned=(!practice&&typeof locked==='function')?Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.mon&&!c.mob&&!c.kit&&!c.built&&!c.custom&&c.cls!=='신화'&&!locked(k); }):null,okG=k=>OPT.rg.split(',').includes(CH[k].grade);
+    const mine=owned&&owned.length?owned.filter(k=>!used.has(k)).sort(()=>Math.random()-.5).sort((a,b)=>okG(b)-okG(a)):null,ourK=()=>mine.length?mine.shift():owned[Math.floor(Math.random()*owned.length)];
+    for(const tm of [0,1]) for(let i=1;i<sideN(tm);i++){ const q=spawnAt(tm,i),n=mk(pick(tm,i)||(tm===0&&mine?ourK():pool.pop()),tm,q.x,q.y); n.slot=i; ents.push(n); } ents.forEach(x=>x.busy=1.5); } dlog=[]; total=0; best=0; combo.n=0; pFree=false; $('p-free').textContent='궁극기 조건 무시: 끔';
   if(practice) sand(foe); else { me.busy=foe.busy=1.5; }
   if(NET.host&&!practice) NET.afterSpawn();
   if(mode===5&&!practice){ const bz=raidBoss()?me:foe; bz.boss=true; bz.max=bz.hp=bz.c.hp*5; msg([['마왕 ','#ff7d8c'],[short(bz),'#fff6d6'],[' · 체력 '+bz.max,'#97a1cf']],bz.team,true); }
@@ -596,7 +607,8 @@ $('rand').onclick=()=>{ const k=randPool(new Set([sel.me])); sel.foeR=false; sel
 function save(){ try{ localStorage.setItem('aether1',JSON.stringify({v:3,sel,diff,m:practice?0:mode,CFG,sandHp,sandInf,sandAct,teamN,gf,OPT,recent})); drawSum();; }catch(x){} }
 $('diff').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; diff=+b.dataset.d; $('diff').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); save(); };
 function bind(id,out,key,unit){ const i=$(id),o=$(out),f=()=>{ CFG[key]=+i.value; o.textContent=i.value+unit; }; i.addEventListener('input',f); f(); }
-try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d&&Array.isArray(d.recent)) recent=d.recent.filter(k=>CH[k]&&!CH[k].re).slice(0,6); if(d&&d.OPT){ for(const S0 of SETTINGS){ const o=S0.opts.find(o=>String(o[0])===String(d.OPT[S0.k])); if(o) OPT[S0.k]=o[0]; } if(d.OPT.map==='random'||MAPS[d.OPT.map]) OPT.map=d.OPT.map; if(d.OPT.raid==='boss') OPT.raid='boss'; if(d.OPT.monhp==='card') OPT.monhp='card'; if(typeof d.OPT.mon==='string') OPT.mon=d.OPT.mon; if(typeof d.OPT.rg==='string') OPT.rg=d.OPT.rg.split(',').filter(x=>['고화','서사','전설','히든','신화'].includes(x)).join(','); } }catch(x){}
+try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d&&Array.isArray(d.recent)) recent=d.recent.filter(k=>CH[k]&&!CH[k].re).slice(0,6); if(d&&d.OPT){ for(const S0 of SETTINGS){ const o=S0.opts.find(o=>String(o[0])===String(d.OPT[S0.k])); if(o) OPT[S0.k]=o[0]; } if(d.OPT.map==='random'||hasK(MAPS,d.OPT.map)) OPT.map=d.OPT.map; if(d.OPT.raid==='boss') OPT.raid='boss'; if(d.OPT.monhp==='card') OPT.monhp='card'; if(typeof d.OPT.mon==='string') OPT.mon=d.OPT.mon; if(typeof d.OPT.rg==='string') OPT.rg=d.OPT.rg.split(',').filter(x=>['고화','서사','전설','히든','신화'].includes(x)).join(','); } }catch(x){}
+OPT.view=VIEW||'auto';   /* 화면 방식은 aetherView가 정한다(설정 화면의 눌린 칸만 맞춘다) */
 try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d){ if([1,2,3,5].includes(d.teamN)){ teamN=d.teamN; $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===teamN)); } if(['전체','고화','서사','전설','히든','신화'].includes(d.gf)){ gf=d.gf; $('gf').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===gf)); } if(CH[d.sel.me]&&!CH[d.sel.me].re) sel.me=d.sel.me; if(CH[d.sel.foe]&&!CH[d.sel.foe].re) sel.foe=d.sel.foe; sel.meR=!!d.sel.meR; sel.foeR=!!d.sel.foeR; for(const gk of ['al','fo']) if(Array.isArray(d.sel[gk])) sel[gk]=[0,1,2,3].map(i=>{ const k=d.sel[gk][i]; return k&&CH[k]&&!CH[k].re?k:null; }); diff=d.diff|0; $('diff').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.d===diff));
     if(d.v>=3&&d.CFG){ $('s-speed').value=d.CFG.speed; $('s-atk').value=d.CFG.atkInt; $('s-reach').value=d.CFG.reach; if(d.CFG.kb!==undefined) $('s-kb').value=d.CFG.kb; } sandHp=d.sandHp||1000; $('s-sand').value=sandHp; sandInf=!!d.sandInf; sandAct=d.sandAct|0;
     $('sinf').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===(sandInf?1:0))); $('sact').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===sandAct)); setMode(d.m===0?0:(d.m===3?3:d.m===4?4:d.m===5?5:d.m===6?6:d.m===7?7:1)); tab=CH[sel.me].cls; } }catch(x){}
