@@ -6,9 +6,13 @@
            shield:[양,초], heal, haste:[비율,초], resist:[비율,초], reach 지정 거리, summon:[적 key, 수] */
 const mkSpec=(q)=>{ const [name,cd,shape,r,dmg,x={}]=q,sp={name,cd,shapes:[],fx:x.fx||{},ok:[],warn:[]}; if(shape!=='none'){ const t=shape==='spot'?'circle':shape; sp.shapes.push({t:x.move&&x.move[0]==='dash'&&shape==='line'?'path':t,r,hits:x.hits||1,dmg,n:x.n||1}); if(shape==='spot') sp.target=x.reach||8; if(t==='proj') sp.range=r; }
   if(x.move) sp.move={t:x.move[0],d:x.move[1]}; for(const k of ['focus','shield','heal','haste','resist']) if(x[k]) sp[k]=x[k]; sp.r=Math.max(2.5,(x.move?x.move[1]:0)+(shape==='none'?4:shape==='spot'?(x.reach||8):r)); sp.x=x; return sp; };
-function summon(e,key,n){ for(let i=0;i<n;i++){ if(ents.filter(o=>o.team===e.team&&!o.dead).length>=5) return; const a=Math.random()*6.283,m=mk(key,e.team,e.x+Math.cos(a)*3,e.y+Math.sin(a)*3); clamp(m); m.slot=ents.filter(o=>o.team===e.team).length; m.busy=now+.8; m.summoned=true; ents.push(m); puff(m.x,m.y,'shadow',10,3); } }
+/* 잡몹 소환의 공통 규칙: 한 편에 살아 있는 소환 잡몹은 SUMCAP마리까지. 소환된 잡몹은 체력이 SUMHP배. 꽉 차 있으면 소환 스킬은 쉬고, 보스의 나머지 스킬이 SUMRUSH만큼 빨리 돈다 */
+const SUMCAP=4,SUMHP=.7,SUMRUSH=.3;
+const sumN=e=>ents.filter(o=>o.team===e.team&&!o.dead&&o.summoned).length, sumFull=e=>sumN(e)>=SUMCAP;
+function summon(e,key,n){ if(e.id) e.sumBoss=true; for(let i=0;i<n;i++){ if(sumFull(e)||ents.filter(o=>o.team===e.team&&!o.dead).length>=SUMCAP+1) return; const a=Math.random()*6.283,m=mk(key,e.team,e.x+Math.cos(a)*3,e.y+Math.sin(a)*3); clamp(m); m.slot=ents.filter(o=>o.team===e.team).length; m.busy=now+.8; m.summoned=true; m.max=m.hp=Math.round(m.max*SUMHP); ents.push(m); puff(m.x,m.y,'shadow',10,3); } }
+on('step',dt=>{ for(const e of ents){ if(!e.sumBoss||e.dead||!sumFull(e)) continue; for(const k in e.cd){ if(k==='b'||e.cd[k]<=0) continue; const sk=e.c.skills[k]; if(sk&&sk.sum) continue; e.cd[k]=Math.max(0,e.cd[k]-dt*SUMRUSH); } } });
 const SLOTS=['n1','n2','aw','x1','x2'];
-const foeSkills=(L,boss)=>{ const S0={}; L.forEach((q,i)=>{ const sp=mkSpec(q),x=sp.x; S0[SLOTS[i]]={name:sp.name,kind:boss?(x.tele?'집중 마법':'기본 공격'):'스킬',cd:sp.cd,r:sp.r,cast(e){ const go=()=>{ if(x.summon) summon(e,x.summon[0],x.summon[1]); if(sp.shapes.length||sp.shield||sp.heal||sp.haste||sp.resist||sp.move) runSpec(e,sp); };
+const foeSkills=(L,boss)=>{ const S0={}; L.forEach((q,i)=>{ const sp=mkSpec(q),x=sp.x; S0[SLOTS[i]]={sum:!!x.summon,can:x.summon?(e=>!sumFull(e)):undefined,need:x.summon?'잡몹 자리':undefined,name:sp.name,kind:boss?(x.tele?'집중 마법':'기본 공격'):'스킬',cd:sp.cd,r:sp.r,cast(e){ const go=()=>{ if(x.summon) summon(e,x.summon[0],x.summon[1]); if(sp.shapes.length||sp.shield||sp.heal||sp.haste||sp.resist||sp.move) runSpec(e,sp); };
       if(x.tele){ const h=sp.shapes[0],t=sp.target?foes(e).sort((a,b)=>dist(e,a)-dist(e,b))[0]:null; monCast(e,x.tele,h?h.r:4,sp.name,go,t&&dist(e,t)<=sp.target+4?{x:t.x,y:t.y}:null); } else go(); }}; }); return S0; };
 /* 적: [key, 이름, 강함(1~5), 체력, 공격, 걸음 배수, 색, 무기 그림, [스킬…]] */
 const MOBS=[

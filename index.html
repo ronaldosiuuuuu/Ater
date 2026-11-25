@@ -719,6 +719,7 @@ const rm=(e,k)=>{e.st=e.st.filter(s=>s.k!==k)};
 const canAct=e=>!e.dead&&!has(e,'stun')&&e.busy<=now&&!e.dash;
 const canMove=e=>canAct(e)&&!has(e,'root')&&!has(e,'grab');
 const canUse=e=>canAct(e)&&!has(e,'silence')&&e.chant<=now;
+const RUNSPD=1.3,RUNDOT=.5;   /* 달리기 속도 배수 · 달리기로 치는 각도(조준과 걷는 방향이 60도 안쪽일 때) */
 function speed(e){ if(e.c.steady&&e.chant>now) return CFG.speed; let h=0,sl=0; for(const s of e.st){ if(s.k==='haste') h+=s.v; if(s.k==='slow') sl=Math.max(sl,s.v);} return CFG.speed*(1+h)*(1-sl)*(e.c.speedMod?e.c.speedMod(e):1)*mapSpeed(e); }
 function say(e,txt,col){ let lane=0; for(const f of floats) if(f.own===e&&!f.s&&now-f.t0<.6) lane++; floats.push({own:e,x:e.x,y:e.y-1.15-e.z*.45-Math.min(lane,5)*.5,txt,col:col||'#eef1ff',t0:now}); }
 function shield(e,v,t){ e.sh.push({v,until:now+t}); say(e,'보호막 '+v,'#cfd6ff'); sfx('shield'); }
@@ -954,7 +955,7 @@ function step(dt){ now+=dt; if(TN()>1){ const f=foes(me)[0]; if(f&&f!==foe){ foe
     if(e===me) e.mv={x:stick.x,y:stick.y}; else if(e.net) e.mv={x:e.net.mv.x,y:e.net.mv.y}; else if(practice&&sandAct===0) e.mv={x:0,y:0}; else { think(e,dt,practice&&sandAct===1); steer(e); }
     const t=seen(e); if(e.net&&e.net.aim){ if(canAct(e)&&!(e.aimLock>now)) e.aim=e.net.aim; } else if(e===me&&mAim){ if(canAct(e)&&!(e.aimLock>now)) mouseAim(); } else if(t&&canAct(e)&&!has(t,'stealth')&&!(e.aimLock>now)) e.aim=norm(t.x-e.x,t.y-e.y);
     if(e.dash){ e.x+=e.dash.vx*dt; e.y+=e.dash.vy*dt; if(now>=e.dash.until){ const f=e.dash.end; e.dash=null; if(f) f(); } }
-    else if(canMove(e)&&(e.mv.x||e.mv.y)){ const m=Math.min(1,Math.hypot(e.mv.x,e.mv.y)),n=norm(e.mv.x,e.mv.y),v=speed(e)*m*(e.launched?.3:1); e.x+=n.x*v*dt; e.y+=n.y*v*dt; }
+    else if(canMove(e)&&(e.mv.x||e.mv.y)){ const m=Math.min(1,Math.hypot(e.mv.x,e.mv.y)),n=norm(e.mv.x,e.mv.y); /* 달리기: 바라보는 쪽(조준)으로 걸으면 빨라진다. 마인크래프트의 달리기처럼 앞으로 갈 때만 1.3배다. 옆걸음·뒷걸음은 그대로 */ e.run=!e.c.mon&&(t||e.net||(e===me&&mAim))&&n.x*e.aim.x+n.y*e.aim.y>=RUNDOT; const v=speed(e)*m*(e.launched?.3:1)*(e.run?RUNSPD:1); e.x+=n.x*v*dt; e.y+=n.y*v*dt; }
     if(e.z>0||e.vz>0){ e.z+=e.vz*dt; e.vz-=G*dt; if(e.z<=0){ e.z=0; e.vz=0; e.launched=false; } }
     for(const w of walls){ if(e.x>w.x0-R&&e.x<w.x1+R&&e.y>w.y0-R&&e.y<w.y1+R&&e.z<3){ const dl=e.x-(w.x0-R),dr=(w.x1+R)-e.x,du=e.y-(w.y0-R),dd=(w.y1+R)-e.y,m=Math.min(dl,dr,du,dd); if(m===dl) e.x=w.x0-R; else if(m===dr) e.x=w.x1+R; else if(m===du) e.y=w.y0-R; else e.y=w.y1+R; } }
     clamp(e); }
