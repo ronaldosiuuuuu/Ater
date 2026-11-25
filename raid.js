@@ -75,6 +75,8 @@ const MONTIER={korhen:0,s_lion:0,golem:0,s_urkan:0,b_gobking:0,s_centaur:0,
  ggolem:1,b_skull:1,b_swamp:1,s_cactus:1,s_pyrite:1,b_shadow:1,b_fgiant:1,b_paladin:1,b_storm:1,s_scorpion:1,
  hydra:2,s_behemoth:2,s_sphinx:2,b_fdragon:2,b_eye:2,s_dynamis:2,b_guardian:2};
 const tierOf=k=>MONTIER[k]===undefined?1:MONTIER[k], dcOf=k=>RDC[tierOf(k)];
+/* 레이드 보스가 받는 체력 비례(%) 피해 배율: 소란 · 집결 50% · 결속 · 군주 25% · 위신 12.5% */
+const monPct=t=>{ const r=tierOf(t.key); return r>=4?.125:r>=2?.25:.5; };
 let raidDC=2, monTab=-1;
 on('begin',()=>{ if(mode===6&&!practice){ raidDC=dcOf(OPT.mon); msg([['난이도 '+RTIER[tierOf(OPT.mon)],RTCOL[tierOf(OPT.mon)]],[' · 데스카운트 '+raidDC,'#eef1ff']],1,true); } });
 function drawMon(){ if(!CH[OPT.mon]||!CH[OPT.mon].mon) OPT.mon='golem'; if(monTab<0) monTab=tierOf(OPT.mon); let tr=$('montier'); if(!tr){ tr=document.createElement('div'); tr.className='row'; tr.id='montier'; tr.style.marginTop='8px'; $('mon').parentNode.insertBefore(tr,$('mon')); tr.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; if(!MONS.some(k=>tierOf(k)===+b.dataset.t)) return toast(RTIER[+b.dataset.t]+' 난이도의 보스는 아직 없다'); monTab=+b.dataset.t; const L=MONS.filter(k=>tierOf(k)===monTab); if(L.length&&tierOf(OPT.mon)!==monTab){ OPT.mon=L[0]; save(); } drawMon(); drawSel(); }; }
