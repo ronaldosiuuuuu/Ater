@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.5.0';
+const VER='1.5.1';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -357,7 +357,7 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('#sv-out,#
    그 아래 등급을 모두 가졌다면 전설 가운데 셋을 빌린다. 방을 나가면 사라진다. */
 function tempRoll(){ const un=g=>gachaPool(g).filter(k=>!PF.own[k]); let pool=un('고화').concat(un('서사')); if(!pool.length) pool=un('전설'); return pool.sort(()=>Math.random()-.5).slice(0,3); }
 { const lk0=locked; locked=function(k){ if((NET.host||NET.client)&&NET.temp&&NET.temp.includes(baseKey(k))&&!(CH[k]&&CH[k].re)) return false; return lk0(k); };
-  const dn0=drawNet; drawNet=function(){ const on=NET.host||NET.client; if(on&&!NET.temp){ NET.temp=PF.open?[]:tempRoll(); if(NET.temp.length){ toast('이번 방에서 빌려 쓰는 캐릭터 · '+NET.temp.map(k=>CH[k].name.split(', ')[1]).join(' · '),4600); drawSel(); } } else if(!on&&NET.temp){ NET.temp=null; if(!PF.open&&lk0(kOf('me'))){ sel.me='ei'; sel.meR=false; save(); } drawSel(); } dn0();
+  const dn0=drawNet; drawNet=function(){ const on=NET.host||NET.client; if(on&&!NET.temp){ NET.temp=PF.open?[]:tempRoll(); if(NET.temp.length){ toast('이번 방에서 빌려 쓰는 캐릭터 · '+NET.temp.map(k=>CH[k].name.split(', ')[1]).join(' · '),4600); drawSel(); } } else if(!on&&NET.temp&&!NET.relink){ NET.temp=null; if(!PF.open&&lk0(kOf('me'))){ sel.me='ei'; sel.meR=false; save(); } drawSel(); } dn0();
     const el=$('n-list'); if(on&&el&&NET.temp&&NET.temp.length) el.insertAdjacentHTML('afterend','<p class="note" id="n-temp">이번 방에서 빌려 쓰는 캐릭터: '+NET.temp.map(k=>CH[k].name.split(', ')[1]+' ('+CH[k].grade+' '+CH[k].cls+')').join(' · ')+'\n캐릭터 화면에서 고를 수 있다. 방을 나가면 사라진다.</p>'); const old=document.querySelectorAll('#n-temp'); if(old.length>1||(!on&&old.length)) old.forEach((x,i)=>{ if(!on||i<old.length-1) x.remove(); }); };
   const ln0=lockNote; lockNote=function(tab,qq){ const base=ln0(tab,qq); return (NET.host||NET.client)&&NET.temp&&NET.temp.length&&slot==='me'?'<p class="note" style="margin-top:10px;border-left-color:var(--ok)">이번 방에서 빌려 쓰는 캐릭터: '+NET.temp.map(k=>CH[k].name.split(', ')[1]).join(' · ')+'</p>'+base:base; }; }
 
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.5.1','2026-11',['태그매치: 교대 재사용 대기시간 15초 → 45초, 대신 싸우는 중에도 교대할 수 있다.','겹침 정리: 싸우는 중 알림 · 교대 단추 · 데스카운트 · 메뉴 알림을 체력 줄 아래에 차례로 쌓고, 왼쪽 기록 줄은 그 아래에서 화면에 들어갈 만큼만 보인다. 고르는 화면과 창에서는 알림이 아래 단추 위에 뜬다. 레이드 · 대돌격 아래쪽 안내 글이 이름표와 겹치던 것을 뺐다.','함께 하기 손질: 방장이 그만두면 손님 화면이 멈춘 채 남던 것, 손님이 그만두기를 한 번만 눌러도 화면이 멈추던 것, 그만둔 손님의 캐릭터를 컴퓨터가 이어 받지 않던 것을 고쳤다.','쓰러진 채 끊긴 손님이 다시 들어와도 자리를 못 찾던 것, 다시 이을 때 빌린 캐릭터가 바뀌던 것, 메뉴 알림이 계속 남던 것을 고쳤다.','손님이 탭을 내리면 그 캐릭터가 마지막 방향으로 계속 걷던 것을 멈추게 했다.','레이드 전리품 · 손님 코인 배수가 방장 기준을 따르게 했다. 함께 레이드 · 등반 뒤 다른 방식으로 싸우면 원래 편으로 돌아간다.']],
  ['1.5.0','2026-11',['새 방식 「3대3 태그매치」: 캐릭터 셋을 골라 한 명씩 싸운다. 5초 동안 싸우지 않으면 교대(재사용 대기시간 15초, 들어온 캐릭터는 1초 무적 · 스킬 못 씀). 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 수만큼.','시작 화면 문구를 바꾸고 저작권 표시를 넣었다.']],
  ['1.4.0','2026-11',['뽑기: 처음 나온 캐릭터는 파편 없이 바로 얻는다. 이미 가진 캐릭터가 나오면 파편 3~5개.','새 시스템 「완성」: 재림이 없는 캐릭터(신화 · 히든 제외)는 재림과 같은 값(15승 + 중복 + 별무리의 흔적)을 내고 완성할 수 있다. 완성하면 체력 +50 · 기본 공격 +2 · 모든 스킬 재사용 대기시간 10% 감소. 가방 → 재림 · 완성.']],
  ['1.3.0','2026-11',['함께 하기: 들어온 사람이 「준비」를 누르면 방장 명단에 ✔ 준비 완료가 뜨고, 방장의 싸우기 단추에 준비한 사람 수가 나온다. 판이 시작되면 준비는 풀린다.','함께 등반: 방장이 고르는 보상 · 길 · 상점 물건이 모두의 화면에 보이고, 하나를 「추천」할 수 있다. 방장 화면의 그 칸에 누가 추천했는지 뜬다.']],
@@ -686,14 +687,14 @@ on('cast',(e,slot)=>{ if(e.done&&slot!=='b'&&slot!=='crouch'&&e.cd[slot]>0) e.cd
 
 /* ════════════════ 1.5.0 3대3 태그매치 ════════════════
    양쪽이 캐릭터 셋을 고른다(나 · 우리 팀 칸 둘 / 상대 · 상대 팀 칸 둘). 경기장에는 한 명씩만 서고, 나머지 둘은 대기한다.
-   5초 동안 주고받은 피해가 없으면 교대할 수 있다(재사용 대기시간 15초). 들어온 캐릭터는 1초 동안 피해 · 상태이상을 받지 않고 스킬도 쓸 수 없다.
+   싸우는 중에도 교대할 수 있다(재사용 대기시간 45초). 들어온 캐릭터는 1초 동안 피해 · 상태이상을 받지 않고 스킬도 쓸 수 없다.
    대기하는 캐릭터는 체력 · 궁극기 조건 · 쌓은 자원을 그대로 지니고, 재사용 대기시간은 계속 돈다.
    한 명이 쓰러지면 1초 뒤 다음 캐릭터가 자동으로 들어온다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 수만큼. */
-const TAG={idle:5,cd:15,inv:1,next:1,pay:200};
+const TAG={idle:0,cd:45,inv:1,next:1,pay:200};   /* idle: 교대하려면 싸우지 않고 있어야 하는 초(0 = 전투 중에도 교대) · cd: 교대 재사용 대기시간 */
 let TG=null;   /* {bench:[[],[]], last:[0,0], cd:[0,0], kills:[0,0]} */
 const isTag=()=>mode===7&&!practice;
 const tagAll=tm=>TG?[ents.find(o=>o.team===tm&&o.tagOn)].filter(Boolean).concat(TG.bench[tm]):[];
-const tagWhy=tm=>{ if(!TG) return '없음'; const L=TG.bench[tm].filter(o=>!o.dead); if(!L.length) return '대기 없음'; if(now<TG.cd[tm]) return Math.ceil(TG.cd[tm]-now)+'초'; const idle=now-TG.last[tm]; if(idle<TAG.idle) return '전투 중 '+Math.ceil(TAG.idle-idle); return ''; };
+const tagWhy=tm=>{ if(!TG) return '없음'; const L=TG.bench[tm].filter(o=>!o.dead); if(!L.length) return '대기 없음'; if(now<TG.cd[tm]) return Math.ceil(TG.cd[tm]-now)+'초'; if(TAG.idle>0){ const idle=now-TG.last[tm]; if(idle<TAG.idle) return '전투 중 '+Math.ceil(TAG.idle-idle); } return ''; };
 function tagSwap(tm,nx,forced){ if(!TG||over) return false; const cur=ents.find(o=>o.team===tm&&o.tagOn); if(!nx||nx.dead) return false; if(!forced&&tagWhy(tm)) return false;
   const i=TG.bench[tm].indexOf(nx); if(i<0) return false; TG.bench[tm].splice(i,1);
   const at=cur||{x:home(tm,MAP.spawn||6).x,y:home(tm,MAP.spawn||6).y,aim:{x:0,y:tm?1:-1}}; nx.x=at.x; nx.y=at.y; nx.z=0; nx.vz=0; nx.dash=null; nx.mv={x:0,y:0}; nx.aim={x:at.aim.x,y:at.aim.y}; nx.launched=false; nx.tagOn=true; nx.busy=Math.max(nx.busy||0,now);
@@ -715,7 +716,7 @@ function tagSwap(tm,nx,forced){ if(!TG||over) return false; const cur=ents.find(
     try{ bg0(); } finally { sel.al=keep; } }; }
 on('begin',()=>{ if(!isTag()){ TG=null; tagUi(); return; } TG={bench:[[],[]],last:[-99,-99],cd:[0,0],kills:[0,0]};
   for(const tm of [0,1]){ const L=ents.filter(o=>o.team===tm).sort((a,b)=>(a.slot||0)-(b.slot||0)); L.forEach((o,i)=>{ if(i===0){ o.tagOn=true; return; } o.tagOn=false; TG.bench[tm].push(o); }); }
-  ents=ents.filter(o=>o.tagOn); msg([['3대3 태그매치 ','#e3c377'],['5초 동안 싸우지 않으면 교대할 수 있다','#fff6d6']],0,true); tagUi(); });
+  ents=ents.filter(o=>o.tagOn); msg([['3대3 태그매치 ','#e3c377'],['언제든 교대할 수 있다 · 재사용 대기시간 '+TAG.cd+'초','#fff6d6']],0,true); tagUi(); });
 /* 누가 쓰러지면: 대기가 남았으면 1초 뒤 다음 캐릭터가 들어오고, 없으면 진다 */
 { const kl0=kill; kill=function(src,t){ if(!isTag()||!TG) return kl0(src,t);
     if(src.team===t.team){ const k=ents.find(o=>o.team!==t.team&&!o.dead)||ents.find(o=>o.team!==t.team); if(k) src=k; }
@@ -742,9 +743,56 @@ function tagUi(){ let el=document.getElementById('tagbar'); if(!TG||!running&&!o
   document.addEventListener('keydown',e=>{ if(!TG||!running||over||paused) return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')) return; const i=e.code==='KeyQ'?0:e.code==='KeyE'?1:-1; if(i<0) return; const o=TG.bench[0][i]; if(!o||o.dead) return; const w=tagWhy(0); if(w){ toast('지금은 교대할 수 없다 · '+w,1400); return; } tagSwap(0,o); }); }
 /* 고르는 화면: 태그매치는 3대3 고정, 함께 하기에서는 못 한다 */
 { let prevN=null; const mn0=modeNote; modeNote=function(){ if(mode===7&&!practice){ if(teamN!==3){ prevN=teamN; teamN=3; } } else if(prevN!=null&&teamN===3){ teamN=prevN; prevN=null; } mn0(); $('size').style.display=mode===7&&!practice?'none':'';
-    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 5초 동안 주고받은 피해가 없으면 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 15초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위.'; } };
+    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 싸우는 중에도 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 '+TAG.cd+'초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위.'; } };
   const sm0=setMode; setMode=function(m){ if(m===7&&(NET.host||NET.client)&&NET.players.length>1) return toast('태그매치는 아직 혼자(컴퓨터와)만 할 수 있다'); sm0(m); };
   const la0=launch; launch=function(){ if(mode===7&&!practice&&(NET.host||NET.client)&&NET.players.length>1) return toast('태그매치는 아직 혼자(컴퓨터와)만 할 수 있다'); return la0(); };
   modeNote(); }
 /* 보상: 쓰러뜨린 캐릭터 수만큼 */
 { const en1=earn; earn=function(win){ const g=en1(win); if(!(mode===7&&!practice&&TG)||TW&&TW.on||SPM) return g; PF.coin-=g.c; PF.star-=g.st; const m=DIFFPAY[diff]==null?1:DIFFPAY[diff],k=TG.kills[0]; g.c=Math.round(k*TAG.pay*m); g.st=k>=3?1:0; PF.coin+=g.c; PF.star+=g.st; g.note='캐릭터 '+k+'명 쓰러뜨림'; return g; }; }
+
+/* ════════════════ 1.5.1 함께 하기 손질 ════════════════ */
+/* 그만두기: 방장이 그만두면 마지막 상태와 '메뉴 닫힘'을 보낸다. 손님이 그만두면 조작을 멈추고 방장에게 알려 컴퓨터가 이어 받는다 */
+function netQuit(){ try{ if(NET.host&&NET.live){ snap(); NET.live=false; sendAll({t:'pz',who:'host',host:true,name:NET.name(),on:false}); }
+    if(NET.client&&NET.tx){ NET.tx.send({t:'in',mv:[0,0],hb:false,aim:0}); NET.tx.send({t:'pz',on:false}); NET.tx.send({t:'quit'}); NET.playing=false; } }catch(x){} }
+{ const hm3=hostMsg; hostMsg=function(pid,d){ const p=NET.players.find(x=>x.pid===pid); if(p) p.seen=performance.now();
+    if(d&&NET.host&&d.t==='in'){ const e=ents.find(o=>o.net&&o.net.pid===pid); if(e) e.net.tt=performance.now(); }
+    if(d&&NET.host&&d.t==='quit'){ const e=ents.find(o=>o.net&&o.net.pid===pid); if(e&&p&&NET.live){ e.net=null; e.left=p.name; e.pname=null; toast((p.name||'손님')+' 그만뒀다 · 컴퓨터가 대신 움직인다',2600); } return; }
+    /* 같은 이름으로 다시 들어왔는데 예전 연결이 아직 안 닫혔으면(2초 넘게 소식 없음) 예전 것을 먼저 내보내 자리를 넘긴다 */
+    if(d&&NET.host&&d.t==='hello'&&NET.live&&!p){ const nm=String(d.name||'손님').slice(0,8),old=NET.players.find(x=>!x.host&&x.pid!==pid&&x.name===nm&&performance.now()-(x.seen||0)>2000); if(old) hostGone(old.pid); }
+    return hm3(pid,d); };
+  /* 손님 조작이 0.6초 넘게 안 오면(탭을 내렸거나 끊김) 멈춰 세운다 */
+  on('step',()=>{ if(!NET.host) return; const t=performance.now(); for(const e of ents) if(e.net&&e.net.tt&&t-e.net.tt>600){ e.net.mv={x:0,y:0}; e.net.held={}; } });
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden&&NET.client&&NET.tx&&NET.playing){ try{ NET.tx.send({t:'in',mv:[0,0],hb:false,aim:0}); }catch(x){} } });
+  /* 손님의 코인 배수는 방장의 컴퓨터 실력을 따른다 */
+  const en2=earn; earn=function(win){ if(!NET.client||typeof NET.hdiff!=='number') return en2(win); const d0=diff; diff=NET.hdiff; try{ return en2(win); } finally { diff=d0; } };
+  /* 함께 레이드 · 함께 등반으로 모두 같은 편이 된 뒤, 다른 방식으로 싸우면 예전 편으로 되돌린다 */
+  document.addEventListener('click',e=>{ if(!NET.host||!e.target.closest('#n-qraid,#n-qtower')) return; NET.players.forEach(p=>{ if(p.prevTeam==null) p.prevTeam=p.team; }); },true);
+  const la1=launch; launch=function(){ if(NET.host&&mode!==6&&!(TW&&TW.on)&&NET.players.some(p=>p.prevTeam!=null)){ NET.players.forEach(p=>{ if(p.prevTeam!=null){ p.team=p.prevTeam; p.prevTeam=null; } }); lobbyOut(); } return la1(); };
+  /* 손님 쪽 설정(방식 · 인원)은 방을 나가면 원래대로 */
+  const cs0=clientStart; clientStart=function(d){ if(!NET.gkeep) NET.gkeep={mode,teamN,practice}; return cs0(d); };
+  const nl0=netLeave; netLeave=function(q){ const k=NET.gkeep; NET.gkeep=null; nl0(q); if(k){ practice=k.practice; mode=k.mode; teamN=k.teamN; try{ modeNote(); drawSel(); }catch(x){} } }; }
+
+/* 다시 잇는 동안에는 빌린 캐릭터와 고른 캐릭터를 그대로 둔다 */
+{ const cl0=clientLost; clientLost=function(why,canRetry){ NET.relink=!!(canRetry&&(NET.retry||0)<2&&NET.code); return cl0(why,canRetry); };
+  const cm1=clientMsg; clientMsg=function(d){ if(d&&(d.t==='lobby'||d.t==='start')) NET.relink=false; return cm1(d); };
+  const jf0=joinFlow; joinFlow=async function(code,again,tries){ try{ return await jf0(code,again,tries); } finally { if(!NET.client) NET.relink=false; } }; }
+
+/* ════════════════ 1.5.1 화면 배치: 겹침 막기 ════════════════
+   싸우는 중: 체력 줄 바로 아래 가운데에 [메뉴 알림 → 데스카운트 → 교대 단추 → 알림(토스트)] 차례로 쌓고, 왼쪽 기록 줄은 그 아래에서 시작한다.
+   고르는 화면 · 창: 알림은 그 화면의 아래 단추(싸우기 · 닫기) 바로 위에 뜬다. */
+let HUDY=0,HUDLIM=0;
+function layoutTop(){ const tst=$('toast'),onT=tst.classList.contains('on'),game=$('sel').hidden&&running||$('sel').hidden&&!!over&&$('res').hidden;
+  const vis=el=>{ if(!el||el.hidden) return false; const s=getComputedStyle(el); return s.display!=='none'&&s.visibility!=='hidden'&&el.offsetHeight>0; };
+  if(game&&!vis($('pause'))){ const hr=$('hud').getBoundingClientRect(); let y=Math.max(hr.bottom,0)+6; const cvr=cv.getBoundingClientRect();
+    for(const el of [document.getElementById('pzs'),document.getElementById('dcb'),document.getElementById('tagbar')]){ if(!el) continue; if(el.id==='pzs'&&!el.children.length) continue; if(!vis(el)) continue; el.style.top=y+'px'; y+=el.offsetHeight+5; }
+    tst.style.top=y+'px'; tst.style.bottom='auto'; if(onT) y+=tst.offsetHeight+5;
+    HUDY=y>hr.bottom+8?(y-cvr.top)/cell+.55:0;
+    /* 기록 줄이 내려갈 수 있는 끝: 가로 화면은 왼쪽 아래 이동 스틱 위까지, 세로 화면은 아래 점수 줄 위까지 */ const sk=$('stick').getBoundingClientRect(); HUDLIM=sk.width&&sk.left<innerWidth*.4&&sk.top>cvr.top&&sk.top<cvr.bottom?(sk.top-cvr.top)/cell-.35:VH-2.1; return; }
+  HUDY=0; tst.style.top='auto';
+  /* 맨 위에 떠 있는 창을 찾아 그 아래 단추 줄 위에 띄운다 */
+  const L=['#title','#patchv','#keysv','#achv','#bagv','#info','#tower','#res','#pause','#sel'].map(q=>document.querySelector(q)).filter(vis); const top=L[0]; let bot=16;
+  if(top){ const docks=[...top.querySelectorAll('.dock')].filter(d=>vis(d)&&d.getBoundingClientRect().top<innerHeight&&d.getBoundingClientRect().bottom>0); const d=docks[docks.length-1];
+    if(d) bot=innerHeight-d.getBoundingClientRect().top+8; else if(top.id==='sel'){ const nv=$('nav').getBoundingClientRect(); if(!document.body.classList.contains('land')&&nv.top>innerHeight/2) bot=innerHeight-nv.top+8; } }
+  tst.style.bottom=Math.max(16,Math.round(bot))+'px'; }
+setInterval(layoutTop,150); addEventListener('resize',layoutTop);
+{ const t0=toast; toast=function(t,ms){ t0(t,ms); layoutTop(); }; }
