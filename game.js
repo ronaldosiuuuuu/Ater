@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.5.1';
+const VER='1.5.2';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -453,7 +453,7 @@ gachaShow=function(res,done){ const el=$('tw-body'); let fin=false; const end=()
   $('tower').hidden=false; $('tower').scrollTop=0; [...el.querySelectorAll('.gc')].forEach((c,i)=>setTimeout(()=>{ if(fin) return; c.classList.add('on'); const r=res[i]; if(r.got==='new'){ sfx('ult'); buzz(80); } else sfx('ui'); },350+i*(res.length>1?260:0)));
   setTimeout(()=>{ const b=$('ga-skip'); if(b&&!fin) b.textContent='결과 보기'; },350+res.length*260+200); el.querySelector('#ga-skip').onclick=end; };
 const reNeed=k=>{ const c=CH[k],w=(PF.ch[k]||{}).w||0,d=PF.dup[k]||0,nd=RDUP[c.grade]||0,st=RECOST[c.grade]||50; return {w,d,nd,st,ok:w>=REWIN&&d>=nd&&PF.star>=st}; };
-lockWhy=function(k){ const b=baseKey(k); if(!PF.own[b]) return '파편 '+SHARDN+'개를 모아 얻는다'; if(CH[k].re){ const n=reNeed(b); return '재림: '+REWIN+'승('+n.w+') · 중복 '+n.nd+'('+n.d+') · 별무리 '+n.st+' — 뽑기 화면에서 연다'; } return ''; };
+lockWhy=function(k){ const b=baseKey(k); if(!PF.own[b]) return '가방 탭의 뽑기에서 처음 나오면 바로 얻는다'; if(CH[k].re){ const n=reNeed(b); return '재림: '+REWIN+'승('+n.w+') · 중복 '+n.nd+'('+n.d+') · 별무리 '+n.st+' — 가방 → 재림 · 완성에서 연다'; } return ''; };
 gachaScreen=function(res){ if(res) res.forEach(r=>{ if(r.n===undefined){ r.n=0; r.got='new'; r.have=0; r.direct=true; } }); if(res&&res.length&&!res.shown){ res.shown=true; return gachaShow(res,()=>gachaScreen(res)); }
   const pb=(v,m,col)=>'<div class="mbar"><i style="width:'+Math.min(100,Math.round(100*v/m))+'%;background:'+(col||'var(--aether)')+'"></i></div>';
   let h=head('GACHA','뽑기','코인 '+PF.coin.toLocaleString()+' · 별무리의 흔적 '+PF.star+' · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번');
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.5.2','2026-11',['최적화: 효과음 잡음 버퍼를 돌려 쓰고, 캐릭터 이름표를 미리 그려 둔 그림으로 붙여 싸움 중 그리기 부담을 줄였다.','옛 휴대폰(iOS 15 등)에서 떠오르는 글자 상자를 그리다 싸움이 멈출 수 있던 것을 막았다.','함께 하기: 자리가 모자란 손님은 그 판을 관전한다(조작 단추를 숨기고 코인 · 전적은 세지 않는다).','잠긴 캐릭터 안내 문구를 지금 방식(뽑기에서 처음 나오면 바로 얻는다)에 맞췄다.']],
  ['1.5.1','2026-11',['태그매치: 교대 재사용 대기시간 15초 → 45초, 대신 싸우는 중에도 교대할 수 있다.','겹침 정리: 싸우는 중 알림 · 교대 단추 · 데스카운트 · 메뉴 알림을 체력 줄 아래에 차례로 쌓고, 왼쪽 기록 줄은 그 아래에서 화면에 들어갈 만큼만 보인다. 고르는 화면과 창에서는 알림이 아래 단추 위에 뜬다. 레이드 · 대돌격 아래쪽 안내 글이 이름표와 겹치던 것을 뺐다.','함께 하기 손질: 방장이 그만두면 손님 화면이 멈춘 채 남던 것, 손님이 그만두기를 한 번만 눌러도 화면이 멈추던 것, 그만둔 손님의 캐릭터를 컴퓨터가 이어 받지 않던 것을 고쳤다.','쓰러진 채 끊긴 손님이 다시 들어와도 자리를 못 찾던 것, 다시 이을 때 빌린 캐릭터가 바뀌던 것, 메뉴 알림이 계속 남던 것을 고쳤다.','손님이 탭을 내리면 그 캐릭터가 마지막 방향으로 계속 걷던 것을 멈추게 했다.','레이드 전리품 · 손님 코인 배수가 방장 기준을 따르게 했다. 함께 레이드 · 등반 뒤 다른 방식으로 싸우면 원래 편으로 돌아간다.']],
  ['1.5.0','2026-11',['새 방식 「3대3 태그매치」: 캐릭터 셋을 골라 한 명씩 싸운다. 5초 동안 싸우지 않으면 교대(재사용 대기시간 15초, 들어온 캐릭터는 1초 무적 · 스킬 못 씀). 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 수만큼.','시작 화면 문구를 바꾸고 저작권 표시를 넣었다.']],
  ['1.4.0','2026-11',['뽑기: 처음 나온 캐릭터는 파편 없이 바로 얻는다. 이미 가진 캐릭터가 나오면 파편 3~5개.','새 시스템 「완성」: 재림이 없는 캐릭터(신화 · 히든 제외)는 재림과 같은 값(15승 + 중복 + 별무리의 흔적)을 내고 완성할 수 있다. 완성하면 체력 +50 · 기본 공격 +2 · 모든 스킬 재사용 대기시간 10% 감소. 가방 → 재림 · 완성.']],
@@ -796,3 +797,12 @@ function layoutTop(){ const tst=$('toast'),onT=tst.classList.contains('on'),game
   tst.style.bottom=Math.max(16,Math.round(bot))+'px'; }
 setInterval(layoutTop,150); addEventListener('resize',layoutTop);
 { const t0=toast; toast=function(t,ms){ t0(t,ms); layoutTop(); }; }
+
+/* 옛 휴대폰(iOS 15 · 옛 크롬)에는 둥근 사각형 그리기(roundRect)가 없다. 없으면 직접 만든다 */
+if(typeof CanvasRenderingContext2D!=='undefined'&&!CanvasRenderingContext2D.prototype.roundRect){ CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){ r=Math.max(0,Math.min(typeof r==='number'?r:(Array.isArray(r)?r[0]||0:0),Math.abs(w)/2,Math.abs(h)/2)); this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r); this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r); this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y); this.closePath(); return this; }; }
+
+/* 함께 하기: 자리가 모자라 캐릭터를 못 받은 손님은 그 판을 관전한다(조작 단추를 숨기고, 코인 · 전적 · 경험치는 세지 않는다) */
+{ const st=document.createElement('style'); st.textContent='body.spect #btns,body.spect #stick,body.spect #tagbar{visibility:hidden}'; document.head.appendChild(st);
+  const cs1=clientStart; clientStart=function(d){ const r=cs1(d); NET.spect=!d.you; document.body.classList.toggle('spect',NET.spect); if(NET.spect) setTimeout(()=>toast('자리가 모자라 이번 판은 관전한다',3200),300); return r; };
+  const nl1=netLeave; netLeave=function(q){ NET.spect=false; document.body.classList.remove('spect'); return nl1(q); };
+  const sr9=showResult; showResult=function(){ if(NET.client&&NET.spect&&over){ over.paid=over.cnt=over.xp=true; } return sr9(); }; }
