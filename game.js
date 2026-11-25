@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.8.2';
+const VER='1.8.3';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -425,7 +425,7 @@ PF.cnt=Object.assign({play:0,pull:0,claim:0,mw:0,raidw:0,sr:0,dmg:0,coop:0,cls:{
   achCheck({}); }
 
 /* ═════ 보상 코드 ═════ 기록 화면의 코드 칸에 적는다. 한 번만 듣는다 */
-const CODES={'(지운 코드)':{coin:15000}};
+const CODES={};   /* 코드 원문은 두지 않는다(아래 CODEH에 암호화한 값만) */
 function redeem(v){ const k=String(v||'').replace(/\s+/g,''),c=CODES[k]; if(!c) return false; PF.codes=PF.codes||{}; if(PF.codes[k]){ toast('이미 쓴 코드다'); return true; } PF.codes[k]=Date.now(); PF.coin+=c.coin||0; PF.star+=c.star||0; pfSave(); sfx('win'); toast('코드 보상 · 코인 +'+(c.coin||0).toLocaleString()+(c.star?' · 별무리 +'+c.star:''),4200); hubCard(); return true; }
 { const dr1=drawRec; drawRec=function(){ dr1(); const rs=$('rec-reset'); if(rs&&!$('code-in')) rs.insertAdjacentHTML('beforebegin','<h2>보상 코드</h2><div class="row"><input type="text" id="code-in" placeholder="코드를 적는다" autocomplete="off" style="flex:2"><button type="button" id="code-go">받기</button></div>'); };
   document.addEventListener('click',e=>{ if(!e.target.closest('#code-go')) return; const el=$('code-in'); if(!el) return; if(!el.value.trim()) return toast('코드를 적는다'); if(redeem(el.value)){ el.value=''; drawRec(); } else toast('없는 코드다'); });
@@ -471,7 +471,8 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,13)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
- ['1.8.2','2026-11',['보상 코드 「(지운 코드)」: 닉네임을 한 번 다시 정할 수 있다(최대 13자).']],
+ ['1.8.3','2026-11',['보상 코드 처리 방식을 정리했다.','저작권 표시를 바꿨다.']],
+ ['1.8.2','2026-11',['새 보상 코드 추가.']],
  ['1.8.1','2026-11',['레이드 보스가 받는 체력 비례(%) 피해: 소란 · 집결 50% · 결속 · 군주 25% · 위신 12.5%만 들어간다. 스킬 안의 체력 비례분과 따로 계산되는 최체비 · 잃체비 · 현체비 피해 모두 해당.']],
  ['1.8.0','2026-11',['모든 플레이 기록을 한 번 초기화했다(코인 · 캐릭터 · 전적 · 업적 · 등반 · 이야기 · 닉네임). 조합 캐릭터와 화면 · 소리 설정은 남는다.','뽑기 확률: 고화 75 · 서사 22 · 전설 3.','닉네임은 처음 한 번 정하면 바꿀 수 없다.']],
  ['1.7.2','2026-11',['별무리의 흔적으로 원하는 캐릭터를 골라 데려오던 것을 없앴다.','대신 「별무리 뽑기」: 등급을 고르면 그 등급에서 아직 없는 캐릭터 하나가 무작위로 나온다. 값은 고화 30 · 서사 90 · 전설 240(예전 5 · 15 · 40). 가방 → 별무리 뽑기.']],
@@ -525,20 +526,20 @@ function achScreen(){ const old=document.getElementById('achv'); if(old) old.rem
   const bs1=backStep; backStep=function(){ const k=document.getElementById('achv'); if(k){ k.remove(); return true; } return bs1(); }; }
 
 /* ════════════════ 1.2.0 ════════════════ */
-/* ── 보상 코드 셋: (지운 코드)(코인 15000) · 일곱 별의 화신(별무리 40) · 만마의 궁전(모두 열기 켬/끔). 띄어쓰기는 없어도 된다 ── */
-delete CODES['(지운 코드)']; Object.assign(CODES,{'(지운 코드)':{coin:15000},'(지운 코드)':{star:40},'만마의궁전':{palace:1}});
-PF.codes=PF.codes||{}; if(PF.codes['(지운 코드)']&&!PF.codes['(지운 코드)']){ PF.codes['(지운 코드)']=PF.codes['(지운 코드)']; delete PF.codes['(지운 코드)']; }
-/* 모두 열기 단추는 없앴다. 예전에 단추로 열어 둔 것은 뽑기 방식으로 돌린다(만마의 궁전으로 연 것만 남는다) */
+/* ── 보상 코드: 원문은 코드에 두지 않는다. 아래 1.8.3 블록의 CODEH(암호화한 값)만 본다 ── */
+
+PF.codes=PF.codes||{};
+/* 모두 열기 단추는 없앴다. 예전에 단추로 열어 둔 것은 뽑기 방식으로 돌린다(보상 코드로 연 것만 남는다) */
 if(PF.open&&!PF.palace){ PF.open=false; pfSave(); }
-{ const rd0=redeem; redeem=function(v){ const k=String(v||'').replace(/\s+/g,''); if(k!=='만마의궁전') return rd0(v);
-    PF.open=!PF.open; PF.palace=PF.open?1:0; pfSave(); sfx('win'); toast(PF.open?'만마의 궁전 · 모든 캐릭터가 열렸다 (한 번 더 적으면 닫힌다)':'만마의 궁전 · 닫혔다. 다시 뽑기 방식이다',4200);
-    if(!PF.open&&locked(kOf('me'))){ sel.me='ei'; sel.meR=false; } drawSel(); hubCard(); if(typeof drawBag==='function') drawBag(); return true; }; }
+
+
+
 
 /* ── 가방 탭: 뽑기 · 파편 · 재림 · 숙련 · 데려오기를 한곳에 ── */
 function giveShard(k,n){ PF.shard=PF.shard||{}; PF.dup=PF.dup||{}; PF.shard[k]=(PF.shard[k]||0)+n; let got=''; while(PF.shard[k]>=SHARDN){ PF.shard[k]-=SHARDN; if(PF.own[k]){ PF.dup[k]=(PF.dup[k]||0)+1; got=' (중복 +1)'; } else { PF.own[k]=Date.now(); got=' (캐릭터 획득)'; } } return CH[k].name.split(', ')[1]+' 파편 +'+n+got; }
 function drawBag(){ const el=$('bag'); if(!el) return; const pb=(v,m,col)=>'<div class="mbar"><i style="width:'+Math.min(100,Math.round(100*v/m))+'%;background:'+(col||'var(--aether)')+'"></i></div>',nm=k=>esc(CH[k].name.split(', ')[1]);
   const base=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built&&!CH[k].custom),own=base.filter(k=>PF.own[k]);
-  let h='<h2>보유</h2><div class="pl"><b>코인 '+PF.coin.toLocaleString()+'</b><span style="color:var(--muted)">별무리의 흔적 '+PF.star+'</span></div><div class="pl"><b>캐릭터 '+own.length+' / '+base.length+'</b><span style="color:var(--muted)">재림 '+Object.keys(PF.re||{}).length+'명</span></div>'+(PF.open?'<p class="note">만마의 궁전이 열려 있다. 지금은 모든 캐릭터를 쓸 수 있다.</p>':'');
+  let h='<h2>보유</h2><div class="pl"><b>코인 '+PF.coin.toLocaleString()+'</b><span style="color:var(--muted)">별무리의 흔적 '+PF.star+'</span></div><div class="pl"><b>캐릭터 '+own.length+' / '+base.length+'</b><span style="color:var(--muted)">재림 '+Object.keys(PF.re||{}).length+'명</span></div>'+(PF.open?'<p class="note">모든 캐릭터가 열려 있다(보상 코드).</p>':'');
   h+='<h2>뽑기</h2><div class="row"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 뽑기<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+' · 서사 이상 하나 보장</small></button></div>';
   h+='<p class="note" style="white-space:pre-line">처음 나온 캐릭터는 그 자리에서 바로 얻는다.\n이미 가진 캐릭터가 나오면 파편이 3~5개 나온다. 파편 '+SHARDN+'개는 \'중복\' 하나가 되고, 재림에 쓴다.\n확률: '+GRATE.map(g=>g[0]+' '+g[1]+'%').join(' · ')+' (신화 · 히든은 나오지 않는다) · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번</p>';
   const S=Object.keys(PF.shard||{}).filter(k=>CH[k]&&PF.shard[k]>0).sort((a,b)=>PF.shard[b]-PF.shard[a]),D=Object.keys(PF.dup||{}).filter(k=>CH[k]&&PF.dup[k]>0);
@@ -613,7 +614,7 @@ const bagData=()=>{ const base=Object.keys(CH).filter(k=>!CH[k].re&&!CH[k].built
    R:own.filter(k=>CH[k+'_r']&&!PF.re[k]).sort((a,b)=>(reNeed(b).ok-reNeed(a).ok)||(((PF.ch[b]||{}).w||0)+(PF.dup[b]||0)*5)-(((PF.ch[a]||{}).w||0)+(PF.dup[a]||0)*5)),L:Object.entries(PF.ch).filter(x=>CH[x[0]]).sort((a,b)=>b[1].w-a[1].w)}; };
 drawBag=function(){ const el=$('bag'); if(!el) return; const B=bagData(),t=(id,name,sub,n)=>'<button type="button" class="tool" data-bag="'+id+'">'+(n?'<i>'+n+'</i>':'')+'<b>'+name+'</b><small>'+sub+'</small></button>';
   el.innerHTML='<div class="wal"><div><b>'+PF.coin.toLocaleString()+'</b><small>코인</small></div><div><b>'+PF.star+'</b><small>별무리의 흔적</small></div><div><b>'+B.own.length+' / '+B.base.length+'</b><small>캐릭터</small></div></div>'
-   +(PF.open?'<p class="note">만마의 궁전이 열려 있다. 지금은 모든 캐릭터를 쓸 수 있다.</p>':'')
+   +(PF.open?'<p class="note">모든 캐릭터가 열려 있다(보상 코드).</p>':'')
    +'<h2>뽑기</h2><div class="pullrow"><button type="button" data-pull="1"'+(PF.coin<PULL?' class="low"':'')+'><b>1번 뽑기</b><small>코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' class="low"':'')+'><b>10번 뽑기</b><small>코인 '+PULL10.toLocaleString()+' · 서사 이상 보장</small></button></div>'
    +'<p class="sub" style="margin:8px 2px 0">처음 나온 캐릭터는 바로 얻는다 · 가진 캐릭터는 파편 3~5개 · 전설 파편 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번</p>'
    +'<h2>가방</h2><div class="bagg">'+t('sh','파편',B.S.length?B.S.length+'명의 파편을 모으는 중':'아직 없다',B.S.filter(k=>PF.shard[k]>=SHARDN-2).length?'곧 '+B.S.filter(k=>PF.shard[k]>=SHARDN-2).length:'')
@@ -1199,13 +1200,30 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-sg],[data
   new MutationObserver(lock).observe(document.body,{childList:true}); /* 닉네임 창이 닫히면 바로 잠근다 */
   const st=document.createElement('style'); st.textContent='#n-name.locked{opacity:.75;cursor:not-allowed}'; document.head.appendChild(st); }
 
-/* ════ 1.8.2 보상 코드 · (지운 코드): 닉네임을 한 번 다시 정한다(2~13자). 새 이름을 정해야 코드가 쓰인 것으로 친다 ════ */
-CODES['(지운 코드)']={rename:1};
+/* ════ 1.8.2 닉네임 다시 정하기(보상 코드로 연다, 2~13자). 새 이름을 정해야 코드가 쓰인 것으로 친다 ════ */
 function renameScreen(){ const old=document.getElementById('renv'); if(old) old.remove(); const d=document.createElement('div'); d.className='overlay'; d.id='renv'; d.style.zIndex=46; const cur=nickOf();
   d.innerHTML='<div class="wrap">'+head('RENAME','닉네임 다시 정하기','지금 · '+esc(cur))+'<div class="row"><input type="text" id="rn-in" maxlength="13" placeholder="새 닉네임 (2~13자)" autocomplete="off" style="flex:1;height:52px;font-size:17px;text-align:center"></div><p class="note">이 코드로 딱 한 번 바꿀 수 있다. 바꾼 뒤에는 다시 바꿀 수 없다.</p><div class="dock"><button class="go" id="rn-ok" type="button">이 이름으로 바꾼다</button><button class="ghost" id="rn-no" type="button">그만둔다</button></div></div>';
   document.body.appendChild(d); const inp=d.querySelector('#rn-in');
   d.querySelector('#rn-no').onclick=()=>d.remove();
-  d.querySelector('#rn-ok').onclick=()=>{ const v=inp.value.trim().slice(0,13); if(v.length<2) return toast('닉네임은 2자 이상'); if(v===cur) return toast('지금 이름과 같다'); try{ localStorage.setItem('aetherName',v); }catch(x){} PF.codes=PF.codes||{}; PF.codes['(지운 코드)']=Date.now(); pfSave(); const n=$('n-name'); if(n){ n.value=v; n.readOnly=true; } if(NET.client||NET.host) try{ NET.pick(); }catch(x){} d.remove(); sfx('win'); toast('닉네임을 바꿨다 · '+v,3000); };
+  d.querySelector('#rn-ok').onclick=()=>{ const v=inp.value.trim().slice(0,13); if(v.length<2) return toast('닉네임은 2자 이상'); if(v===cur) return toast('지금 이름과 같다'); try{ localStorage.setItem('aetherName',v); }catch(x){} PF.codes=PF.codes||{}; PF.codes[CODE_RENAME]=Date.now(); pfSave(); const n=$('n-name'); if(n){ n.value=v; n.readOnly=true; } if(NET.client||NET.host) try{ NET.pick(); }catch(x){} d.remove(); sfx('win'); toast('닉네임을 바꿨다 · '+v,3000); };
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing) d.querySelector('#rn-ok').click(); }); setTimeout(()=>inp.focus(),50); }
-{ const rd2=redeem; redeem=function(v){ const k=String(v||'').replace(/\s+/g,''); if(k!=='(지운 코드)') return rd2(v); PF.codes=PF.codes||{}; if(PF.codes[k]){ toast('이미 쓴 코드다'); return true; } renameScreen(); return true; };
+{
   const bs6=backStep; backStep=function(){ const r=document.getElementById('renv'); if(r){ r.remove(); return true; } return bs6(); }; }
+
+/* ════════════════ 1.8.3 보상 코드: 원문 없이 암호화한 값(SHA-256 앞 24자리)만 둔다 ════════════════ */
+function sha256(str){ const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b=Array.from(new TextEncoder().encode(str)),l=b.length*8; b.push(0x80); while(b.length%64!==56) b.push(0); for(let i=7;i>=0;i--) b.push(i>3?0:(l>>>(i*8))&255);
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]; const r=(x,n)=>(x>>>n)|(x<<(32-n)),w=new Array(64);
+  for(let o=0;o<b.length;o+=64){ for(let i=0;i<16;i++) w[i]=(b[o+i*4]<<24|b[o+i*4+1]<<16|b[o+i*4+2]<<8|b[o+i*4+3])>>>0; for(let i=16;i<64;i++){ const s0=r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3),s1=r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10); w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0; }
+    let [a,bb,c,d,e,f,g2,h]=H; for(let i=0;i<64;i++){ const t1=(h+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g2))+K[i]+w[i])>>>0,t2=((r(a,2)^r(a,13)^r(a,22))+((a&bb)^(a&c)^(bb&c)))>>>0; h=g2; g2=f; f=e; e=(d+t1)>>>0; d=c; c=bb; bb=a; a=(t1+t2)>>>0; }
+    H=H.map((x,i)=>(x+[a,bb,c,d,e,f,g2,h][i])>>>0); } return H.map(x=>x.toString(16).padStart(8,'0')).join(''); }
+const codeKey=v=>sha256('aether|'+String(v||'').replace(/\s+/g,'')).slice(0,24);
+const CODEH={'152d17f3b081ecf2410acd02':{coin:15000},'1d9a64f3cd9d8565d89eb9c6':{star:40},'b311b59e8c65142c24e4115d':{palace:1},'83f1671a476f11c6475e2b70':{rename:1}},CODE_RENAME='83f1671a476f11c6475e2b70';
+/* 예전에 원문으로 적어 둔 '쓴 코드' 기록을 암호화한 값으로 옮긴다(아주 옛 코드는 첫 코인 코드로 친다) */
+{ PF.codes=PF.codes||{}; let ch=false; for(const k of Object.keys(PF.codes)){ if(/^[0-9a-f]{24}$/.test(k)) continue; let h=codeKey(k); if(h==='deb6c2a784a77949da9bbf89') h='152d17f3b081ecf2410acd02'; if(!PF.codes[h]) PF.codes[h]=PF.codes[k]; delete PF.codes[k]; ch=true; } if(ch) pfSave(); }
+redeem=function(v){ const h=codeKey(v),c=CODEH[h]; if(!c) return false; PF.codes=PF.codes||{};
+  if(c.palace){ PF.open=!PF.open; PF.palace=PF.open?1:0; pfSave(); sfx('win'); toast(PF.open?'모든 캐릭터가 열렸다 (같은 코드를 한 번 더 적으면 닫힌다)':'닫혔다 · 다시 뽑기 방식이다',4200); if(!PF.open&&locked(kOf('me'))){ sel.me='ei'; sel.meR=false; } drawSel(); hubCard(); if(typeof drawBag==='function') drawBag(); return true; }
+  if(PF.codes[h]){ toast('이미 쓴 코드다'); return true; }
+  if(c.rename){ renameScreen(); return true; }
+  PF.codes[h]=Date.now(); PF.coin+=c.coin||0; PF.star+=c.star||0; pfSave(); sfx('win'); toast('코드 보상 · '+(c.coin?'코인 +'+c.coin.toLocaleString():'')+(c.coin&&c.star?' · ':'')+(c.star?'별무리 +'+c.star:''),4200); hubCard(); return true; };
+{ const q=$('q'); if(q) q.addEventListener('input',()=>{ if(CODEH[codeKey(q.value)]&&redeem(q.value)){ q.value=''; drawSel(); } }); }
