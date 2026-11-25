@@ -926,7 +926,7 @@ function basic(e){ /* 기본 공격은 침묵 중에도 된다(스킬만 막힌�
   if(e.c.onBasic) e.c.onBasic(e,hit.filter(t=>!t.dead)); }
 /* CASTGATE: 스킬이 나가기 직전에 묻는 문지기들. (e,slot,k)=>true 를 돌려주면 그 시전은 취소되고 대기시간만 돈다(역설 - 전지무능) */
 const CASTGATE=[];
-function cast(e,slot){ if(NET.client){ if(e===me) NET.cast(slot); return true; } if(e.dead) return false; /* intercept: 캐릭터가 단추 입력을 통째로 가로챈다(아몬의 기록) */ if(e.c.intercept&&!over&&e.c.intercept(e,slot)) return true; if(slot==='b') return basic(e); if(slot==='jump') return jump(e); const k=e.c.skills[slot]; if(!k) return false;
+function cast(e,slot){ if(NET.client){ if(e===me) NET.cast(slot); return true; } if(e===me&&e.net&&NET.host&&!NET.castNet) return false; if(e.dead) return false; /* intercept: 캐릭터가 단추 입력을 통째로 가로챈다(아몬의 기록) */ if(e.c.intercept&&!over&&e.c.intercept(e,slot)) return true; if(slot==='b') return basic(e); if(slot==='jump') return jump(e); const k=e.c.skills[slot]; if(!k) return false;
   const usable=canUse(e)||(k.whileChant&&canAct(e)&&!has(e,'silence')); const free=practice&&pFree&&e===me&&slot==='ult'; if(!usable||e.cd[slot]>0||(slot==='ult'&&e.ultUsed&&!free)||(k.can&&!k.can(e)&&!free)) return false; if(slot==='ult'&&!free) e.ultUsed=true;
   { const kd0=k.kind||KIND[slot]; for(const s2 of e.st.slice()){ if(!s2.onCast) continue; const r=s2.onCast(e,slot,kd0); if(r==='deny'){ say(e,'제한','#d7a6ff'); return false; } if(r===true){ e.cd[slot]=k.cd||0.5; if(slot==='ult'&&!free) e.ultUsed=true; return true; } } }
   for(const gate of CASTGATE){ if(gate(e,slot,k)){ e.cd[slot]=k.cd||0.5; return true; } }
@@ -966,7 +966,7 @@ function step(dt){ now+=dt; if(TN()>1){ const f=foes(me)[0]; if(f&&f!==foe){ foe
   for(const e of ents){ if(e.dead) continue;
     const ended=e.st.filter(s=>s.until<=now); e.st=e.st.filter(s=>s.until>now); ended.forEach(s=>s.end&&!over&&s.end()); e.sh=e.sh.filter(s=>s.until>now);
     for(const k in e.cd) if(e.cd[k]>0) e.cd[k]=Math.max(0,e.cd[k]-dt*(e.boss&&k!=='b'?2:1)); /* 마왕은 재사용 대기시간이 절반 */ if(e.c.tick) e.c.tick(e,dt);
-    if(e===me) e.mv={x:stick.x,y:stick.y}; else if(e.net) e.mv={x:e.net.mv.x,y:e.net.mv.y}; else if(practice&&sandAct===0) e.mv={x:0,y:0}; else { think(e,dt,practice&&sandAct===1); steer(e); }
+    if(e===me&&!e.net) e.mv={x:stick.x,y:stick.y}; else if(e.net) e.mv={x:e.net.mv.x,y:e.net.mv.y}; else if(practice&&sandAct===0) e.mv={x:0,y:0}; else { think(e,dt,practice&&sandAct===1); steer(e); }
     const t=seen(e); if(e.net&&e.net.aim){ if(canAct(e)&&!(e.aimLock>now)) e.aim=e.net.aim; } else if(e===me&&mAim){ if(canAct(e)&&!(e.aimLock>now)) mouseAim(); } else if(t&&canAct(e)&&!has(t,'stealth')&&!(e.aimLock>now)) e.aim=norm(t.x-e.x,t.y-e.y);
     if(e.dash){ e.x+=e.dash.vx*dt; e.y+=e.dash.vy*dt; if(now>=e.dash.until){ const f=e.dash.end; e.dash=null; if(f) f(); } }
     else if(canMove(e)&&(e.mv.x||e.mv.y)){ const m=Math.min(1,Math.hypot(e.mv.x,e.mv.y)),n=norm(e.mv.x,e.mv.y); /* 달리기: 바라보는 쪽(조준)으로 걸으면 빨라진다. 마인크래프트의 달리기처럼 앞으로 갈 때만 1.3배다. 옆걸음·뒷걸음은 그대로 */ e.run=!e.c.mon&&(t||e.net||(e===me&&mAim))&&n.x*e.aim.x+n.y*e.aim.y>=RUNDOT; const v=speed(e)*m*(e.launched?.3:1)*(e.run?RUNSPD:1); e.x+=n.x*v*dt; e.y+=n.y*v*dt; }
@@ -976,7 +976,7 @@ function step(dt){ now+=dt; if(TN()>1){ const f=foes(me)[0]; if(f&&f!==foe){ foe
   for(const f of feats){ const F=FEAT[f.t]; if(F.step) F.step(f,dt); }
   for(let a=0;a<ents.length;a++) for(let b=a+1;b<ents.length;b++){ const A=ents[a],B=ents[b]; if(A.dead||B.dead) continue; const d=dist(A,B),rs=(A.rad||R)+(B.rad||R); if(d<rs&&d>0&&Math.abs(A.z-B.z)<1.5){ const n=norm(A.x-B.x,A.y-B.y),p=(rs-d)/2; A.x+=n.x*p; A.y+=n.y*p; B.x-=n.x*p; B.y-=n.y*p; clamp(A); clamp(B); } }
   if(!over&&!me.dead) for(const s in held) if(held[s]) cast(me,s);
-  if(NET.host&&!over) for(const e of ents) if(e.net&&!e.dead) for(const s in e.net.held) if(e.net.held[s]) cast(e,s);
+  if(NET.host&&!over){ NET.castNet=true; try{ for(const e of ents) if(e.net&&!e.dead) for(const s in e.net.held) if(e.net.held[s]) cast(e,s); } finally { NET.castNet=false; } }
   walls=walls.filter(w=>w.until>now);
   for(let i=0;i<zones.length;i++){ const z=zones[i]; if(z.until<=now||z.owner.dead){ zones.splice(i--,1); continue; }
     if(z.chase&&!z.chase.dead){ const n=norm(z.chase.x-z.x,z.chase.y-z.y),d=Math.hypot(z.chase.x-z.x,z.chase.y-z.y),mv=Math.min(d,(z.speed||4)*dt); z.x+=n.x*mv; z.y+=n.y*mv; }
@@ -1063,8 +1063,9 @@ function draw(){ g.setTransform(dpr*cell,0,0,dpr*cell,0,0); g.fillStyle='#060917
     if(me.dead&&!over){ g.textAlign='center'; g.font='800 .8px "Hahmlet",serif'; g.fillStyle='#ff7d8c'; g.fillText('쓰러졌다',VW/2,VH/2-.4); g.font='600 .45px "Gothic A1",sans-serif'; g.fillStyle='#eef1ff'; g.fillText(TN()>1&&(mode===1||mode===5)?(ents.some(o=>o.team===0&&!o.dead)?'관전 중 · 남은 아군을 따라간다':'쓰러졌다'):'곧 부활한다',VW/2,VH/2+.4); } }
   if(!practice&&now<1.5&&!over){ const k=Math.floor(now/.5),q=now/.5-k; g.textAlign='center'; g.globalAlpha=1-q*.7; g.font='800 '+(2.2-q*.6)+'px "Hahmlet",serif'; g.fillStyle='#fff6d6'; g.shadowColor='#e3c377'; g.shadowBlur=20; g.fillText(String(3-k),VW/2,VH/2+.7); g.shadowBlur=0; g.globalAlpha=1; if(draw.k!==k){ draw.k=k; tone(440,.12,'square',.08); } }
   else if(!practice&&now<2.1&&!over){ g.textAlign='center'; g.globalAlpha=1-(now-1.5)/.6; g.font='800 1.6px "Hahmlet",serif'; g.fillStyle='#8fe9ff'; g.fillText('시작',VW/2,VH/2+.5); g.globalAlpha=1; if(draw.k!==9){ draw.k=9; tone(880,.3,'square',.1); } }
-  if(combo.n>=2&&now-combo.t<2){ const a=1-(now-combo.t)/2; g.globalAlpha=Math.min(1,a*3); g.textAlign='right'; g.font='800 .95px "Hahmlet",serif'; g.fillStyle='#fff6d6'; const cy=(practice?3.4:1.3)+TOPC; g.fillText(combo.n+' 연타',VW-.4,cy); g.font='600 .46px "Gothic A1",sans-serif'; g.fillStyle='#e3c377'; g.fillText('합 '+Math.round(combo.d),VW-.4,cy+.62); g.globalAlpha=1; }
-  if(practice){ dlog=dlog.filter(x=>now-x.t<5); const d5=dlog.reduce((a,x)=>a+x.a,0)/Math.min(5,Math.max(1,now)); g.textAlign='right'; g.font='600 .42px "Gothic A1",sans-serif';
+  const tutOn=typeof TUT!=='undefined'&&TUT.on; /* 첫 판 안내 중에는 연타 · 연습 기록판을 숨긴다(안내 칸과 겹친다) */
+  if(combo.n>=2&&now-combo.t<2&&!tutOn){ const a=1-(now-combo.t)/2; g.globalAlpha=Math.min(1,a*3); g.textAlign='right'; g.font='800 .95px "Hahmlet",serif'; g.fillStyle='#fff6d6'; const cy=(practice?3.4:1.3)+TOPC; g.fillText(combo.n+' 연타',VW-.4,cy); g.font='600 .46px "Gothic A1",sans-serif'; g.fillStyle='#e3c377'; g.fillText('합 '+Math.round(combo.d),VW-.4,cy+.62); g.globalAlpha=1; }
+  if(practice&&!tutOn){ dlog=dlog.filter(x=>now-x.t<5); const d5=dlog.reduce((a,x)=>a+x.a,0)/Math.min(5,Math.max(1,now)); g.textAlign='right'; g.font='600 .42px "Gothic A1",sans-serif';
     const L=['최근 5초 초당 '+d5.toFixed(1),'총 피해 '+Math.round(total),'가장 큰 한 방 '+Math.round(best)]; g.fillStyle='rgba(6,9,23,.72)'; g.fillRect(VW-5.1,.25+TOPC,4.85,2.05); g.fillStyle='#e3c377'; g.fillText('연습',VW-.45,.75+TOPC); g.fillStyle='#eef1ff'; L.forEach((t2,i)=>g.fillText(t2,VW-.45,1.25+TOPC+i*.48)); }
   if(mini){ const q=(performance.now()-mini.t0)/1500; if(q>=1) mini=null; else { const a=q<.1?q/.1:q>.75?(1-q)/.25:1,cy=2.55+TOPC; g.globalAlpha=a; g.font='800 .5px "Hahmlet",serif'; const t1='★ '+mini.who+'  ',t2=mini.skill,w=g.measureText(t1+t2).width+.7,x0=VW/2-w/2; g.fillStyle='rgba(20,14,2,.88)'; g.fillRect(x0,cy-.52,w,.78); g.fillStyle='rgb('+TC[mini.team]+')'; g.fillRect(x0,cy-.52,w,.05); g.fillRect(x0,cy+.21,w,.05);
       g.textAlign='left'; g.fillStyle='rgb('+TC[mini.team]+')'; g.fillText(t1,x0+.35,cy+.04); g.fillStyle='#fff6d6'; g.fillText(t2,x0+.35+g.measureText(t1).width,cy+.04); g.globalAlpha=1; } }
