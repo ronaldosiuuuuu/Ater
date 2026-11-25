@@ -236,7 +236,7 @@ valtma:{name:'종족 사냥꾼, 발트마',cls:'암살자',grade:'고화',range:
    n1:{name:'포승',cd:9,r:4,can:e=>!!tgt(e,e.r.emp?7:4),need:'4칸 안의 적',cast(e){ const E=CH.valtma.take(e),t=tgt(e,E?7:4); near(e,t); e.r.bn=E?24:12; e.r.bt=now+2; }},
    n2:{name:'기세',cd:9,r:3,cast(e){ const E=CH.valtma.take(e); S.circle(e,3,8,'기세',E?{knock:2,stun:1}:{slow:[.33,1]}); }},
    aw:{name:'사냥 본능',cd:30,r:6,cast(e){ const E=CH.valtma.take(e); add(e,'haste',6,E?.4:.2); e.r.up=now+6; if(E) add(e,'stealth',2); }},
-   ult:{name:'사냥감 포착',cd:0,r:5,can:e=>CH.valtma.ok(e)&&!!tgt(e,5),need:'상대 직업군 모두에게 피해 + 5칸 안',cast(e){ const t=tgt(e,5); add(t,'vuln',6,.3); add(t,'slow',6,.3); e.r.prey=t; e.r.preyT=now+6; say(t,'사냥감','#f0b458'); }}
+   ult:{name:'사냥감 포착',cd:0,r:5,can:e=>CH.valtma.ok(e)&&!!tgt(e,5),need:'상대 직업군 모두에게 피해 + 5칸 안',cast(e){ const t=tgt(e,5); if(!t) return; add(t,'vuln',6,.3); add(t,'slow',6,.3); e.r.prey=t; e.r.preyT=now+6; say(t,'사냥감','#f0b458'); }}
   },note:'사냥감 포착의 조건(모든 직업군에게 피해)은 "이 판의 상대 편에 있는 직업군 모두에게 한 번 이상 피해"로 읽었다. 1대1에서는 상대 한 명을 맞히면 채워진다. 컴퓨터는 상대 체력이 절반 아래일 때만 쓴다.'},
 clover:{name:'적청의 광대, 클로버',cls:'암살자',grade:'고화',range:2.4,
   init:e=>{e.r={last:null,lt:0,cnt:0}}, hud:e=>(e.r.lt>now?e.r.last+' · ':'')+'띄움·추락 '+e.r.cnt+'/30',
@@ -308,7 +308,7 @@ mimosa:{name:'황천의 제해, 미모사',cls:'척후병',grade:'고화',range:
    n1:{name:'창해',cd:7,r:13,cast(e){ const F=e.r.awT>now&&e.r.awN>0; if(F){ e.r.awN--; e.cd.n1=.25; } S.focus(e,.5); after(.5,()=>{ if(!e.dead) S.proj(e,e.aim,{speed:24,range:18,dmg:8,label:'창해',pierce:F,ghost:F,o:{post:t=>after(2,()=>{ if(!e.dead&&!t.dead) damage(e,t,8,'창해 (2초 뒤)'); })}}); }); }},
    n2:{name:'바다벽',cd:16,ai:(e,d)=>d<5,cast(e){ const p=front(e,3); wall(e,p.x,p.y,Math.abs(e.aim.x)>Math.abs(e.aim.y)?1:5,Math.abs(e.aim.x)>Math.abs(e.aim.y)?5:1,8); }},
    aw:{name:'황천의 비',cd:30,r:8,cast(e){ fx.push({k:'circle',x:e.x,y:e.y,r:8,t0:now,team:e.team,dur:.9,lab:'황천의 비',src:e}); foes(e).forEach(t=>{ if(dist(e,t)<=8+R){ add(t,'blind',4); add(t,'glow',4); } }); e.r.awT=now+4; e.r.awN=4; e.cd.n1=0; }},
-   ult:{name:'사풍세우',cd:0,r:12,can:e=>e.r.u>=18&&!!tgt(e,14),need:'우천 18회',cast(e){ const t=tgt(e,14); add(t,'glow',6); e.r.gt=now+6; e.r.gu=0; after(6,()=>{ if(e.dead||t.dead) return; damage(e,t,24,'사풍세우'); const n=Math.min(16,e.r.gu*2); for(let i=0;i<n;i++) after(.1+i*.08,()=>{ if(!t.dead) damage(e,t,16/n,'사풍세우 (추가)'); }); }); }}
+   ult:{name:'사풍세우',cd:0,r:12,can:e=>e.r.u>=18&&!!tgt(e,14),need:'우천 18회',cast(e){ const t=tgt(e,14); if(!t) return; add(t,'glow',6); e.r.gt=now+6; e.r.gu=0; after(6,()=>{ if(e.dead||t.dead) return; damage(e,t,24,'사풍세우'); const n=Math.min(16,e.r.gu*2); for(let i=0;i<n;i++) after(.1+i*.08,()=>{ if(!t.dead) damage(e,t,16/n,'사풍세우 (추가)'); }); }); }}
   },note:'바다벽은 3칸 앞에 가로 5칸, 두께 1칸으로 세운다(카드의 4칸은 높이). 걸음과 투사체를 막는다. 궁극기 조건의 "시야 밖"은 뺐다(우천 18회). 발광은 표시만 한다.'},
 ford:{name:'공성 병기, 포드',cls:'척후병',grade:'고화',range:9,
   init:e=>{e.r={wp:false,wd:0}}, hud:e=>(e.r.wp?'병기 · ':'')+'병기 피해 '+Math.floor(e.r.wd)+'/350',

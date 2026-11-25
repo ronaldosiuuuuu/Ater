@@ -7,7 +7,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.5.2';
+const VER='1.5.3';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
 const pfSave=()=>{ try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };
@@ -18,7 +18,7 @@ const rankOf=()=>{ const p=me.hp/me.max; return p>=.7?'S':p>=.4?'A':p>=.15?'B':'
 const ACH=[
  ['first','첫 승리','한 번 이긴다',()=>PF.w>=1],['w10','열 번의 승리','10승',()=>PF.w>=10],['w50','백전노장','50승',()=>PF.w>=50],
  ['st3','연승','3연승',()=>PF.streak>=3],['st7','파죽지세','7연승',()=>PF.streak>=7],
- ['clean','완승','1대1에서 체력 90% 이상을 남기고 이긴다',x=>x.win&&x.solo&&me.hp>=me.max*.9],['edge','기사회생','체력 10% 아래로 이긴다',x=>x.win&&me.hp<=me.max*.1],['fast','속전속결','1대1을 10초 안에 끝낸다',x=>x.win&&x.solo&&over.t<=10],
+ ['clean','완승','1대1에서 체력 90% 이상을 남기고 이긴다',x=>x.win&&x.solo&&me.hp>=me.max*.9],['edge','기사회생','체력 10% 아래로 이긴다',x=>x.win&&!me.dead&&me.hp<=me.max*.1],['fast','속전속결','1대1을 10초 안에 끝낸다',x=>x.win&&x.solo&&over.t<=10],
  ['hard','강적','어려움 난이도 1대1에서 이긴다',x=>x.win&&x.solo&&diff===2],['myth','신살','신화가 아닌 캐릭터로 신화를 1대1에서 이긴다',x=>x.win&&x.solo&&foe.c.grade==='신화'&&me.c.grade!=='신화'],
  ['v10','두루 쓰는 손','서로 다른 캐릭터 10명으로 이긴다',()=>Object.values(PF.ch).filter(c=>c.w>0).length>=10],['v40','만물상','서로 다른 캐릭터 40명으로 이긴다',()=>Object.values(PF.ch).filter(c=>c.w>0).length>=40],
  ['m3','손에 익은 무기','한 캐릭터로 15승 (★★★)',()=>Object.values(PF.ch).some(c=>c.w>=15)],['built','내가 만든 영웅','조합 캐릭터로 이긴다',x=>x.win&&me.c.built],
@@ -30,9 +30,9 @@ const ACH=[
 ];
 function achCheck(x){ const got=[]; for(const a of ACH){ if(PF.ach[a[0]]) continue; let ok=false; try{ ok=a[3](x||{}); }catch(e){} if(ok){ PF.ach[a[0]]=Date.now(); got.push(a[1]); } } if(got.length){ pfSave(); setTimeout(()=>toast('업적 달성 · '+got.join(' · '),3600),1200); } }
 const openSet=()=>Object.keys(CH).filter(k=>!CH[k].re&&!locked(k));
-on('end',w=>{ if(practice||!w||NET.client) return; const was=new Set(openSet()); setTimeout(()=>{ const nw=openSet().filter(k=>!was.has(k)); if(nw.length&&0) toast('새로 열린 캐릭터 · '+nw.slice(0,4).map(k=>CH[k].name.split(', ')[1]).join(' · ')+(nw.length>4?' 외 '+(nw.length-4)+'명':''),4200); },2600); const win=w.team===0,k=baseKey(me.key),solo=ents.length===2&&!RAID(),c=PF.ch[k]||(PF.ch[k]={w:0,l:0});
+on('end',w=>{ if(practice||!w||NET.client) return; const was=new Set(openSet()); setTimeout(()=>{ const nw=openSet().filter(k=>!was.has(k)); if(nw.length&&0) toast('새로 열린 캐릭터 · '+nw.slice(0,4).map(k=>CH[k].name.split(', ')[1]).join(' · ')+(nw.length>4?' 외 '+(nw.length-4)+'명':''),4200); },2600); const win=w.team===0,k=baseKey(me.key),solo=ents.length===2&&!RAID()&&!(mode===7&&!practice),c=PF.ch[k]||(PF.ch[k]={w:0,l:0});
   { const g=earn(win); showResult.gain=g; setTimeout(()=>toast('코인 +'+g.c+(g.st?' · 별무리의 흔적 +'+g.st:'')+(g.note?' · '+g.note:''),2600),200); }
-  if(win){ PF.w++; PF.streak++; c.w++; if(foe.c.mon) PF.mon[foe.key]=(PF.mon[foe.key]||0)+1; } else { PF.l++; PF.streak=0; c.l++; } pfSave(); achCheck({win,solo}); });
+  if(win){ PF.w++; PF.streak++; c.w++; const bz=ents.find(o=>o.c&&o.c.mon); if(bz) PF.mon[bz.key]=(PF.mon[bz.key]||0)+1; } else { PF.l++; PF.streak=0; c.l++; } pfSave(); achCheck({win,solo}); });
 
 /* ───── 권능을 아무 캐릭터에게나 얹기(등반 보상) ───── */
 function empower(c,pw,atkB){ const W=id=>POWERS[id],each=(h,fn)=>{ for(const id of pw) if(W(id)[h]) fn(W(id),id); },n=Object.assign({},c); n.atk=c.atk+(atkB||0);
@@ -77,7 +77,7 @@ const owned=k=>!!PF.own[baseKey(k)];
 function locked(k){ const c0=CH[k]; if(!c0||PF.open) return false; const b=baseKey(k),c=CH[b]; if(!c||c.built||c.custom||c.mon||c.mob||c.kit) return false; if(!PF.own[b]) return true; return !!c0.re&&!PF.re[b]; }
 function lockWhy(k){ const b=baseKey(k); return !PF.own[b]?'뽑기로 얻는다':CH[k].re?'원래 캐릭터로 '+REWIN+'승 뒤, 뽑기 화면에서 별무리의 흔적 '+RECOST[CH[b].grade]+'개로 연다':''; }
 function lockNote(tab,qq){ if(slot!=='me'||practice||PF.open) return ''; const L=Object.values(CH).filter(c=>!c.re&&(qq?c.name.includes(qq):c.cls===tab)&&locked(c.key)); if(!L.length) return '';
-  return '<p class="note" style="margin-top:10px">아직 가지지 않은 캐릭터 '+L.length+'명은 보이지 않는다. 대전 화면의 모험 → 뽑기에서 코인으로 데려온다.\n상대 칸과 연습에서는 모두 보인다.</p>'; }
+  return '<p class="note" style="margin-top:10px">아직 가지지 않은 캐릭터 '+L.length+'명은 보이지 않는다. 아래 가방 탭의 뽑기에서 코인으로 데려온다(처음 나오면 바로 얻는다).\n상대 칸과 연습에서는 모두 보인다.</p>'; }
 function earn(win){ const r=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),m=DIFFPAY[diff]==null?1:DIFFPAY[diff],c=Math.round((win?r(250,500):r(150,350))*m),st=Math.random()<.4?1:0; PF.coin+=c; PF.star+=st; return {c,st}; }
 function pullOne(minIdx){ let L=GRATE.slice(minIdx||0),tot=L.reduce((a,x)=>a+x[1],0),x=Math.random()*tot,g=L[L.length-1][0]; for(const q of L){ if((x-=q[1])<0){ g=q[0]; break; } } const pool=gachaPool(g),k=pool[Math.floor(Math.random()*pool.length)]; if(!k) return null; const dup=!!PF.own[k]; if(dup) PF.star+=DUP[g]; else PF.own[k]=Date.now(); return {k,g,dup}; }
 function pulls(n){ const cost=n===10?PULL10:PULL*n; if(PF.coin<cost) return toast('코인이 모자라다 · '+(cost-PF.coin).toLocaleString()+' 더 필요하다'),null; PF.coin-=cost; const L=[]; for(let i=0;i<n;i++){ const sure=n===10&&i===9&&!L.some(r=>r.g!=='고화'); L.push(pullOne(sure?1:0)); } pfSave(); achCheck({}); return L.filter(Boolean); }
@@ -109,7 +109,7 @@ function rollGear(f,up){ const g=Math.max(0,Math.min(5,Math.floor((f-1)/3)+(up?1
 let TW=null;
 const twLoad=()=>{ try{ const d=JSON.parse(localStorage.getItem('aetherTower')||'null'); return d&&CH[d.key]&&(!d.next||CH[d.next.k])?Object.assign({gold:0,rewN:0,gear:{}},d,{on:false}):null; }catch(x){ return null; } };
 const twStore=()=>{ try{ if(TW) localStorage.setItem('aetherTower',JSON.stringify(TW)); else localStorage.removeItem('aetherTower'); }catch(x){} };
-const isBoss=f=>f%5===0, twMax=()=>CH[TW.key].hp+TW.hpB+statOf(twIds()).hp, rnd=a=>a[Math.floor(Math.random()*a.length)];
+const isBoss=f=>f%5===0, twMax=()=>CH[TW.key].hp+TW.hpB+statOf(twIds()).hp+(typeof isDone==='function'&&isDone(TW.key)&&canDone(TW.key)?50:0), rnd=a=>a[Math.floor(Math.random()*a.length)];
 function twPool(gr){ return Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&gr.includes(c.grade)&&k!==TW.key&&k!==(TW.last||''); }); }
 function towerFoe(f,up){ if(isBoss(f)){ const i=f/5,B=typeof TBOSS!=='undefined'?TBOSS:MONS; if(i%3!==0) return {t:'fight',k:B[(i-Math.floor(i/3)-1)%B.length],boss:true}; return {t:'fight',k:rnd(twPool(f<=15?['전설']:['전설','신화']))||'max',lord:true}; }
   const gr=f+(up?2:0)<=10?TIER[f-1+(up?2:0)]||TIER[f-1]:['전설','신화']; return {t:'fight',k:rnd(twPool(gr))||'ei'}; }
@@ -189,7 +189,7 @@ function dailyScreen(){ const d=today(),x=dailyOf(d),rec=PF.daily.d===d?PF.daily
 let SPM=null;      /* 지금 하는 이야기·도전 판 */
 function spGo(m){ if(NET.host||NET.client) return toast('친구와 함께 중에는 할 수 없다'); SPM=m; setup(m.cfg); $('tower').hidden=true; launch(); }
 { const sr0=showResult; showResult=function(){ if(TW&&TW.on){ if(!over) return; running=false; wakeOff(); $('menu').style.display='none'; if(!over.winner){ const f=TW.floor; TW.on=false; keepBack(); $('sel').hidden=false; over=null; toast('등반은 '+f+'층에서 멈춰 있다. 이어서 오를 수 있다'); return; } return towerEnd(over.winner); }
-    if(!over) return; const win=!!over.winner&&over.winner.team===0,solo=ents.length===2,m=SPM; sr0();
+    if(!over) return; const win=!!over.winner&&over.winner.team===0,solo=ents.length===2&&!(mode===7&&!practice),m=SPM; sr0();
     if(win&&!practice&&solo) $('r-small').textContent='VICTORY · '+rankOf();
     if(showResult.gain&&over.winner&&!practice){ const g=showResult.gain; $('r-sub').textContent='코인 +'+g.c+(g.st?' · 별무리 +'+g.st:'')+(g.note?' · '+g.note:'')+' · '+$('r-sub').textContent; } showResult.gain=null;
     if(m){ let line='';
@@ -307,7 +307,7 @@ const weekKey=()=>{ const d=new Date(),t=new Date(d.getFullYear(),d.getMonth(),d
 function msRoll(){ const M=PF.ms||(PF.ms={}),mk=(pool,seed,n)=>{ let h=2166136261; for(const ch of seed) h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0; const r=()=>{ h=Math.imul(h^(h>>>15),2246822507)>>>0; h=Math.imul(h^(h>>>13),3266489909)>>>0; return ((h^=h>>>16)>>>0)/4294967296; },L=pool.slice(),out=[]; while(out.length<n&&L.length){ const q=L.splice(Math.floor(r()*L.length),1)[0],g=q[2][Math.floor(r()*q[2].length)],cls=ORDER[Math.floor(r()*6)]; out.push({t:q[0],txt:q[1].replace('{c}',cls),n:g,p:0,coin:q[3],star:q[4],cls:q[0]==='cls'?cls:undefined,u:q[0]==='uniq'?[]:undefined}); } return out; };
   let ch=false; if(M.d!==today()){ M.d=today(); M.dl=mk(MS_D,'d'+today(),3); ch=true; } if(M.w!==weekKey()){ M.w=weekKey(); M.wl=mk(MS_W,'w'+weekKey(),3); ch=true; } if(ch) pfSave(); return M; }
 function mission(ev,n,meta){ const M=msRoll(); let ch=false; for(const m of M.dl.concat(M.wl)){ if(m.p>=m.n||m.t!==ev) continue; if(ev==='cls'&&m.cls!==meta) continue; if(ev==='uniq'){ if(m.u.includes(meta)) continue; m.u.push(meta); } const was=m.p; m.p=Math.min(m.n,m.p+n); ch=true; if(m.p>=m.n&&was<m.n) setTimeout(()=>toast('임무 완료 · '+m.txt,3000),3400); } if(ch) pfSave(); }
-on('end',w=>{ if(practice||!w||NET.client) return; const win=w.team===0; mission('play',1); mission('dmg',Math.round(Object.values(me.dealt).reduce((a,b)=>a+b,0))); if(win){ mission('win',1); if(diff===2) mission('hard',1); mission('cls',1,me.c.cls); mission('uniq',1,baseKey(me.key)); if(foe.c.mon) mission('raid',1); } if(SPM&&SPM.kind==='daily') mission('daily',1); });
+on('end',w=>{ if(practice||!w||NET.client) return; const win=w.team===0; mission('play',1); mission('dmg',Math.round(Object.values(me.dealt).reduce((a,b)=>a+b,0))); if(win){ mission('win',1); if(diff===2) mission('hard',1); mission('cls',1,me.c.cls); mission('uniq',1,baseKey(me.key)); if(ents.some(o=>o.c&&o.c.mon)) mission('raid',1); } if(SPM&&SPM.kind==='daily') mission('daily',1); });
 function missionScreen(){ const M=msRoll(),row=(m,i,k)=>'<div class="pl" style="border-left-color:'+(m.c?'var(--line)':m.p>=m.n?'var(--gold)':'var(--aether)')+';opacity:'+(m.c?.5:1)+'"><b>'+esc(m.txt)+' <small style="color:var(--muted)">'+m.p.toLocaleString()+' / '+m.n.toLocaleString()+'</small></b><span style="color:var(--muted)">코인 '+m.coin.toLocaleString()+(m.star?' · 별무리 '+m.star:'')+'</span>'+(m.c?'<span>받음</span>':m.p>=m.n?'<button type="button" data-mc="'+k+i+'" style="height:34px;border:1px solid var(--gold);border-radius:8px;background:var(--panel);color:var(--gold);padding:0 12px;font-weight:700">받기</button>':'')+'<div class="mbar"><i style="width:'+Math.round(100*m.p/m.n)+'%"></i></div></div>';
   $('tw-body').innerHTML=head('MISSION','임무','코인 '+PF.coin.toLocaleString()+' · 별무리의 흔적 '+PF.star)+'<h2>오늘</h2>'+M.dl.map((m,i)=>row(m,i,'d')).join('')+'<h2>이번 주</h2>'+M.wl.map((m,i)=>row(m,i,'w')).join('')+'<p class="note">오늘 임무는 자정에, 이번 주 임무는 월요일에 바뀐다. 연습은 세지 않는다.</p><div class="dock"><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tower').hidden=false; }
 document.addEventListener('click',e=>{ const t=e.target.closest('#hub-ms,[data-mc]'); if(!t) return; if(t.id==='hub-ms') return missionScreen(); const M=msRoll(),m=(t.dataset.mc[0]==='d'?M.dl:M.wl)[+t.dataset.mc.slice(1)]; if(!m||m.c||m.p<m.n) return; m.c=1; PF.coin+=m.coin; PF.star+=m.star||0; pfSave(); sfx('win'); toast('코인 +'+m.coin.toLocaleString()+(m.star?' · 별무리 +'+m.star:'')); missionScreen(); hubCard(); });
@@ -336,7 +336,7 @@ function lvInfo(){ let L=1,x=PF.xp||0; while(x>=xpNeed(L)){ x-=xpNeed(L); L++; }
 function gainXp(n){ const a=lvInfo().lv; PF.xp=(PF.xp||0)+n; const b=lvInfo().lv; if(b>a){ let c=0,s=0; for(let L=a+1;L<=b;L++){ c+=400+50*L; if(L%5===0) s+=5; } PF.coin+=c; PF.star+=s; setTimeout(()=>{ sfx('win'); toast('레벨 '+b+' · 코인 +'+c.toLocaleString()+(s?' · 별무리 +'+s:''),4200); },4600); } pfSave(); }
 const ACHPAY={w50:[2000,8],st7:[1000,3],v10:[800,2],v40:[2500,10],m3:[1000,3],myth:[1000,3],hydra:[1000,3],t10:[1200,4],t15:[2000,6],t25:[3000,10],stmax:[1500,5],stall:[3000,10],d7:[2000,6],g50:[2500,8],gmyth:[1500,5]};
 const achPay=id=>ACHPAY[id]||[400,1];
-function achSettle(quiet){ PF.achPaid=PF.achPaid||{}; let c=0,s=0,n=0; for(const a of ACH){ if(PF.ach[a[0]]&&!PF.achPaid[a[0]]){ PF.achPaid[a[0]]=1; const p=achPay(a[0]); c+=p[0]; s+=p[1]; n++; } } if(!n) return; PF.coin+=c; PF.star+=s; PF.xp=(PF.xp||0)+80*n; pfSave(); if(!quiet) setTimeout(()=>toast('업적 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,3600),2400); else setTimeout(()=>toast('지금까지 이룬 업적 '+n+'개의 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,4200),1500); }
+function achSettle(quiet){ PF.achPaid=PF.achPaid||{}; let c=0,s=0,n=0; for(const a of ACH){ if(PF.ach[a[0]]&&!PF.achPaid[a[0]]){ PF.achPaid[a[0]]=1; const p=achPay(a[0]); c+=p[0]; s+=p[1]; n++; } } if(!n) return; PF.coin+=c; PF.star+=s; gainXp(80*n); pfSave(); if(!quiet) setTimeout(()=>toast('업적 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,3600),2400); else setTimeout(()=>toast('지금까지 이룬 업적 '+n+'개의 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,4200),1500); }
 { const ac0=achCheck; achCheck=function(x){ ac0(x); achSettle(false); }; achSettle(true);
   on('end',w=>{ if(practice||!w||NET.client) return; gainXp(w.team===0?100:40); });
   const sr2=showResult; showResult=function(){ if(NET.client&&over&&over.winner&&me&&!over.xp){ over.xp=true; gainXp(over.winner.team===me.team?100:40); } sr2(); };
@@ -418,7 +418,7 @@ PF.cnt=Object.assign({play:0,pull:0,claim:0,mw:0,raidw:0,sr:0,dmg:0,coop:0,cls:{
   A('ms10','성실','임무 보상 10번 받기',()=>C.claim>=10,1000,3); A('ms50','근면','임무 보상 50번 받기',()=>C.claim>=50,4000,12); A('dw3','사흘','오늘의 도전 3승',()=>PF.dwin>=3,800,3); A('dw15','보름','오늘의 도전 15승',()=>PF.dwin>=15,3000,10); A('ds14','두 이레','오늘의 도전을 14일 내리 이긴다',()=>PF.dstreak>=14,5000,15);
   A('ss10','이야기꾼','이야기 별 10개',()=>stars()>=10,1500,5); A('ss20','기록자','이야기 별 20개',()=>stars()>=20,3000,10); A('lv5','다섯 걸음','계정 레벨 5',()=>lvInfo().lv>=5,500,2); A('lv10','열 걸음','계정 레벨 10',()=>lvInfo().lv>=10,1500,5); A('lv20','스무 걸음','계정 레벨 20',()=>lvInfo().lv>=20,4000,12); A('lv30','서른 걸음','계정 레벨 30',()=>lvInfo().lv>=30,8000,25);
   on('hit',(s,t,amt)=>{ if(s===me&&!practice&&amt>C.maxhit) C.maxhit=Math.round(amt); });
-  on('end',w=>{ if(practice||!w) return; const win=me&&w.team===me.team; C.play++; C.dmg+=Math.round(Object.values(me.dealt||{}).reduce((a,b)=>a+b,0)); if(win){ C.cls[me.c.cls]=(C.cls[me.c.cls]||0)+1; if(diff===2) C.hardw++; if(ents.length===2&&me.hp>=me.max*.7) C.sr++; if(me.hp>=me.max) C.flawless++; if(foe&&foe.c.mon) C.raidw++; if(NET.host&&NET.players.length>1) C.mw++; if(TW&&TW.on){ C.tfloor++; if(coopN()>1) C.coop=Math.max(C.coop,TW.floor); } } pfSave(); setTimeout(()=>achCheck({}),50); });
+  on('end',w=>{ if(practice||!w) return; const win=me&&w.team===me.team; C.play++; C.dmg+=Math.round(Object.values(me.dealt||{}).reduce((a,b)=>a+b,0)); if(win){ C.cls[me.c.cls]=(C.cls[me.c.cls]||0)+1; if(diff===2) C.hardw++; const tg=mode===7&&!practice; if(ents.length===2&&!tg&&me.hp>=me.max*.7) C.sr++; if(!tg&&me.hp>=me.max) C.flawless++; if(ents.some(o=>o.c&&o.c.mon)&&!(TW&&TW.on)) C.raidw++; if(NET.host&&NET.players.length>1) C.mw++; if(TW&&TW.on){ C.tfloor++; if(coopN()>1) C.coop=Math.max(C.coop,TW.floor); } } pfSave(); setTimeout(()=>achCheck({}),50); });
   const po1=pullOne; pullOne=function(m){ const r=po1(m); C.pull++; return r; };
   document.addEventListener('click',e=>{ if(e.target.closest('[data-mc]')){ C.claim++; pfSave(); setTimeout(()=>achCheck({}),100); } },true);
   const sr3=showResult; showResult=function(){ if(NET.client&&over&&over.winner&&me&&!over.cnt){ over.cnt=true; C.play++; if(over.winner.team===me.team){ C.mw++; C.cls[me.c.cls]=(C.cls[me.c.cls]||0)+1; PF.w++; } else PF.l++; pfSave(); setTimeout(()=>achCheck({}),50); } sr3(); };
@@ -471,6 +471,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return (v||($('n-name')&&$('n-name').value)||'').trim().slice(0,8)||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.5.3','2026-11',['태그매치: 물러난 캐릭터가 남은 지속 피해로 쓰러져 지던 것, 물러난 캐릭터의 장판 · 연속 스킬이 계속 싸우던 것, 쓰러진 사이 고른 캐릭터가 교대 대기시간을 쓰던 것을 고쳤다. 1대1 업적 · S 평가가 붙지 않게 했다. 대기 중인 우리 팀 캐릭터에도 완성이 붙는다.','다시 서는 캐릭터(등반 보스 층 부활 · 킬 선취 · 점령전 · 연습)가 등반 권능 · 장비 · 완성 효과를 잃던 것을 고쳤다. 등반에서 완성 체력이 최대 체력에 제대로 들어간다.','업적 경험치로 레벨이 올라도 레벨 보상을 준다. 여럿이 하는 레이드에서 보스 처치가 가끔 안 세지던 것, 쓰러진 채 이겨도 기사회생이 붙던 것, 등반 · 이야기 중 설정을 바꾸면 빌린 캐릭터 · 방식이 저장되던 것을 고쳤다.','화면: 가로 화면 메뉴에서 알림이 화면 밖에 뜨던 것, 좁은 휴대폰에서 스킬 이름이 잘리던 것(이제 133명 모두 들어간다), 가로 화면 창의 아래 단추가 화면 절반을 덮던 것을 고쳤다. 교대 단추를 낮게, 싸움 중 알림을 한 줄로 했다.','왼손 배치에서 단추 묶음도 거울처럼 놓는다(기본 공격이 바깥쪽). 노치 · 홈 막대(안전 영역)를 피한다. 좁은 화면의 캐릭터 찾기 줄 · 뽑기 결과(네 칸)를 정리했다.','PC: Esc로 창을 닫고 멈춤을 푼다. 겹친 창은 맨 위부터 닫는다. 소리 · 음악 끄기가 다음에도 그대로다. 뽑기 연출은 카드를 누르면 한 번에 넘어간다.']],
  ['1.5.2','2026-11',['최적화: 효과음 잡음 버퍼를 돌려 쓰고, 캐릭터 이름표를 미리 그려 둔 그림으로 붙여 싸움 중 그리기 부담을 줄였다.','옛 휴대폰(iOS 15 등)에서 떠오르는 글자 상자를 그리다 싸움이 멈출 수 있던 것을 막았다.','함께 하기: 자리가 모자란 손님은 그 판을 관전한다(조작 단추를 숨기고 코인 · 전적은 세지 않는다).','잠긴 캐릭터 안내 문구를 지금 방식(뽑기에서 처음 나오면 바로 얻는다)에 맞췄다.']],
  ['1.5.1','2026-11',['태그매치: 교대 재사용 대기시간 15초 → 45초, 대신 싸우는 중에도 교대할 수 있다.','겹침 정리: 싸우는 중 알림 · 교대 단추 · 데스카운트 · 메뉴 알림을 체력 줄 아래에 차례로 쌓고, 왼쪽 기록 줄은 그 아래에서 화면에 들어갈 만큼만 보인다. 고르는 화면과 창에서는 알림이 아래 단추 위에 뜬다. 레이드 · 대돌격 아래쪽 안내 글이 이름표와 겹치던 것을 뺐다.','함께 하기 손질: 방장이 그만두면 손님 화면이 멈춘 채 남던 것, 손님이 그만두기를 한 번만 눌러도 화면이 멈추던 것, 그만둔 손님의 캐릭터를 컴퓨터가 이어 받지 않던 것을 고쳤다.','쓰러진 채 끊긴 손님이 다시 들어와도 자리를 못 찾던 것, 다시 이을 때 빌린 캐릭터가 바뀌던 것, 메뉴 알림이 계속 남던 것을 고쳤다.','손님이 탭을 내리면 그 캐릭터가 마지막 방향으로 계속 걷던 것을 멈추게 했다.','레이드 전리품 · 손님 코인 배수가 방장 기준을 따르게 했다. 함께 레이드 · 등반 뒤 다른 방식으로 싸우면 원래 편으로 돌아간다.']],
  ['1.5.0','2026-11',['새 방식 「3대3 태그매치」: 캐릭터 셋을 골라 한 명씩 싸운다. 5초 동안 싸우지 않으면 교대(재사용 대기시간 15초, 들어온 캐릭터는 1초 무적 · 스킬 못 씀). 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 수만큼.','시작 화면 문구를 바꾸고 저작권 표시를 넣었다.']],
@@ -571,7 +572,7 @@ const payTxt={ raid:k=>{ const t=tierOf(k),f=!(PF.rf||{})[k]; return '이기면 
     try{ if(TW&&TW.on){ if(win){ const f=TW.floor,n=TW.next||{}; c+=TWPAY.coin(f); if(n.boss||n.lord) s+=TWPAY.boss(f); if(f%5===0&&f>PF.tw.best){ c+=TWPAY.mcoin(f); s+=TWPAY.mstar(f); N.push(f+'층 첫 돌파'); } } }
       else if(SPM&&SPM.kind==='story'){ if(win){ const S0=STORY[SPM.si],ch=S0.ch[SPM.ci],a=PF.story[S0.id]||[],was=a[SPM.ci]||0,st=goalOk(ch.goal)?2:1; if(!was){ c+=STPAY.first[0]; s+=STPAY.first[1]; N.push('첫 승리'); } if(st===2&&was<2){ c+=STPAY.two[0]; s+=STPAY.two[1]; N.push('★★'); } if(was>=st) c+=STPAY.again; if(!was&&S0.ch.every((_,j)=>j===SPM.ci||(a[j]||0)>0)){ c+=STPAY.all[0]; s+=STPAY.all[1]; N.push('이야기 완주'); } } }
       else if(SPM&&SPM.kind==='daily'){ if(win&&PF.daily.d!==today()){ c+=DYPAY[0]; s+=DYPAY[1]; N.push('오늘의 도전'); } }
-      else if(mode===6&&foe&&foe.c.mon&&win){ const k=foe.key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; s+=RAIDPAY.star[t]; PF.rf=PF.rf||{};
+      else if(mode===6&&win&&ents.some(o=>o.c&&o.c.mon)){ const k=ents.find(o=>o.c&&o.c.mon).key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; s+=RAIDPAY.star[t]; PF.rf=PF.rf||{};
         if(!PF.rf[k]){ PF.rf[k]=Date.now(); c+=RAIDPAY.fcoin[t]; s+=RAIDPAY.fstar[t]; N.push('첫 처치'); const q=pool(); if(q) N.push(giveShard(q,RAIDPAY.fshard[t])); } else if(t>=2&&Math.random()<.35){ const q=pool(); if(q) N.push(giveShard(q,1)); } }
     }catch(x){}
     PF.coin+=c; PF.star+=s; g.c+=c; g.st+=s; g.note=N.join(' · '); return g; };
@@ -665,7 +666,8 @@ function doneList(){ return Object.keys(CH).filter(k=>PF.own[k]&&canDone(k)&&!is
 const DONEHP=50,DONEATK=2,DONECD=.9;
 /* 판이 시작될 때 완성한 캐릭터의 몸을 올린다. 방장(또는 혼자)이 셈하고, 들어온 사람은 방장이 보낸 값을 받는다 */
 on('begin',()=>{ if(NET.client) return; for(const e of ents){ let want=false,keep=null;
-    if(e===me){ want=e.key===sel.me&&!sel.meR&&isDone(e.key)&&canDone(e.key); if(TW&&TW.on&&TW.hp!=null) keep=TW.hp; }
+    if(e===me){ want=e.key===sel.me&&!sel.meR&&isDone(e.key)&&canDone(e.key); if(want&&TW&&TW.on){ e.done=true; e.atk+=DONEATK; continue; } /* 등반은 최대 체력(twMax)에 이미 들어 있다 */ }
+    else if(mode===7&&!practice&&e.team===0&&!e.net){ want=isDone(e.key)&&canDone(e.key); }
     else if(e.net){ const p=NET.players.find(q=>q.pid===e.net.pid); want=!!(p&&p.done&&p.done===e.key&&canDone(e.key)); if(TW&&TW.on&&TW.php&&TW.php[e.net.pid]!=null) keep=TW.php[e.net.pid]; }
     if(!want) continue; e.done=true; e.max+=DONEHP; e.hp=keep==null?e.hp+DONEHP:Math.max(1,Math.min(e.max,keep)); e.atk+=DONEATK; } });
 on('cast',(e,slot)=>{ if(e.done&&slot!=='b'&&slot!=='crouch'&&e.cd[slot]>0) e.cd[slot]*=DONECD; });
@@ -786,15 +788,15 @@ function layoutTop(){ const tst=$('toast'),onT=tst.classList.contains('on'),game
   const vis=el=>{ if(!el||el.hidden) return false; const s=getComputedStyle(el); return s.display!=='none'&&s.visibility!=='hidden'&&el.offsetHeight>0; };
   if(game&&!vis($('pause'))){ const hr=$('hud').getBoundingClientRect(); let y=Math.max(hr.bottom,0)+6; const cvr=cv.getBoundingClientRect();
     for(const el of [document.getElementById('pzs'),document.getElementById('dcb'),document.getElementById('tagbar')]){ if(!el) continue; if(el.id==='pzs'&&!el.children.length) continue; if(!vis(el)) continue; el.style.top=y+'px'; y+=el.offsetHeight+5; }
-    tst.style.top=y+'px'; tst.style.bottom='auto'; if(onT) y+=tst.offsetHeight+5;
+    tst.classList.add('ingame'); tst.style.top=y+'px'; tst.style.bottom='auto'; if(onT) y+=tst.offsetHeight+5;
     HUDY=y>hr.bottom+8?(y-cvr.top)/cell+.55:0;
-    /* 기록 줄이 내려갈 수 있는 끝: 가로 화면은 왼쪽 아래 이동 스틱 위까지, 세로 화면은 아래 점수 줄 위까지 */ const sk=$('stick').getBoundingClientRect(); HUDLIM=sk.width&&sk.left<innerWidth*.4&&sk.top>cvr.top&&sk.top<cvr.bottom?(sk.top-cvr.top)/cell-.35:VH-2.1; return; }
+    /* 기록 줄이 내려갈 수 있는 끝: 가로 화면은 왼쪽 아래 이동 스틱 위까지, 세로 화면은 아래 점수 줄 위까지 */ let lim=VH-2.1; for(const el of [$('stick'),$('btns')]){ const r=el.getBoundingClientRect(); if(r.width&&r.left<innerWidth*.4&&r.top>cvr.top&&r.top<cvr.bottom) lim=Math.min(lim,(r.top-cvr.top)/cell-.35); } HUDLIM=lim; return; }
   HUDY=0; tst.style.top='auto';
   /* 맨 위에 떠 있는 창을 찾아 그 아래 단추 줄 위에 띄운다 */
   const L=['#title','#patchv','#keysv','#achv','#bagv','#info','#tower','#res','#pause','#sel'].map(q=>document.querySelector(q)).filter(vis); const top=L[0]; let bot=16;
   if(top){ const docks=[...top.querySelectorAll('.dock')].filter(d=>vis(d)&&d.getBoundingClientRect().top<innerHeight&&d.getBoundingClientRect().bottom>0); const d=docks[docks.length-1];
-    if(d) bot=innerHeight-d.getBoundingClientRect().top+8; else if(top.id==='sel'){ const nv=$('nav').getBoundingClientRect(); if(!document.body.classList.contains('land')&&nv.top>innerHeight/2) bot=innerHeight-nv.top+8; } }
-  tst.style.bottom=Math.max(16,Math.round(bot))+'px'; }
+    const dr=d&&d.getBoundingClientRect(); if(d&&dr.top>innerHeight*.5&&(dr.bottom>=innerHeight-24||top.id==='sel')) bot=innerHeight-dr.top+8; else if(top.id==='sel'){ const nv=$('nav').getBoundingClientRect(); if(!document.body.classList.contains('land')&&nv.top>innerHeight/2) bot=innerHeight-nv.top+8; } }
+  tst.classList.remove('ingame'); tst.style.bottom=bot>16?Math.round(bot)+'px':'calc(16px + env(safe-area-inset-bottom))'; }
 setInterval(layoutTop,150); addEventListener('resize',layoutTop);
 { const t0=toast; toast=function(t,ms){ t0(t,ms); layoutTop(); }; }
 
@@ -806,3 +808,81 @@ if(typeof CanvasRenderingContext2D!=='undefined'&&!CanvasRenderingContext2D.prot
   const cs1=clientStart; clientStart=function(d){ const r=cs1(d); NET.spect=!d.you; document.body.classList.toggle('spect',NET.spect); if(NET.spect) setTimeout(()=>toast('자리가 모자라 이번 판은 관전한다',3200),300); return r; };
   const nl1=netLeave; netLeave=function(q){ NET.spect=false; document.body.classList.remove('spect'); return nl1(q); };
   const sr9=showResult; showResult=function(){ if(NET.client&&NET.spect&&over){ over.paid=over.cnt=over.xp=true; } return sr9(); }; }
+
+/* ════════════════ 1.5.3 버그 손질 ════════════════ */
+/* 다시 서는 캐릭터(레이드 부활 · 킬 선취 · 점령전 · 연습)는 판 처음의 몸을 이어 받는다: 등반 권능 · 장비 · 완성. 판이 시작될 때(맨 마지막) 기록해 둔다 */
+on('begin',()=>{ for(const e of ents) e.base0={c:e.c,max:e.max,atk:e.atk,done:!!e.done}; if(typeof TG!=='undefined'&&TG) for(const tm of [0,1]) for(const o of TG.bench[tm]) if(!o.base0) o.base0={c:o.c,max:o.max,atk:o.atk,done:!!o.done}; });
+function onRespawn(n,t){ const b=t.base0; if(!b) return; n.base0=b; n.c=b.c; n.max=n.hp=b.max; n.atk=b.atk; if(b.done) n.done=true;
+  if(TW&&TW.on&&n.team===0&&(t===me||n.net)){ const ids=twIds(); n.r=n.r||{}; n.r._w={}; for(const id of ids){ const P=n.r._w[id]={cdT:0}; if(POWERS[id]&&POWERS[id].init) POWERS[id].init(P); } try{ kitInit(n,ids); }catch(x){} } }
+/* 6. 등반 · 이야기 · 오늘의 도전 중에 설정을 바꿔도, 저장에는 빌려 온 캐릭터 · 방식이 아니라 원래 설정이 남는다 */
+{ const sv0=save; save=function(){ if(!KEEP) return sv0(); const k=KEEP,cur={practice,mode,teamN,diff,me:sel.me,meR:sel.meR,foe:sel.foe,foeR:sel.foeR,al:sel.al,fo:sel.fo,mon:OPT.mon,monhp:OPT.monhp,raid:OPT.raid,myth:OPT.myth,map:OPT.map};
+    const put=x=>{ practice=x.practice; mode=x.mode; teamN=x.teamN; diff=x.diff; sel.me=x.me; sel.meR=x.meR; sel.foe=x.foe; sel.foeR=x.foeR; sel.al=x.al; sel.fo=x.fo; OPT.mon=x.mon; OPT.monhp=x.monhp; OPT.raid=x.raid; OPT.myth=x.myth; OPT.map=x.map; };
+    put(k); try{ return sv0(); } finally { put(cur); try{ drawSum(); }catch(x){} } }; }
+/* 1 · 10. 태그매치: 대기 중인 캐릭터는 맞지도 않고, 남은 스킬 · 장판 · 투사체로 싸우지도 않는다 */
+{ const live=()=>typeof TG!=='undefined'&&!!TG,off=e=>!!e&&e.tagOn===false;
+  const dm1=damage; damage=function(src,t,amt,label,o){ if(live()&&(off(t)||off(src))) return false; return dm1(src,t,amt,label,o); };
+  const ef1=effects; effects=function(e,t,o){ if(live()&&(off(t)||off(e))) return; return ef1(e,t,o); };
+  const kn1=knock; knock=function(t,from,d){ if(live()&&off(t)) return; return kn1(t,from,d); };
+  const ai1=air; air=function(t,h){ if(live()&&off(t)) return; return ai1(t,h); };
+  const hl1=heal; heal=function(e,amt,quiet){ if(live()&&off(e)) return 0; return hl1(e,amt,quiet); };
+  const ad1=add; add=function(e,k,t,v,extra){ if(live()&&(off(e)||extra&&off(extra.by))) return; return ad1(e,k,t,v,extra); };
+  /* 물러나는 캐릭터의 장판 · 투사체는 걷어 낸다 */
+  const ts0=tagSwap; tagSwap=function(tm,nx,forced){ const cur=ents.find(o=>o.team===tm&&o.tagOn); const r=ts0(tm,nx,forced); if(r&&cur){ zones=zones.filter(z=>z.owner!==cur); projs=projs.filter(p=>p.owner!==cur); } return r; };
+  /* 쓰러진 사람 말고 살아 있는 캐릭터가 하나라도 있으면 지지 않는다 */
+  const kl1=kill; kill=function(src,t){ if(!(mode===7&&!practice)||!live()) return kl1(src,t); if(off(t)){ t.dead=true; return; }
+    if(src.team===t.team){ const k=ents.find(o=>o.team!==t.team&&!o.dead)||ents.find(o=>o.team!==t.team); if(k) src=k; }
+    const left=TG.bench[t.team].filter(o=>!o.dead&&o!==t); if(left.length) return kl1(src,t);
+    fire('kill',src,t); if(src.c.onKill&&!src.dead) src.c.onKill(src,t); score[src.team]++; TG.kills[src.team]++; msg(short(src)+'(이)가 '+short(t)+'(을)를 쓰러뜨렸다 · '+(t.team?'상대':'우리')+' 남은 캐릭터 0',src.team,true); finish(src); };
+  /* 12. 내 캐릭터가 쓰러진 1초 사이에 고르면 '다음에 나설 캐릭터'로만 정한다(교대 대기시간을 쓰지 않는다) */
+  const pick=i=>{ if(!live()||!running||over||paused) return; const o=TG.bench[0][i]; if(!o||o.dead) return; const cur=ents.find(x=>x.team===0&&x.tagOn); if(cur&&cur.dead){ TG.pick0=o; toast('다음에 나설 캐릭터 · '+short(o),1400); tagUi(); return; } const w=tagWhy(0); if(w){ toast('지금은 교대할 수 없다 · '+w,1400); return; } tagSwap(0,o); };
+  document.addEventListener('click',e=>{ const b=e.target.closest('#tagbar [data-tg]'); if(!b) return; e.stopImmediatePropagation(); pick(+b.dataset.tg); },true);
+  document.addEventListener('keydown',e=>{ if(!live()||!running||over||paused) return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')) return; const i=e.code==='KeyQ'?0:e.code==='KeyE'?1:-1; if(i<0) return; e.stopImmediatePropagation(); pick(i); },true); }
+
+/* ════════════════ 1.5.3 화면 · 조작 손질 (휴대폰 · 태블릿 · PC) ════════════════ */
+{ const st=document.createElement('style'); st.textContent=[
+  /* 싸우는 중 알림은 한 줄로 짧게 */
+  '#toast.ingame{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(86vw,520px);padding:6px 12px;font-size:12.5px}',
+  /* 교대 단추: 낮은 칩 모양(32px 안팎) */
+  '#tagbar button{width:auto;min-width:92px;max-width:132px;padding:4px 8px 5px}#tagbar b{display:flex;gap:6px;align-items:baseline;justify-content:space-between}#tagbar b small{font-weight:600}#tagbar i{margin:3px 0 0}',
+  '#tagbar .tgf{flex-direction:row;flex-wrap:wrap;max-width:120px}#tagbar em{font-size:10px;padding:1px 5px}',
+  /* 왼손 배치: 단추 묶음도 거울처럼(기본 공격이 바깥쪽) */
+  'body.lefty #btns{direction:rtl}body.lefty #btns>*{direction:ltr}',
+  /* 세로 화면: 스틱 칸이 화면 폭의 30%를 넘지 않게, 조작 크기를 키우면 함께 커지게 */
+  'body:not(.land):not(.pc) #pad{grid-template-columns:clamp(92px,calc(128px*var(--ui)),30vw) 1fr}body.lefty:not(.land):not(.pc) #pad{grid-template-columns:1fr clamp(92px,calc(128px*var(--ui)),30vw)}',
+  /* 노치 · 홈 막대(안전 영역) */
+  '#hud{padding-top:calc(7px + env(safe-area-inset-top))}body.land #hud{padding-top:calc(5px + env(safe-area-inset-top))}',
+  '#menu{top:calc(8px + env(safe-area-inset-top));width:44px;height:44px;font-size:17px;right:max(8px,calc((100vw - 520px)/2 + 8px))}body.pc #menu{right:max(8px,calc((100vw - 1180px)/2 + 8px))}body.land #menu{top:calc(5px + env(safe-area-inset-top));margin-left:-22px;right:auto}',
+  'body:not(.land):not(.pc) #pad{padding-bottom:calc(10px + env(safe-area-inset-bottom));height:calc(196px*var(--ui) + env(safe-area-inset-bottom))}body.xs:not(.land):not(.pc) #pad{height:calc(268px*var(--ui) + env(safe-area-inset-bottom))}',
+  '.overlay .wrap{padding-top:calc(16px + env(safe-area-inset-top))}.overlay .dock{padding-bottom:calc(12px + env(safe-area-inset-bottom))}.shell{padding-top:env(safe-area-inset-top)}',
+  /* 가로 화면의 창: 아래 단추들을 한 줄로 나란히(세로로 쌓이면 화면 절반을 덮는다) */
+  'body.land .overlay .dock{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}body.land .overlay .dock>button{flex:1 1 150px;width:auto;margin:0;min-height:44px}body.land .overlay .dock>.go{flex:2 1 220px}',
+  /* 좁은 세로 화면의 캐릭터 고르기: 찾기 줄을 한 줄로 */
+  '@media (max-width:420px){.crow{flex-wrap:nowrap;gap:6px}.crow #q{flex:1 1 0;min-width:0}.crow button{flex:none;max-width:28vw;padding:0 8px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}',
+  /* 좁은 화면의 뽑기 결과: 네 칸씩 */
+  '@media (max-width:400px){.gst{grid-template-columns:repeat(4,1fr)}}.gst .gc .ft em{word-break:keep-all}',
+  /* 만들기 창의 이름 칸이 납작해지지 않게 */
+  '#build input[type="text"],#build input:not([type]){min-height:40px}',
+  /* 창 제목이 늦게 뜨던 것을 빠르게 */
+  '@media (prefers-reduced-motion:no-preference){.overlay .brand h1{animation-duration:.45s}}'
+ ].join(''); document.head.appendChild(st); }
+/* 교대 단추 모양: 이름과 상태를 한 줄에 */
+{ const tu0=tagUi; tagUi=function(){ tu0(); const el=document.getElementById('tagbar'); if(!el||el.hidden||!TG) return; el.querySelectorAll('button[data-tg]').forEach(b=>{ const sm=b.querySelector('small'),bb=b.querySelector('b'); if(sm&&bb&&sm.parentNode!==bb) bb.appendChild(sm); }); }; }
+/* 스킬 단추 글자가 단추에 다 들어가게: 넘치면 글자를 줄이고, 그래도 넘치면 두 줄로 */
+function fitSk(){ document.querySelectorAll('#btns .sk .nm').forEach(el=>{ el.style.fontSize=''; el.style.whiteSpace=''; el.style.display=''; if(!el.clientWidth) return; let fs=parseFloat(getComputedStyle(el).fontSize),i=0; const over=()=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+2;
+    while(over()&&i<7){ fs*=.92; el.style.fontSize=fs.toFixed(1)+'px'; i++; } if(over()&&el.classList.contains('l1')){ el.style.whiteSpace='normal'; el.style.display='-webkit-box'; } });
+  document.querySelectorAll('#btns .sk .need').forEach(el=>{ el.style.fontSize=''; if(!el.clientWidth) return; let fs=parseFloat(getComputedStyle(el).fontSize),i=0; while(el.scrollWidth>el.clientWidth+1&&i<4){ fs*=.9; el.style.fontSize=fs.toFixed(1)+'px'; i++; } }); }
+{ const ub0=uiBegin; uiBegin=function(){ const r=ub0(); requestAnimationFrame(fitSk); return r; }; addEventListener('resize',()=>requestAnimationFrame(fitSk)); try{ document.fonts&&document.fonts.addEventListener('loadingdone',()=>fitSk()); }catch(x){}
+  /* 자판으로 싸우는 PC에서 Tab이 숨은 스킬 단추를 돌지 않게 */
+  document.querySelectorAll('#btns .sk').forEach(b=>b.setAttribute('tabindex','-1')); }
+/* PC: Esc = 뒤로(창 닫기 · 멈춤 풀기 · 멈추기). 맨 위에 뜬 창부터 닫는다 */
+{ const bs3=backStep; backStep=function(){ if(!$('info').hidden&&!['keysv','patchv','achv','bagv','title'].some(id=>document.getElementById(id))){ $('info').hidden=true; return true; } return bs3(); };
+  addEventListener('keydown',e=>{ if(e.key!=='Escape'||e.repeat) return; const a=document.activeElement; if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)) return; if(backStep()){ e.preventDefault(); e.stopImmediatePropagation(); } },true); }
+/* 소리 · 음악 끄기는 다음에 켤 때도 그대로 */
+{ try{ const v=JSON.parse(localStorage.getItem('aetherSound')||'{}'); if(v.m){ muted=true; $('p-mute').textContent='소리 켜기'; } if(v.b){ bgmOff=true; $('bgmb').textContent='음악 켜기'; } }catch(x){}
+  const keep=()=>{ try{ localStorage.setItem('aetherSound',JSON.stringify({m:muted?1:0,b:bgmOff?1:0})); }catch(x){} }; $('p-mute').addEventListener('click',()=>setTimeout(keep,0)); $('bgmb').addEventListener('click',()=>setTimeout(keep,0)); }
+/* 결과 화면 '캐릭터 바꾸기'는 캐릭터 탭으로 */
+{ const bk1=$('back').onclick; $('back').onclick=function(ev){ const m=showResult.last; const r=bk1.call(this,ev); if(!m&&!NET.client&&!(TW)&&$('tower').hidden) goPage('chars'); return r; }; }
+/* 레이드 결과 화면의 상대 칸은 보스로(가장 가까운 잡몹이 아니라) */
+{ const fn0=finish; finish=function(w){ if(!over&&mode===6&&!practice){ const bz=ents.find(o=>o.c&&o.c.mon); if(bz) foe=bz; } return fn0(w); }; }
+/* 뽑기 연출: 카드 쪽을 누르면 한 번에 모두 뒤집고, 한 번 더 누르면 결과로 */
+{ const gs1=gachaShow; gachaShow=function(res,done){ const r=gs1(res,done); const g0=$('tw-body').querySelector('.gst'); if(g0) g0.addEventListener('click',()=>{ const cs=[...g0.querySelectorAll('.gc')]; if(cs.some(c=>!c.classList.contains('on'))) cs.forEach(c=>c.classList.add('on')); else { const b=$('ga-skip'); if(b) b.click(); } }); return r; }; }

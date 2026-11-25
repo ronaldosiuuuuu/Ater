@@ -59,7 +59,7 @@ bunt:{name:'도박사, 번트',cls:'마법사',grade:'서사',range:7,
    n2:{name:'밑장',cd:12,ai:(e,d)=>d>4.5&&d<=7.5,cast(e){ const p=Object.assign(front(e,6),{z:0}); fx.push({k:'circle',x:p.x,y:p.y,r:1.5,t0:now,team:e.team,dur:2,lab:'밑장',src:e}); after(2,()=>{ if(!e.dead) S.circle(e,1.5,24,'밑장',{stun:1,v:'burst'},p); }); }},
    aw:{name:'멋진 등장',cd:30,r:10,cast(e){ S.proj(e,e.aim,{speed:24,range:12,dmg:0,label:'멋진 등장 (금)',nohit:true,el:'holy',onEnd:p=>S.circle(e,4,30,'멋진 등장',{knock:2,v:'burst',el:'holy'},{x:p.x,y:p.y,z:0})});
         S.proj(e,e.aim,{speed:9,range:12,dmg:0,label:'멋진 등장 (은)',nohit:true,el:'steel',onEnd:p=>{ if(!e.dead){ puff(e.x,e.y,'arcane',8,4); e.x=p.x; e.y=p.y; clamp(e); } }}); }},
-   ult:{name:'게임 스타트',cd:0,r:5,can:e=>e.r.n>=6&&!!tgt(e,5),need:'셔플 6회 + 5칸 안의 적',cast(e){ const t=tgt(e,5); for(const x of [e,t]){ add(x,'invuln',2); add(x,'stun',2,0,{self:true}); } say(e,'착석','#f0b458');
+   ult:{name:'게임 스타트',cd:0,r:5,can:e=>e.r.n>=6&&!!tgt(e,5),need:'셔플 6회 + 5칸 안의 적',cast(e){ const t=tgt(e,5); if(!t) return; for(const x of [e,t]){ add(x,'invuln',2); add(x,'stun',2,0,{self:true}); } say(e,'착석','#f0b458');
         after(2,()=>{ if(e.dead) return; if(Math.random()<.5){ say(e,'성공','#7fe3b5'); heal(e,50); for(const k in e.cd) e.cd[k]=0; } else { say(e,'실패','#ff7d8c'); S.circle(e,2,0,'게임 스타트',{v:'burst'}); damage(e,e,50,'게임 스타트 (실패)',{fixed:true}); add(e,'stun',1); } }); }}
   },note:'셔플은 16초에 한 번, 피해를 준 순간 상대와 자리를 바꾼다. 멋진 등장의 금색 카드는 닿은 곳(또는 12칸 끝)에서 반지름 4칸으로 터진다. 착석 중에는 둘 다 움직이지 못하고 피해를 받지 않는다.'},
 roland:{name:'전광의 천재, 롤랑',cls:'마법사',grade:'서사',range:7,
