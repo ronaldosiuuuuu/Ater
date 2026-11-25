@@ -5,7 +5,7 @@ const KCOL={일반:'#7fe9ff',각성:'#b48cff',궁극:'#e3c377',초월:'#ff7d8c',
 const kindOf=(k,slot)=>{ const t=String((k&&k.kind)||KIND[slot]||'일반'); for(const key of ['궁극','Ultimate','초월','신화','각성','Awaken','권능','기본기','기본 공격','무기','패시브','Passive','웅크리기','집중']) if(t.indexOf(key)>=0) return ({Ultimate:'궁극',Awaken:'각성','기본 공격':'기본기',Passive:'패시브',집중:'각성'})[key]||key; return slot==='ult'?'궁극':slot==='aw'?'각성':'일반'; };
 const kcol=(k,slot)=>KCOL[kindOf(k,slot)]||KCOL.일반;
 /* ── 단추 ── */
-function skLabel(b,s){ if(s==='b'){ b.style.setProperty('--kc',KCOL.기본기); return '<i class="tg">기본</i><b class="nm l2">기본 공격</b><small class="kind">ATK '+me.atk+'</small><span class="cd"></span>'; }
+function skLabel(b,s){ if(s==='b'){ b.style.setProperty('--kc',KCOL.기본기); return '<i class="tg">기본</i><b class="nm l2">기본 공격</b><small class="kind">ATK '+(+me.atk||0)+'</small><span class="cd"></span>'; }
   if(s==='jump'){ b.style.setProperty('--kc','#97a1cf'); return '<i class="tg">이동</i><b class="nm l2">점프</b><small class="kind">1.25칸</small><span class="cd"></span>'; }
   const k=me.c.skills[s]; if(!k) return null; const kd=kindOf(k,s),n=k.name.replace(/\s+/g,' '),L=[...n].length; b.style.setProperty('--kc',KCOL[kd]||KCOL.일반);
   return '<i class="tg">'+kd+'</i><b class="nm l'+(L<=4?1:L<=7?2:L<=10?3:4)+'">'+esc(n)+'</b><small class="kind">'+(k.cd>=1?k.cd+'s':s==='ult'?'한 번':'')+'</small><small class="need">'+esc(k.need||'')+'</small><span class="cd"></span>'; }

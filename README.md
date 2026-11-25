@@ -11,7 +11,7 @@
 
 설치 없이 휴대폰 · PC 브라우저에서 바로 된다. 홈 화면에 추가하면 앱처럼 쓸 수 있다(PWA).
 
-![버전](https://img.shields.io/badge/버전-1.8.3-e3c377?style=flat-square) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
+![버전](https://img.shields.io/badge/버전-1.8.4-e3c377?style=flat-square) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
 </div>
 
@@ -54,7 +54,7 @@
 ## 친구와 함께 하는 법
 
 1. 한 사람이 **함께** 탭 → **방 만들기**를 누르고, 코드나 **초대 링크**를 보낸다.
-2. 나머지는 링크를 열거나 함께 탭에서 코드를 적고 들어온다.
+2. 나머지는 링크를 열고 **들어가기**를 누르거나, 함께 탭에서 코드를 적고 들어온다.
 3. 각자 캐릭터를 고르고 **준비하기**를 누른다. 방장이 방식을 정하고 **싸우기**를 누른다.
 
 모두 같은 판(버전)이어야 들어갈 수 있다. 판이 다르다고 나오면 새로고침한다.
@@ -62,10 +62,10 @@
 ## 만든 방식
 
 - 빌드 없는 순수 JavaScript + Canvas 2D. `index.html`을 열면 바로 돌아간다.
-- 오프라인에서도 되는 PWA(서비스 워커), 기기끼리 잇는 WebRTC(PeerJS) + 중계 서버(TURN)
+- 오프라인에서도 되는 PWA(서비스 워커), 기기끼리 잇는 WebRTC(PeerJS). 직접 닿지 못하면 사이트에 마련된 중계 서버(TURN)를 저절로 거친다.
 - 기록은 지금 그 기기의 브라우저에 저장된다.
 
-변경 기록은 [CHANGELOG.md](CHANGELOG.md)와 [릴리스](https://github.com/ronaldosiuuuuu/Ater/releases)에 있다. 버그나 제안은 [Issues](https://github.com/ronaldosiuuuuu/Ater/issues)에 남겨 주면 된다.
+변경 기록은 [CHANGELOG.md](CHANGELOG.md)와 [릴리스](https://github.com/ronaldosiuuuuu/Ater/releases)에 있다. 버그나 제안은 [Issues](https://github.com/ronaldosiuuuuu/Ater/issues)에 남겨 주면 된다. 보안 문제는 공개 이슈 대신 [SECURITY.md](SECURITY.md)에 적힌 방법으로 알려 준다.
 
 ---
 

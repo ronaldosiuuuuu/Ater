@@ -1,0 +1,23 @@
+# 비밀값이 든 파일은 올리지 않는다 (relay.json의 공개용 API Key만 예외)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*secret*
+*credential*
+turn*.json
+
+# 기기 · 편집기가 만드는 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# 묶음 · 임시 파일
+*.zip
+*.log
+node_modules/
+tmp/
