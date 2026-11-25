@@ -2,7 +2,7 @@
    - 앱 파일: 저장해 둔 것을 바로 쓰고, 뒤에서 새 것을 받아 둔다. 판(V)이 올라가면 화면이 알아서 새 판으로 다시 열린다.
    - 글꼴(구글): 한 번 받은 것은 저장해 두고 계속 쓴다.
    파일을 더하거나 빼면 FILES를 고치고 V의 숫자를 올린다. */
-const V='aether-1.6.0';
+const V='aether-1.7.0';
 const FILES=['./','bench.js','build.js','kits.js','wkits1.js','wkits2.js','pkits.js','foes.js','docboss.js','game.js','story2.js','raid.js','lore.js','forge.js','guide.js','net.js','peerjs.min.js','extra.js','cardtext6.js','brain.js','brain2.js','brain3.js','cardtext.js','cardtext2.js','cardtext3.js','cardtext4.js','cardtext5.js','chars.js','feel.js','text.js','flair.js','fxs.js','icons/apple-180.png','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','index.html','relay.json','배포.md','jeon1.js','jeon2.js','jeon3.js','look.js','manifest.json','maps.js','rebirth.js','seosa1.js','seosa2.js','seosa3.js','sinhwa.js','team.js'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(V).then(c=>c.addAll(FILES.map(f=>new Request(f,{cache:'reload'})))).then(()=>self.skipWaiting())); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V&&k!=='aether-fonts').map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
