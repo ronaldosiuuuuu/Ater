@@ -11,7 +11,7 @@
 
 설치 없이 휴대폰 · PC 브라우저에서 바로 된다. 홈 화면에 추가하면 앱처럼 쓸 수 있다(PWA).
 
-![버전](https://img.shields.io/badge/버전-1.8.8-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
+![버전](https://img.shields.io/badge/버전-1.8.9-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
 </div>
 
@@ -67,7 +67,7 @@
 - 오프라인에서도 되는 PWA(서비스 워커), 기기끼리 잇는 WebRTC(PeerJS). 직접 닿지 못하면 사이트에 마련된 중계 서버(TURN)를 저절로 거친다.
 - 기록은 지금 그 기기의 브라우저에 저장된다.
 
-변경 기록은 [CHANGELOG.md](CHANGELOG.md)와 [릴리스](https://github.com/ronaldosiuuuuu/Ater/releases)에 있다. 버그나 제안은 [Issues](https://github.com/ronaldosiuuuuu/Ater/issues)에 남겨 주면 된다. 보안 문제는 공개 이슈 대신 [SECURITY.md](SECURITY.md)에 적힌 방법으로 알려 준다.
+변경 기록은 [CHANGELOG.md](CHANGELOG.md)에 있다. 버그나 제안은 [Issues](https://github.com/ronaldosiuuuuu/Ater/issues)에 남겨 주면 된다. 보안 문제는 공개 이슈 대신 [SECURITY.md](SECURITY.md)에 적힌 방법으로 알려 준다.
 
 ---
 
