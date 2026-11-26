@@ -7,9 +7,9 @@ let chaosUntil=0,chaosName='혼돈 세계';
 Object.assign(CH,{
 max:{name:'위대한 하나, 맥스',cls:'신화',grade:'신화',range:2.6,
   init:e=>{e.r={step:0,par:0,god:0,fate:null,ft:0}}, hud:e=>(e.hp<=e.max/2?'재림(강화) · ':'재림 · ')+(e.r.god>now?'신살자 · ':'')+(e.r.ft>now?'운명':''),
-  /* 1.9.0: 기본 공격 단추가 곧 검격이다(누르고 있으면 1초마다 이어서 벤다). 일반 ① 칸에서는 뺐다 */
-  basicName:'검격', basicSub:'1초마다',
-  altBasic(e){ if(e.cd.b>0) return true; e.cd.b=1; swingSnd(e); CH.max.slash(e); return true; },
+  /* 1.9.0: 기본 공격 단추가 곧 검격이다(누르고 있으면 0.5초마다 이어서 벤다 · 1.9.2). 일반 ① 칸에서는 뺐다 */
+  basicName:'검격', basicSub:'0.5초마다',
+  altBasic(e){ if(e.cd.b>0) return true; e.cd.b=.5; swingSnd(e); CH.max.slash(e); return true; },
   slash(e){ const h=()=>heal(e,2,true); e.swingT=now; if(e.r.step++%2===0) S.circle(e,4,14,'검격',{v:'spin',post:h}); else for(let i=0;i<2;i++) after(i*.12,()=>{ if(!e.dead) S.arc(e,4,9,'검격',{post:h}); }); },
   speedMod:e=>e.hp<=e.max/2?1.25:1,
   fixHalf:e=>e.r.god>now,
@@ -29,7 +29,7 @@ max:{name:'위대한 하나, 맥스',cls:'신화',grade:'신화',range:2.6,
         after(1,()=>{ if(!e.dead) S.circle(e,4,0,'절망의 검',{zfree:true,v:'nova',el:'shadow',post:t=>{ say(t,'절망','#c9c2ff'); add(t,'despair',10,0,{by:e,end:()=>{ if(!t.dead) damage(e,t,(t.max-t.hp)*.25,'절망',FIX); }}); }},q); }); }}); }},
    x3:{name:'운명의 실',kind:'신화',cd:120,r:10,can:e=>!!tgt(e,10),need:'10칸 안의 적',cast(e){ const t=tgt(e,10); e.r.fate=t; e.r.ft=now+30; add(e,'noheal',30,0,{self:true}); add(t,'noheal',30,0,{by:e}); add(t,'fate',30,0,{by:e}); say(t,'운명','#f0b458'); }},
    x4:{name:'시간 조작',kind:'신화',cd:180,r:99,cast(e){ ents.forEach(o=>{ if(o!==e&&!o.dead) add(o,'stun',3,0,{by:e}); }); for(const k in e.cd) if(k!=='x4') e.cd[k]=0; }}
-  },note:"기본 공격 단추가 검격이다(1초마다 원형 · 두 번 베기를 번갈아 낸다). 흘려내기는 웅크리기 칸이다. 신살자 중에는 주는 피해의 절반이 고정 피해(저항·보호막·무적·피해 감소 무시)로 들어간다. 운명으로 엮이면 둘 다 30초 동안 회복할 수 없고 서로 주는 피해가 50% 는다."},
+  },note:"기본 공격 단추가 검격이다(0.5초마다 원형 · 두 번 베기를 번갈아 낸다). 흘려내기는 웅크리기 칸이다. 신살자 중에는 주는 피해의 절반이 고정 피해(저항·보호막·무적·피해 감소 무시)로 들어간다. 운명으로 엮이면 둘 다 30초 동안 회복할 수 없고 서로 주는 피해가 50% 는다."},
 girl:{name:'혼돈, 소녀',cls:'신화',grade:'신화',range:6,unknowable:true,
   init:e=>{e.r={acc:0,world:0}}, hud:e=>(has(e,'nullpass')?'불가해 무력화 · ':'불가해 · ')+(e.r.world>now?'혼돈 세계':'무질서'),
   modTake(e,src,amt,label,o){ if(src===e) return amt; if(!has(e,'nullpass')) amt*=.5; return e.r.world>now?amt*.5:amt; },
