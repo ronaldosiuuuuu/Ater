@@ -5,11 +5,11 @@
 # 에테르 · AETHER
 
 **오래도록 꿈꿔온 여정의 시작.**
-맥스 세계관의 카드 캐릭터로 싸우는 브라우저 아레나 게임
+맥스 세계관의 캐릭터를 이용해 전투하는 브라우저 아레나 게임입니다.
 
 ### [▶ 지금 하기](https://ronaldosiuuuuu.github.io/Ater/)
 
-설치 없이 휴대폰 · PC 브라우저에서 바로 된다. 홈 화면에 추가하면 앱처럼 쓸 수 있다(PWA).
+설치 없이 휴대폰 · PC 브라우저에서 바로 가능합니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
 
 ![버전](https://img.shields.io/badge/버전-1.8.14-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
