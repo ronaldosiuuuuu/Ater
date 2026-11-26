@@ -5,7 +5,7 @@
 { const pidOk=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(v),num=(v,a,b,f)=>{ v=+v; return Number.isFinite(v)?Math.min(b,Math.max(a,v)):f; },arr=(v,n)=>Array.isArray(v)?v.slice(0,n):[];
   const colOk=v=>typeof v==='string'&&/^(#[0-9a-f]{3,8}|rgba?\([\d.,\s%]+\)|var\(--[\w-]+\))$/i.test(v)?v:'';
   const fix={
-    lobby(d){ d.players=arr(d.players,12).filter(p=>p&&typeof p==='object'&&pidOk(p.pid)).map(p=>({pid:p.pid,name:cleanName(p.name)||'손님',key:okKey(p.key)?p.key:'ei',re:!!p.re,team:p.team===1?1:0,host:!!p.host,ready:!!p.ready,done:okKey(p.done)?p.done:'',tag:arr(p.tag,2).filter(okKey),fc:typeof p.fc==='string'&&/^[A-HJ-NP-Z2-9]{10}$/.test(p.fc)?p.fc:''}));
+    lobby(d){ d.players=arr(d.players,12).filter(p=>p&&typeof p==='object'&&pidOk(p.pid)).map(p=>({pid:p.pid,name:cleanName(p.name)||'손님',key:okKey(p.key)?p.key:'ei',re:!!p.re,team:p.team===1?1:0,host:!!p.host,ready:!!p.ready,done:okKey(p.done)?p.done:'',tag:arr(p.tag,2).filter(okKey),fc:typeof p.fc==='string'&&/^[A-HJ-NP-Z2-9]{10}$/.test(p.fc)?p.fc:'',rnd:p.rnd===true}));
       d.code=typeof d.code==='string'&&/^[A-Z0-9]{4,6}$/.test(d.code)?d.code:NET.code; d.you=pidOk(d.you)?d.you:NET.pid; d.hm=num(d.hm,0,9,0)|0;
       if(typeof d.tok==='string'&&/^[A-Za-z0-9]{8,32}$/.test(d.tok)){ NET.tok=d.tok; try{ sessionStorage.setItem('aetherTok',(d.code||NET.code)+':'+d.tok); }catch(x){} } else delete d.tok;
       const hs=d.hs&&typeof d.hs==='object'?d.hs:null; d.hs=hs?{sum:cleanText(hs.sum,200),m:num(hs.m,0,9,0)|0,n:num(hs.n,1,6,1)|0,mon:cleanText(hs.mon,40)}:undefined; },

@@ -25,7 +25,7 @@ function uniqName(n,p){ const used=new Set(NET.players.filter(x=>x!==p).map(x=>x
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=1813;
+const APPV=1814;
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 직접 길이 안 뚫리면 relay.json에 적힌 곳에서 중계 서버(TURN) 접속 정보를 받아 거친다. relay.json이 없으면 직접 연결만 쓴다 */
 let relayP=null;
 const relayGet=()=>relayP||(relayP=fetch('relay.json',{cache:'no-cache',credentials:'same-origin'}).then(q=>q.ok?q.json():null).then(r=>(r&&typeof r.url==='string'&&/^https:\/\/[A-Za-z0-9.-]+(\/[^\s]*)?$/.test(r.url)&&r.url.length<300)?{url:r.url}:null).catch(()=>null).then(r=>{ if(!r) relayP=null; return r; }));
