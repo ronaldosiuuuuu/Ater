@@ -108,7 +108,7 @@ function sha256(str){ const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x395
     let [a,bb,c,d,e,f,g2,h]=H; for(let i=0;i<64;i++){ const t1=(h+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g2))+K[i]+w[i])>>>0,t2=((r(a,2)^r(a,13)^r(a,22))+((a&bb)^(a&c)^(bb&c)))>>>0; h=g2; g2=f; f=e; e=(d+t1)>>>0; d=c; c=bb; bb=a; a=(t1+t2)>>>0; }
     H=H.map((x,i)=>(x+[a,bb,c,d,e,f,g2,h][i])>>>0); } return H.map(x=>x.toString(16).padStart(8,'0')).join(''); }
 const codeKey=v=>sha256('aether|'+String(v||'').replace(/\s+/g,'')).slice(0,24);
-const CODEH={'d6aad6d07073a1053e5792ce':{coin:13500},'5ead639f3fb3c46e3149490d':{star:40},'1a65523c58f35a12abbc1da2':{rename:1},'b311b59e8c65142c24e4115d':{palace:1}},CODE_RENAME='1a65523c58f35a12abbc1da2';
+const CODEH={'d6aad6d07073a1053e5792ce':{coin:13500},'deb6c2a784a77949da9bbf89':{coin:40000},'5ead639f3fb3c46e3149490d':{star:40},'1a65523c58f35a12abbc1da2':{rename:1},'b311b59e8c65142c24e4115d':{palace:1}},CODE_RENAME='1a65523c58f35a12abbc1da2';
 /* 1.8.4 보상 코드를 모두 새로 바꿨다. 예전 코드를 쓴 기록은 지운다(새 코드와 겹치지 않는다) */
 { PF.codes=PF.codes||{}; let ch=false; for(const k of Object.keys(PF.codes)){ if(CODEH[k]) continue; delete PF.codes[k]; ch=true; } if(ch) pfSave(); }
 redeem=function(v){ const h=codeKey(v),c=CODEH[h]; if(!c) return false; PF.codes=PF.codes||{};
