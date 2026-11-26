@@ -35,7 +35,7 @@ Object.assign(BRAIN,{
  rano_r(e,t,d){ e.ai.want=2.4; if(hot(e)&&d<=6&&go(e,'n2')) return true; if(d<=6&&go(e,'aw')) return true; if(d<=5&&go(e,'n1')) return true; },
  leus_r(e,t,d){ e.ai.want=2.3; if(e.r.gd>now&&d<=4.5&&go(e,'crouch')) return true; if(e.hp<e.max*.6&&hurtNow(e)&&go(e,'aw')) return true; if(d<=7&&go(e,'n2')) return true; if(d<=3.5&&go(e,'n1')) return true; },
  max(e,t,d){ e.ai.want=2.2; if(d<=8&&go(e,'x4')) return true; if(hot(e)&&d<=6&&go(e,'crouch')) return true; if(e.r.god>now){ if(d<=14&&(e.r.god-now<5||t.hp<=60)&&go(e,'x1')) return true; } else { if(d<=6&&go(e,'aw')) return true; if(e.cd.aw>4&&e.hp>260&&d<=10&&go(e,'x2')) return true; }
-   if(d<=10&&e.hp>e.max*.6&&go(e,'x3')) return true; if(d>3.5&&d<=7.5&&go(e,'n2')) return true; if(d<=4.2&&go(e,'n1')) return true; return true; },
+   if(d<=10&&e.hp>e.max*.6&&go(e,'x3')) return true; if(d>3.5&&d<=7.5&&go(e,'n2')) return true; if(d<=4.2) basic(e); return true; },   /* 1.9.0: 검격은 기본 공격 단추로 옮겼다 */
  girl(e,t,d){ e.ai.want=5; if(e.hp>e.max*.35&&t.hp<t.max*.8&&go(e,'x1')) return true; if(d<=9&&go(e,'aw')) return true; if(d<=7&&go(e,'n2')) return true; if(d<=10&&go(e,'n1')) return true; },
  arthur(e,t,d){ e.ai.want=2.3; const op=e.r.open>now; if(d<=10&&go(e,'x2')) return true; if(d<=14&&go(e,'x1')) return true; if(!op&&e.r.king<=now&&d<=8&&go(e,'aw')) return true; if(op?d<=4:hurtNow(e)&&d<=5){ if(go(e,'n2')) return true; } if(d<=(op?13:4)&&go(e,'n1')) return true; },
  girl_r(e,t,d){ e.ai.want=7; if(e.cd.x1<=0&&e.hp>e.max*.5&&go(e,'x1')) return true; if(d<=9&&go(e,'aw')) return true; if(d<=15&&go(e,'n2')) return true; if(d<=10&&go(e,'n1')) return true; },
