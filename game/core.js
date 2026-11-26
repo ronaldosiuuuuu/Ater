@@ -8,7 +8,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.8.15';
+const VER='1.9.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
 { const N=v=>{ v=+v; return Number.isFinite(v)?Math.max(0,v):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
@@ -75,19 +75,19 @@ function setup(x){ keepSet(); practice=false; mode=x.mode||1; teamN=x.teamN||1; 
 /* ───── 해금: 처음에는 고화만. 이기고 오르면 윗등급이 열린다. 연습과 상대·팀원 칸은 언제나 모두 열려 있다 ───── */
 /* ───── 보유와 뽑기 ─────
    처음부터 가진 캐릭터는 에이와 비라 둘. 나머지는 코인으로 뽑는다. 가지지 않은 캐릭터는 내 캐릭터 칸에 보이지 않는다(상대·팀원 칸, 연습, 이야기, 오늘의 도전은 모두 열려 있다).
-   코인과 별무리의 흔적을 버는 양은 기획 그대로다('균형' 채널): 적 처치 시 250~500 코인, 적에게 사망했을 시 150~350 코인, 40% 확률로 별무리의 흔적 1개.
+   코인과 별무리의 흔적을 버는 양은 기획 그대로다('균형' 채널): 이기면 250~400 코인, 지면 200~350 코인(1.9.0), 40% 확률로 별무리의 흔적 1개. 컴퓨터 실력 배율 쉬움 0.6 · 보통 0.8 · 어려움 1.
    시험장에서는 한 판을 기준으로 준다(이기면 처치 몫, 지면 사망 몫). 뽑기 값·확률·겹쳤을 때의 보상·별무리 교환 값은 기획에 없어 시험장에서 정했다. */
 const START=['ei','vira'], PULL=1500, PULL10=13500;
 const GRATE=[['고화',75],['서사',22],['전설',3]];   /* 한 번 뽑을 때 등급이 나올 확률(%). 히든 · 신화는 뽑기에서 나오지 않는다 */
 const REWIN=15, RECOST={고화:20,서사:30,전설:50,히든:80,신화:120};   /* 재림 · 완성: 원래 캐릭터로 15승 + 별무리의 흔적(중복 수는 v1.0-1.2.js의 RDUP) */
-const DIFFPAY=[.5,.75,1];                                                            /* 컴퓨터 실력에 따른 코인 배수(쉬움 · 보통 · 어려움) */
+const DIFFPAY=[.6,.8,1];                                                            /* 컴퓨터 실력에 따른 코인 배수(쉬움 · 보통 · 어려움) */
 const gachaPool=g=>Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&!c.mob&&!c.kit&&c.grade===g; });
 const owned=k=>!!PF.own[baseKey(k)];
 function locked(k){ const c0=CH[k]; if(!c0||PF.open) return false; const b=baseKey(k),c=CH[b]; if(!c||c.built||c.custom||c.mon||c.mob||c.kit) return false; if(!PF.own[b]) return true; return !!c0.re&&!PF.re[b]; }
 function lockWhy(k){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
 function lockNote(tab,qq){ if(slot!=='me'||practice||PF.open) return ''; const L=Object.values(CH).filter(c=>!c.re&&(qq?c.name.includes(qq):c.cls===tab)&&locked(c.key)); if(!L.length) return '';
   return '<p class="note" style="margin-top:10px">아직 가지지 않은 캐릭터 '+L.length+'명은 보이지 않는다. 아래 가방 탭의 뽑기에서 코인으로 데려온다(처음 나오면 바로 얻는다).\n상대 칸과 연습에서는 모두 보인다.</p>'; }
-function earn(win){ const r=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),m=DIFFPAY[diff]==null?1:DIFFPAY[diff],c=Math.round((win?r(250,500):r(150,350))*m),st=Math.random()<.4?1:0; PF.coin+=c; PF.star+=st; return {c,st}; }
+function earn(win){ const r=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),m=DIFFPAY[diff]==null?1:DIFFPAY[diff],c=Math.round((win?r(250,400):r(200,350))*m),st=Math.random()<.4?1:0; PF.coin+=c; PF.star+=st; return {c,st}; }
 function pullOne(minIdx){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
 function pulls(n){ const cost=n===10?PULL10:PULL*n; if(PF.coin<cost) return toast('코인이 모자라다 · '+(cost-PF.coin).toLocaleString()+' 더 필요하다'),null; PF.coin-=cost; const L=[]; for(let i=0;i<n;i++){ const sure=n===10&&i===9&&!L.some(r=>r.g!=='고화'); L.push(pullOne(sure?1:0)); } pfSave(); achCheck({}); return L.filter(Boolean); }
 function gachaScreen(res){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }

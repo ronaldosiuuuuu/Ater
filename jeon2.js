@@ -41,9 +41,9 @@ pastern:{name:'시사계의 허물, 파스테른',cls:'마법사',grade:'전설'
   onCast(e,s){ if(s==='crouch'||s==='ult'||e.r.pcd>0) return; e.r.pcd=8; proc(e,'평행','1초 뒤 재시전'); after(1,()=>{ if(!e.dead&&canAct(e)){ say(e,e.c.skills[s].name,'#b58cff'); e.c.skills[s].cast(e); } }); },
   modTake(e,src,amt){ if(src!==e&&e.r.pcd<=0&&has(src,'paradox')){ e.r.pcd=8; proc(e,'평행','피해 무시'); return 0; } return amt; },
   skills:{
-   n1:{name:'괴리',cd:8,r:3,cast(e){ S.line(e,3,t=>has(t,'root')?30:15,'괴리',{post:t=>{ if(!has(t,'root')){ rm(t,'paradox'); add(t,'paradox',2,0,{by:e}); } }}); }},
+   n1:{name:'괴리',cd:8,r:6,cast(e){ const t0=tgt(e,6); if(t0){ e.aim=norm(t0.x-e.x,t0.y-e.y); } S.line(e,6,t=>has(t,'root')?30:15,'괴리',{post:t=>{ if(!has(t,'root')){ rm(t,'paradox'); add(t,'paradox',2,0,{by:e}); } }}); }},
    n2:{name:'관측',cd:12,r:4,cast(e){ S.circle(e,4,20,'관측',{v:'vortex',post:t=>{ if(has(t,'paradox')){ rm(t,'paradox'); add(t,'root',1,0,{by:e}); } else knock(t,e,1.5); }}); }},
-   aw:{name:'시간의 끝',cd:30,r:5,cast(e){ const p=spot(e,5,3); fx.push({k:'circle',x:p.x,y:p.y,r:2,t0:now,team:e.team,dur:1,lab:'시간의 끝',src:e}); after(1,()=>{ if(e.dead) return; if(S.circle(e,2,25,'시간의 끝',{v:'hex',post:t=>{ rm(t,'paradox'); add(t,'paradox',4,0,{by:e}); }},p).length){ const c=['n1','n2'].filter(k=>e.cd[k]>0),k=c[Math.floor(Math.random()*c.length)]; if(k) e.cd[k]=0; e.r.rs++; } }); }},
+   aw:{name:'시간의 끝',cd:30,r:5,cast(e){ const p=spot(e,5,3); fx.push({k:'circle',x:p.x,y:p.y,r:4,t0:now,team:e.team,dur:1,lab:'시간의 끝',src:e}); after(1,()=>{ if(e.dead) return; if(S.circle(e,4,25,'시간의 끝',{v:'hex',post:t=>{ rm(t,'paradox'); add(t,'paradox',4,0,{by:e}); }},p).length){ const c=['n1','n2'].filter(k=>e.cd[k]>0),k=c[Math.floor(Math.random()*c.length)]; if(k) e.cd[k]=0; e.r.rs++; } }); }},
    ult:{name:'시간의 신',cd:0,r:10,can:e=>e.r.rs>=9,need:'재사용 초기화 9회',cast(e){ fx.push({k:'circle',x:e.x,y:e.y,r:10,t0:now,team:e.team,lab:'시간의 신',src:e,v:'shout'}); foes(e).forEach(t=>{ const d=dist(e,t); if(d<=10+R) add(t,'stun',lerp(.5,3,Math.min(1,d/10)),0,{by:e}); }); for(const k in e.cd) e.cd[k]=0; }}
   },note:'평행은 8초에 한 번, 스킬을 쓰면 1초 뒤 같은 스킬이 한 번 더 나가거나, 역설 상태인 적의 공격 한 번을 무시한다(먼저 온 쪽에 쓰인다).'},
 rotia:{name:'메마른 나비, 로티아',cls:'마법사',grade:'전설',range:6.5,

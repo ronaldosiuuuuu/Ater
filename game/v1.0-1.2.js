@@ -28,6 +28,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return cleanName(v||($('n-name')&&$('n-name').value)||'')||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.9.0','2026-11',['[밸런스] 컴퓨터 실력별 보상 배율이 상향되었습니다: 쉬움 0.5 → 0.6배, 보통 0.75 → 0.8배 (어려움 1배 그대로).','[밸런스] 판 보상이 조정되었습니다: 승리 250~500 → 250~400 코인, 패배 150~350 → 200~350 코인.','[밸런스] 이야기 클리어 보상이 상향되었습니다: 장 첫 승리 · ★★ 달성 각 500 → 750 코인, 이야기 완주 1,500 → 2,500 코인 (전체 19,500 → 30,000 코인).','[밸런스] 레이드 승리 보상이 조정되었습니다: 코인 300 · 500 · 700 · 1,200 · 1,500, 별무리의 흔적 0 · 0~1 · 1 · 2 · 3 (소란 → 위신).','[밸런스] 등반 층 코인 보상이 상향되었습니다: 40 + 층×15 → 50 + 층×25.','[밸런스] 계정 레벨 업 보상이 상향되었습니다: 400 + 레벨×50 → 500 + 레벨×100 코인.','[밸런스] 매일 임무 보상이 300~700 → 250~500 코인으로 하향되는 대신, 모든 매일 임무가 별무리의 흔적 1개를 줍니다.','[밸런스] 매주 임무 보상이 2,000~3,000 → 1,500~2,500 코인으로 하향되었습니다.','[밸런스] 오늘의 도전 코인 보상이 600 → 500으로 하향되었습니다.','[개선] 맥스: 기본 공격 단추가 「검격」이 되었습니다. 누르고 있으면 1초마다 원형 베기 · 두 번 베기를 번갈아 냅니다.','[밸런스] 파스테른: 「괴리」가 지정형 6칸 · 직선 피해 6칸으로, 「시간의 끝」이 원형 범위 피해 4칸으로 상향되었습니다.']],
  ['1.8.15','2026-11',['[안정성] 쓰이지 않던 옛 뽑기 값과 없어진 「골라서 데려오기」 흔적을 정리했습니다. 게임 내용은 그대로입니다.']],
  ['1.8.14','2026-11',['[개선] 창 머리와 닫기 단추 모양이 통일되었습니다. 닫기는 어두운 단추, 금색 단추는 주요 행동에만 쓰입니다.','[개선] 창 안의 단추 줄이 늘 화면 아래쪽에 놓이고, 알림이 작아지며 잇달아 오면 한 칸에 모여 뜹니다.','[개선] 판 시작 편성 표시가 체력 막대를 가리지 않게 아래로 옮겨졌습니다.','[개선] 함께 하기에서 무작위로 고른 사람은 방 목록 · 준비 칸 · 편성 표시에 「무작위」로 표시됩니다.','[신규] 설정에 「글자 크기(메뉴)」가 추가되었습니다.','[신규] 무작위로 정한 판이 끝나면 결과 창에서 「같은 상대로 다시」를 할 수 있습니다.','[안정성] 게임을 고치는 데 쓰려고 접속 · 판 수와 화면 오류 내용을 익명으로 모읍니다(이름 · 기기 정보 · 기록은 모으지 않습니다). 설정 「익명 통계 보내기」에서 끌 수 있습니다.']],
  ['1.8.13','2026-11',['[신규] 판이 시작될 때 이번 판 편성(우리 편 · 상대 편)이 화면 위쪽에 잠깐 표시됩니다. 무작위로 정해진 캐릭터에는 「무작위」 표시가 붙습니다.','[개선] 함께 하기에서는 판마다 편성이 표시되어 서로 어떤 캐릭터로 싸우는지 바로 알 수 있습니다.']],
@@ -94,17 +95,17 @@ function drawBag(){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰�
     if(si!=null&&ci!=null){ const d=el.querySelector('.dock'); if(d) d.insertAdjacentHTML('beforebegin','<p class="sub">내 캐릭터 · '+esc(CH[k].name)+' (글 속의 주인공 자리에 선다)</p><p class="note">'+payTxt.story(STORY[si],ci)+'</p>'); } }; }
 
 /* ── 보상: 판마다 받는 기본 코인에 더해, 레이드 · 등반 · 이야기 · 오늘의 도전은 따로 얹어 준다 ── */
-const RAIDPAY={coin:[200,400,700,1100,1600],star:[0,1,1,2,3],fcoin:[600,1000,1800,3000,5000],fstar:[1,2,3,5,8],fshard:[1,2,3,4,5]};   /* 난이도(소란~위신)별 · f = 첫 처치 */
-const TWPAY={coin:f=>40+f*15,boss:f=>f>=20?2:1,mcoin:f=>f*150,mstar:f=>f/5};                                                        /* 층마다 · 보스 층 별무리 · 5층 단위 첫 돌파 */
-const STPAY={first:[500,2],two:[500,2],again:100,all:[1500,5]}, DYPAY=[600,2];
-const payTxt={ raid:k=>{ const t=tierOf(k),f=!(PF.rf||{})[k]; return '이기면 코인 +'+RAIDPAY.coin[t]+(RAIDPAY.star[t]?' · 별무리 +'+RAIDPAY.star[t]:'')+(t>=2?' · 가끔 파편':'')+(f?'\n첫 처치: 코인 +'+RAIDPAY.fcoin[t].toLocaleString()+' · 별무리 +'+RAIDPAY.fstar[t]+' · 서사 이상 파편 '+RAIDPAY.fshard[t]+'개':'\n첫 처치 보상은 이미 받았다'); },
+const RAIDPAY={coin:[300,500,700,1200,1500],star:[0,.5,1,2,3],fcoin:[600,1000,1800,3000,5000],fstar:[1,2,3,5,8],fshard:[1,2,3,4,5]};   /* 난이도(소란~위신)별 · f = 첫 처치 */
+const TWPAY={coin:f=>50+f*25,boss:f=>f>=20?2:1,mcoin:f=>f*150,mstar:f=>f/5};                                                        /* 층마다 · 보스 층 별무리 · 5층 단위 첫 돌파 */
+const STPAY={first:[750,2],two:[750,2],again:100,all:[2500,5]}, DYPAY=[500,2];
+const payTxt={ raid:k=>{ const t=tierOf(k),f=!(PF.rf||{})[k]; return '이기면 코인 +'+RAIDPAY.coin[t]+(RAIDPAY.star[t]?' · 별무리 '+(RAIDPAY.star[t]<1?'0~1':'+'+RAIDPAY.star[t]):'')+(t>=2?' · 가끔 파편':'')+(f?'\n첫 처치: 코인 +'+RAIDPAY.fcoin[t].toLocaleString()+' · 별무리 +'+RAIDPAY.fstar[t]+' · 서사 이상 파편 '+RAIDPAY.fshard[t]+'개':'\n첫 처치 보상은 이미 받았다'); },
   story:(s,ci)=>{ const was=(PF.story[s.id]||[])[ci]||0; return '보상 · '+(was?'':'첫 승리 코인 +'+STPAY.first[0]+' · 별무리 +'+STPAY.first[1]+' / ')+(was<2?'★★ 코인 +'+STPAY.two[0]+' · 별무리 +'+STPAY.two[1]+' / ':'다시 이기면 코인 +'+STPAY.again+' / ')+'이야기를 끝까지 넘기면 코인 +'+STPAY.all[0].toLocaleString()+' · 별무리 +'+STPAY.all[1]; },
   tower:()=>'보상 · 층을 넘을 때마다 코인(1층 '+TWPAY.coin(1)+' → 20층 '+TWPAY.coin(20)+'), 보스 · 마왕 층은 별무리 +1(20층부터 +2). 5 · 10 · 15…층을 처음 넘으면 코인 층×150 · 별무리 층÷5.' };
 { const en0=earn; earn=function(win){ const g=en0(win); let c=0,s=0; const N=[];
     try{ if(TW&&TW.on){ if(win){ const f=TW.floor,n=TW.next||{}; c+=TWPAY.coin(f); if(n.boss||n.lord) s+=TWPAY.boss(f); if(f%5===0&&f>PF.tw.best){ c+=TWPAY.mcoin(f); s+=TWPAY.mstar(f); N.push(f+'층 첫 돌파'); } } }
       else if(SPM&&SPM.kind==='story'){ if(win){ const S0=STORY[SPM.si],ch=S0.ch[SPM.ci],a=PF.story[S0.id]||[],was=a[SPM.ci]||0,st=goalOk(ch.goal)?2:1; if(!was){ c+=STPAY.first[0]; s+=STPAY.first[1]; N.push('첫 승리'); } if(st===2&&was<2){ c+=STPAY.two[0]; s+=STPAY.two[1]; N.push('★★'); } if(was>=st) c+=STPAY.again; if(!was&&S0.ch.every((_,j)=>j===SPM.ci||(a[j]||0)>0)){ c+=STPAY.all[0]; s+=STPAY.all[1]; N.push('이야기 완주'); } } }
       else if(SPM&&SPM.kind==='daily'){ if(win&&PF.dpay!==today()){ PF.dpay=today(); c+=DYPAY[0]; s+=DYPAY[1]; N.push('오늘의 도전'); } }
-      else if(mode===6&&win&&ents.some(o=>o.c&&o.c.mon)){ const k=ents.find(o=>o.c&&o.c.mon).key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; s+=RAIDPAY.star[t]; PF.rf=PF.rf||{};
+      else if(mode===6&&win&&ents.some(o=>o.c&&o.c.mon)){ const k=ents.find(o=>o.c&&o.c.mon).key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; { const v=RAIDPAY.star[t]; s+=v>=1?v:(Math.random()<v?1:0); } PF.rf=PF.rf||{};
         if(!PF.rf[k]){ PF.rf[k]=Date.now(); c+=RAIDPAY.fcoin[t]; s+=RAIDPAY.fstar[t]; N.push('첫 처치'); const q=pool(); if(q) N.push(giveShard(q,RAIDPAY.fshard[t])); } else if(t>=2&&Math.random()<.35){ const q=pool(); if(q) N.push(giveShard(q,1)); } }
     }catch(x){}
     PF.coin+=c; PF.star+=s; g.c+=c; g.st+=s; g.note=N.join(' · '); return g; };

@@ -19,8 +19,8 @@ const PITY=60;
 function gachaShow(res,done){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
 
 /* ═════ 임무: 날마다 셋, 주마다 셋. 채우면 코인과 별무리의 흔적을 받는다(값은 시험장에서 정했다) ═════ */
-const MS_D=[['win','이긴다',[2,3],500,0],['hard','컴퓨터 실력 어려움에서 이긴다',[1,2],600,0],['dmg','준 피해를 모은다',[3000,5000],500,0],['tower','등반에서 층을 넘는다',[3,5],700,1],['daily','오늘의 도전을 한다',[1],500,0],['pull','뽑기를 한다',[1],300,0],['cls','{c}(으)로 이긴다',[1,2],600,0],['raid','레이드 보스를 쓰러뜨린다',[1],700,1],['play','판을 끝까지 한다',[4,6],400,0]];
-const MS_W=[['win','이긴다',[20],3000,5],['tower','등반에서 층을 넘는다',[15],3000,5],['uniq','서로 다른 캐릭터로 이긴다',[5],2500,4],['dmg','준 피해를 모은다',[40000],2500,3],['raid','레이드 보스를 쓰러뜨린다',[5],3000,5],['pull','뽑기를 한다',[10],2000,3]];
+const MS_D=[['win','이긴다',[2,3],400,1],['hard','컴퓨터 실력 어려움에서 이긴다',[1,2],450,1],['dmg','준 피해를 모은다',[3000,5000],400,1],['tower','등반에서 층을 넘는다',[3,5],500,1],['daily','오늘의 도전을 한다',[1],400,1],['pull','뽑기를 한다',[1],250,1],['cls','{c}(으)로 이긴다',[1,2],450,1],['raid','레이드 보스를 쓰러뜨린다',[1],500,1],['play','판을 끝까지 한다',[4,6],300,1]];
+const MS_W=[['win','이긴다',[20],2500,5],['tower','등반에서 층을 넘는다',[15],2500,5],['uniq','서로 다른 캐릭터로 이긴다',[5],2000,4],['dmg','준 피해를 모은다',[40000],2000,3],['raid','레이드 보스를 쓰러뜨린다',[5],2500,5],['pull','뽑기를 한다',[10],1500,3]];
 const weekKey=()=>{ const d=new Date(),t=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7)); return t.getFullYear()+'-'+(t.getMonth()+1)+'-'+t.getDate(); };
 function msRoll(){ const M=PF.ms||(PF.ms={}),mk=(pool,seed,n)=>{ let h=2166136261; for(const ch of seed) h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0; const r=()=>{ h=Math.imul(h^(h>>>15),2246822507)>>>0; h=Math.imul(h^(h>>>13),3266489909)>>>0; return ((h^=h>>>16)>>>0)/4294967296; },L=pool.slice(),out=[]; while(out.length<n&&L.length){ const q=L.splice(Math.floor(r()*L.length),1)[0],g=q[2][Math.floor(r()*q[2].length)],cls=ORDER[Math.floor(r()*6)]; out.push({t:q[0],txt:q[1].replace('{c}',cls),n:g,p:0,coin:q[3],star:q[4],cls:q[0]==='cls'?cls:undefined,u:q[0]==='uniq'?[]:undefined}); } return out; };
   let ch=false; if(M.d!==today()){ M.d=today(); M.dl=mk(MS_D,'d'+today(),3); ch=true; } if(M.w!==weekKey()){ M.w=weekKey(); M.wl=mk(MS_W,'w'+weekKey(),3); ch=true; } if(ch) pfSave(); return M; }
@@ -48,10 +48,10 @@ function coopInfo(d){ $('res').hidden=true; $('tw-body').innerHTML=d.end?head('T
 
 /* ═════ 계정 레벨 · 업적 보상 ═════ (값은 시험장에서 정했다)
    경험치: 이기면 100, 지면 40, 업적 하나에 80. 레벨 L에서 다음 레벨까지 150+50×L.
-   레벨이 오르면 코인 400+50×레벨, 다섯 레벨마다 별무리의 흔적 5. 업적은 달성하는 순간 보상이 들어온다. */
+   레벨이 오르면 코인 500+100×레벨, 다섯 레벨마다 별무리의 흔적 5. 업적은 달성하는 순간 보상이 들어온다. */
 const xpNeed=L=>150+50*L;
 function lvInfo(){ let L=1,x=PF.xp||0; while(x>=xpNeed(L)){ x-=xpNeed(L); L++; } return {lv:L,cur:x,need:xpNeed(L)}; }
-function gainXp(n){ const a=lvInfo().lv; PF.xp=(PF.xp||0)+n; const b=lvInfo().lv; if(b>a){ let c=0,s=0; for(let L=a+1;L<=b;L++){ c+=400+50*L; if(L%5===0) s+=5; } PF.coin+=c; PF.star+=s; setTimeout(()=>{ sfx('win'); toast('레벨 '+b+' · 코인 +'+c.toLocaleString()+(s?' · 별무리 +'+s:''),4200); },4600); } pfSave(); }
+function gainXp(n){ const a=lvInfo().lv; PF.xp=(PF.xp||0)+n; const b=lvInfo().lv; if(b>a){ let c=0,s=0; for(let L=a+1;L<=b;L++){ c+=500+100*L; if(L%5===0) s+=5; } PF.coin+=c; PF.star+=s; setTimeout(()=>{ sfx('win'); toast('레벨 '+b+' · 코인 +'+c.toLocaleString()+(s?' · 별무리 +'+s:''),4200); },4600); } pfSave(); }
 const ACHPAY={w50:[2000,8],st7:[1000,3],v10:[800,2],v40:[2500,10],m3:[1000,3],myth:[1000,3],hydra:[1000,3],t10:[1200,4],t15:[2000,6],t25:[3000,10],stmax:[1500,5],stall:[3000,10],d7:[2000,6],g50:[2500,8],gmyth:[1500,5]};
 const achPay=id=>ACHPAY[id]||[400,1];
 function achSettle(quiet){ PF.achPaid=PF.achPaid||{}; let c=0,s=0,n=0; for(const a of ACH){ if(PF.ach[a[0]]&&!PF.achPaid[a[0]]){ PF.achPaid[a[0]]=1; const p=achPay(a[0]); c+=p[0]; s+=p[1]; n++; } } if(!n) return; PF.coin+=c; PF.star+=s; gainXp(80*n); pfSave(); if(!quiet) setTimeout(()=>toast('업적 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,3600),2400); else setTimeout(()=>toast('지금까지 이룬 업적 '+n+'개의 보상 · 코인 +'+c.toLocaleString()+' · 별무리 +'+s,4200),1500); }
