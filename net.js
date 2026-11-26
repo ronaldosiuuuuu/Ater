@@ -25,7 +25,7 @@ function uniqName(n,p){ const used=new Set(NET.players.filter(x=>x!==p).map(x=>x
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=186;
+const APPV=187;
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 통신사 데이터끼리처럼 직접 길이 안 뚫리면 중계 서버(TURN)를 거친다.
    중계 서버는 사이트에 마련해 둔 relay.json(Metered 앱 이름 · API Key)으로, 이을 때마다 그쪽에서 접속 정보를 받아 온다. 따로 적을 것은 없다.
    API Key는 공개돼도 되는 열쇠다(접속 정보만 받아 올 수 있고 계정은 건드리지 못한다). relay.json이 없으면 직접 연결만 쓴다.
@@ -33,8 +33,8 @@ const APPV=186;
 let relayP=null;
 const relayGet=()=>relayP||(relayP=fetch('relay.json',{cache:'no-cache',credentials:'same-origin'}).then(q=>q.ok?q.json():null).then(r=>(r&&typeof r.url==='string'&&/^https:\/\/[A-Za-z0-9.-]+(\/[^\s]*)?$/.test(r.url)&&r.url.length<300)?{url:r.url}:(r&&typeof r.app==='string'&&typeof r.key==='string'&&/^[a-z0-9-]{1,40}$/i.test(r.app)&&/^[A-Za-z0-9_-]{8,100}$/.test(r.key))?{app:r.app,key:r.key}:null).catch(()=>null).then(r=>{ if(!r) relayP=null; return r; }));
 const iceOk=s=>!!(s&&typeof s==='object'&&[].concat(s.urls).every(u=>typeof u==='string'&&/^(stun|turns?):[^\s]{3,200}$/.test(u))&&(s.username===undefined||typeof s.username==='string')&&(s.credential===undefined||typeof s.credential==='string'));
-function relayIce(){ return relayGet().then(r=>{ if(!r){ NET.ice=null; return; } if(NET.ice&&performance.now()-NET.iceAt<6e5) return;
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000); return fetch(r.url||'https://'+r.app+'.metered.live/api/v1/turn/credentials?apiKey='+encodeURIComponent(r.key),{signal:ctl.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'}).then(q=>q.ok?q.json():Promise.reject(new Error(q.status))).then(L=>{ if(L&&!Array.isArray(L)) L=[].concat(L.iceServers||[]); const ok=Array.isArray(L)?L.filter(iceOk).slice(0,8):[]; if(ok.length){ NET.ice=ok.map(s=>({urls:s.urls,username:s.username,credential:s.credential})); NET.iceAt=performance.now(); } }).catch(x=>{ NET.ice=null; netStat('중계 서버 정보를 받지 못했다 · 직접 연결로 해 본다'); }).finally(()=>clearTimeout(to)); }); }
+function relayIce(quiet){ return relayGet().then(r=>{ if(!r){ NET.ice=null; return; } if(NET.ice&&performance.now()-NET.iceAt<6e5) return;
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000); return fetch(r.url||'https://'+r.app+'.metered.live/api/v1/turn/credentials?apiKey='+encodeURIComponent(r.key),{signal:ctl.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'}).then(q=>q.ok?q.json():Promise.reject(new Error(q.status))).then(L=>{ if(L&&!Array.isArray(L)) L=[].concat(L.iceServers||[]); const ok=Array.isArray(L)?L.filter(iceOk).slice(0,8):[]; if(ok.length){ NET.ice=ok.map(s=>({urls:s.urls,username:s.username,credential:s.credential})); NET.iceAt=performance.now(); } }).catch(x=>{ NET.ice=null; if(!quiet) netStat('중계 서버 정보를 받지 못했다 · 직접 연결로 해 본다'); }).finally(()=>clearTimeout(to)); }); }
 function ICE(){ if(NET.ice) return {config:{iceServers:NET.ice.concat([{urls:'stun:stun.l.google.com:19302'}])},debug:0}; return {config:{iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'}]},debug:0}; }
 /* 이어진 길이 직접인지 중계인지 */
 function linkKind(c,cb){ try{ c.peerConnection.getStats().then(st=>{ let pair=null; st.forEach(r=>{ if(r.type==='transport'&&r.selectedCandidatePairId) pair=st.get(r.selectedCandidatePairId); }); if(!pair) st.forEach(r=>{ if(r.type==='candidate-pair'&&r.state==='succeeded'&&(r.nominated||r.selected)) pair=pair||r; }); const loc=pair&&st.get(pair.localCandidateId); cb(loc?(loc.candidateType==='relay'?'중계':'직접'):''); }).catch(()=>cb('')); }catch(x){ cb(''); } }
@@ -65,8 +65,18 @@ function hostOpen(code){ return new Promise((ok,no)=>{
     peer.on('error',e=>{ if(!done) no(e); else netStat('연결 오류: '+(e.type||e.message)); }); }).catch(no); }); }
 const others=()=>NET.players.filter(p=>!p.host);
 function sendAll(d){ if(NET.tx) for(const p of others()) NET.tx.send(p.pid,d); }
-function lobbyOut(){ const h=NET.players[0]; if(h){ h.name=NET.name(); h.key=okKey(sel.me)?sel.me:'ei'; h.re=!!(sel.meR&&CH[sel.me+'_r']); } const L=NET.players.map(p=>({pid:p.pid,name:p.name,key:p.key,re:p.re,team:p.team,host:!!p.host})); for(const p of others()) NET.tx.send(p.pid,{t:'lobby',players:L,code:NET.code,you:p.pid}); drawNet(); }
-function hostMsg(pid,d){ if(!NET.host||!d) return; let p=NET.players.find(x=>x.pid===pid);
+function lobbyOut(){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
+/* ───────── 메시지 처리기 모음 ─────────
+   예전에는 판(버전)마다 hostMsg · clientMsg를 한 겹씩 감쌌다. 이제는 판 파일마다 onMsg로 등록하고 여기서 차례로 돌린다.
+   순서는 예전 감싸기와 같다: 앞 처리(pre)는 나중에 등록한 것부터 돌고, true를 돌려주면 거기서 멈춘다(안쪽 처리 · 기본 처리를 건너뛴다).
+   뒤 처리(post)는 멈춘 자리보다 바깥(나중 등록)인 것만, 먼저 등록한 것부터 돈다. 멈추지 않았으면 기본 처리 뒤에 모두 돈다 */
+const MSGL={host:[],client:[]};
+function onMsg(side,h){ MSGL[side].push(h); }
+function runMsg(L,base,a,b){ let k=L.length-1; for(;k>=0;k--){ const f=L[k].pre; if(f&&f(a,b)===true) break; } if(k<0) base(a,b); for(let j=k+1;j<L.length;j++){ const f=L[j].post; if(f) f(a,b); } }
+function hostMsg(pid,d){ runMsg(MSGL.host,hostBase,pid,d); }
+function clientMsg(d){ runMsg(MSGL.client,clientBase,d); }
+/* 방장의 기본 처리: 들어온 사람이 보낸 것 */
+function hostBase(pid,d){ if(!NET.host||!d) return; let p=NET.players.find(x=>x.pid===pid);
   if(d.t==='pg'){ const ow=!NET.live&&over&&over.winner?over.winner:null; NET.tx.send(pid,{t:'pg',ts:d.ts,lv:NET.live?1:0,ow:ow?ow.id:0,owt:ow?ow.team:-1}); return; }
   if(d.t==='pz'){ if(p){ const m={t:'pz',who:pid,name:p.name||'손님',on:!!d.on}; for(const q of others()) if(q.pid!==pid) NET.tx.send(q.pid,m); pzShow(m); } return; }
   if(d.t==='chat'){ const t=performance.now(),text=cleanText(d.text,80); if(p&&text&&!(t-(p.chatT||0)<600)){ p.chatT=t; const m={t:'chat',name:p.name||'손님',team:p.team,text,pid}; sendAll(m); chatShow(m); } return; }   /* 채팅은 0.6초에 한 번까지 */
@@ -125,7 +135,8 @@ function joinOpen(code){ return new Promise((ok,no)=>{
       c.on('open',()=>{ clearTimeout(to); done=true; NET.tx={send:d=>{ if(c.open){ try{ c.send(d); }catch(x){} } },close:()=>{ try{ peer.destroy(); }catch(x){} }}; setTimeout(()=>linkKind(c,k=>{ NET.kind=k; drawNet(); }),1500); ok(); });
       c.on('data',d=>{ try{ clientMsg(d); }catch(x){ console.error('방장 메시지를 처리하지 못했다',d&&d.t,x&&x.message); } }); c.on('close',()=>{ if(NET.tx) clientLost('방장과 연결이 끊겼다',true); }); c.on('error',e=>{ if(e&&/message-too-big|not-open-yet/.test(e.type||'')) return; if(NET.tx) clientLost('연결 오류',true); }); });
     peer.on('error',e=>{ clearTimeout(to); if(!done) fail(new Error(e.type==='peer-unavailable'?'그 코드의 방이 없다':(e.type||e.message))); }); }).catch(no); }); }
-function clientMsg(d){ if(!NET.client||!d) return; NET.seen=performance.now(); if(d.t==='pg'){ NET.rtt=Math.round(performance.now()-d.ts); if(!NET.playing) drawNet(); return; } if(d.t==='bye'&&d.final){ NET.retry=9; } if(d.t==='lobby'){ NET.players=d.players; NET.code=d.code; drawNet(); } else if(d.t==='start') clientStart(d); else if(d.t==='s'){ if(NET.playing) apply(d); } else if(d.t==='pz'){ pzShow(d); } else if(d.t==='chat'){ chatShow(d); } else if(d.t==='tw'){ if(typeof coopInfo==='function') coopInfo(d); } else if(d.t==='bye') clientLost(d.why||'방이 닫혔다'); }
+/* 손님의 기본 처리: 방장이 보낸 것 */
+function clientBase(d){ if(!NET.client||!d) return; NET.seen=performance.now(); if(d.t==='pg'){ NET.rtt=Math.round(performance.now()-d.ts); if(!NET.playing) drawNet(); return; } if(d.t==='bye'&&d.final){ NET.retry=9; } if(d.t==='lobby'){ NET.players=d.players; NET.code=d.code; drawNet(); } else if(d.t==='start') clientStart(d); else if(d.t==='s'){ if(NET.playing) apply(d); } else if(d.t==='pz'){ pzShow(d); } else if(d.t==='chat'){ chatShow(d); } else if(d.t==='tw'){ if(typeof coopInfo==='function') coopInfo(d); } else if(d.t==='bye') clientLost(d.why||'방이 닫혔다'); }
 /* 들어가기(다시 잇기 포함) */
 /* 이어 주는 서버(PeerJS)가 가끔 한 번에 안 붙는다. 망 쪽 오류면 두 번까지 조용히 다시 해 본다 */
 const netFlaky=x=>/network|server-error|socket|disconnected|찾지 못했다|Lost connection/i.test(String((x&&(x.type||x.message))||''));

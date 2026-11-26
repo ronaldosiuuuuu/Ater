@@ -13,9 +13,10 @@
 - `net.js`: 함께 하기(PeerJS · 방장 기기에서 판이 돈다)
 - `game/`: 게임다운 겉옷(등반 · 뽑기 · 임무 · 업적 · 태그매치 …). 판(버전)마다 앞의 함수를 감싸 고치는 덩어리로 쌓여 있다.
   - `hoisted.js`: 앞 파일이 뒤 파일의 함수를 부르는 경우 그 함수만 모아 먼저 읽는다
-  - `core.js` → `meta.js` → `v1.0-1.2.js` → `v1.3-1.5.js` → `v1.6-1.7.0.js` → `v1.7.1-1.8.3.js` → `v1.8.4.js`(보안 점검) → `v1.8.5.js`(저장 지키기 · 태그매치 끝 · 화면 방식) → `v1.8.6.js`(무작위는 가진 캐릭터만)
+  - `core.js` → `meta.js` → `v1.0-1.2.js` → `v1.3-1.5.js` → `v1.6-1.7.0.js` → `v1.7.1-1.8.3.js` → `v1.8.4.js`(보안 점검) → `v1.8.5.js`(저장 지키기 · 태그매치 끝 · 화면 방식) → `v1.8.6.js`(무작위는 가진 캐릭터만) → `v1.8.7.js`(친구 · 초대 · 무작위 안내)
 - `sw.js`: 서비스 워커(오프라인 · 새 판 받기)
-- `tools/smoke.py`: 자동 점검
+- `tools/smoke.py`: 자동 점검(대전표 지문 · 저장 파일), `tools/mp_check.py`: 함께 하기 점검 — 둘 다 GitHub에 올릴 때마다 돈다
+- `tools/layers.py`: 겹 지도(`docs/겹지도.md`), `tools/perf.py`: 성능 기록(`docs/성능.md`), `tools/balance.py`: 밸런스 보고(`docs/밸런스.md`)
 
 ## 새 판을 낼 때
 
@@ -29,7 +30,7 @@
 
 1. 화면에 글을 넣을 때: 남이 보낸 것 · 사람이 적은 것 · 저장에서 읽은 것은 `esc()`(따옴표까지 바꾼다)나 `textContent`로 넣는다. `innerHTML`에 날것을 넣지 않는다.
 2. `index.html`에 인라인 스크립트나 `onclick=` 같은 속성을 쓰지 않는다(CSP가 막는다). 새 바깥 주소에 접속해야 하면 `index.html`의 CSP(`connect-src` 등)에 그 주소를 더한다.
-3. 함께 하기: 손님이 보낸 것은 방장이(`net.js`의 `hostIn` · `hostMsg`), 방장이 보낸 것은 손님이(`game/v1.8.4.js`의 `fix`) 거른다. 새 메시지 종류를 만들면 양쪽 검사도 더한다. 이름은 `cleanName`, 글은 `cleanText`, 캐릭터 · 맵 이름은 `hasK` · `okKey`로 확인한다.
+3. 함께 하기: 메시지 처리는 감싸지 말고 `onMsg('host'|'client',{pre,post})`로 등록한다(net.js의 처리기 모음). 손님이 보낸 것은 방장이(`net.js`의 `hostIn` · `hostBase`), 방장이 보낸 것은 손님이(`game/v1.8.4.js`의 `fix`) 거른다. 새 메시지 종류를 만들면 양쪽 검사도 더한다. 이름은 `cleanName`, 글은 `cleanText`, 캐릭터 · 맵 이름은 `hasK` · `okKey`로 확인한다.
 4. 보상 코드: 원문을 저장소에 두지 않는다(`CODEH`에 SHA-256 앞 24자리만). 패치 내역 · CHANGELOG · README · 커밋 메시지에도 코드 이름을 적지 않는다.
 5. 비밀값: TURN 아이디 · 비밀번호, Metered의 `sk_` Secret Key, Cloudflare 토큰 같은 것은 저장소에도 화면 쪽 코드에도 두지 않는다. `relay.json`에는 공개용 API Key나 Worker 주소만 둔다.
 6. 저장 가져오기는 `SAVEKEYS`(game/meta.js)에 있는 칸만 받는다. 새 저장 칸(localStorage 열쇠)을 만들면 거기에 더한다.

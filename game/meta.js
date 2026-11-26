@@ -16,10 +16,7 @@ const PITY=60;
    +'.mbar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;flex-basis:100%}.mbar i{display:block;height:100%;background:var(--aether)}';
   document.head.appendChild(st);
   const gs0=gachaScreen; gachaScreen=function(res){ if(res&&res.length&&!res.shown){ res.shown=true; return gachaShow(res,()=>gachaScreen(res)); } gs0(res); const p=$('tw-body').querySelector('.brand p'); if(p) p.textContent+=' · 전설 이상 보장까지 '+Math.max(0,PITY-(PF.pity||0))+'번'; }; }
-function gachaShow(res,done){ const el=$('tw-body'); let fin=false; const end=()=>{ if(fin) return; fin=true; done(); };
-  el.innerHTML=head('GACHA','뽑기','눌러서 넘긴다')+'<div class="gst'+(res.length===1?' one':'')+'">'+res.map(r=>{ const c=CH[r.k]; return '<div class="gc'+(GORD[r.g]>=2?' hi':'')+'" style="--gc:'+GCOL[r.g]+'"><div class="bk"></div><div class="ft"><b>'+esc(c.name.split(', ')[1])+'</b><small>'+r.g+' · '+c.cls+'</small><em>'+(r.dup?'이미 있다':'새로 얻었다')+'</em></div></div>'; }).join('')+'</div><div class="dock"><button class="go" id="ga-skip" type="button">넘기기</button></div>';
-  $('tower').hidden=false; $('tower').scrollTop=0; const cards=[...el.querySelectorAll('.gc')]; cards.forEach((c,i)=>setTimeout(()=>{ if(fin) return; c.classList.add('on'); const r=res[i]; if(GORD[r.g]>=2){ sfx('ult'); buzz&&buzz(60); } else sfx('ui'); },350+i*(res.length>1?260:0)));
-  const total=350+res.length*260+1400; setTimeout(()=>{ const b=$('ga-skip'); if(b&&!fin) b.textContent='결과 보기'; },total-1200); el.querySelector('#ga-skip').onclick=end; }
+function gachaShow(res,done){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
 
 /* ═════ 임무: 날마다 셋, 주마다 셋. 채우면 코인과 별무리의 흔적을 받는다(값은 시험장에서 정했다) ═════ */
 const MS_D=[['win','이긴다',[2,3],500,0],['hard','컴퓨터 실력 어려움에서 이긴다',[1,2],600,0],['dmg','준 피해를 모은다',[3000,5000],500,0],['tower','등반에서 층을 넘는다',[3,5],700,1],['daily','오늘의 도전을 한다',[1],500,0],['pull','뽑기를 한다',[1],300,0],['cls','{c}(으)로 이긴다',[1,2],600,0],['raid','레이드 보스를 쓰러뜨린다',[1],700,1],['play','판을 끝까지 한다',[4,6],400,0]];
@@ -153,7 +150,7 @@ PF.cnt=Object.assign({play:0,pull:0,claim:0,mw:0,raidw:0,sr:0,dmg:0,coop:0,cls:{
 
 /* ═════ 보상 코드 ═════ 기록 화면의 코드 칸(또는 캐릭터 찾기 칸)에 적는다 */
 const CODES={};   /* 코드 원문은 두지 않는다(아래 CODEH에 암호화한 값만) */
-function redeem(v){ const k=String(v||'').replace(/\s+/g,''),c=CODES[k]; if(!c) return false; PF.codes=PF.codes||{}; if(PF.codes[k]){ toast('이미 쓴 코드다'); return true; } PF.codes[k]=Date.now(); PF.coin+=c.coin||0; PF.star+=c.star||0; pfSave(); sfx('win'); toast('코드 보상 · 코인 +'+(c.coin||0).toLocaleString()+(c.star?' · 별무리 +'+c.star:''),4200); hubCard(); return true; }
+function redeem(v){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 않는다 */ }
 { const dr1=drawRec; drawRec=function(){ dr1(); const rs=$('rec-reset'); if(rs&&!$('code-in')) rs.insertAdjacentHTML('beforebegin','<h2>보상 코드</h2><div class="row"><input type="text" id="code-in" maxlength="40" placeholder="코드를 적는다" autocomplete="off" style="flex:2"><button type="button" id="code-go">받기</button></div><p class="note" id="code-note">보상은 코드마다 한 번씩 받는다. 띄어쓰기는 상관없다.</p>'); };
   document.addEventListener('click',e=>{ if(!e.target.closest('#code-go')) return; const el=$('code-in'); if(!el) return; if(!el.value.trim()) return toast('코드를 적는다'); if(redeem(el.value)){ el.value=''; drawRec(); } else toast('없는 코드다'); });
   document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='code-in'){ const b=$('code-go'); if(b) b.click(); } });

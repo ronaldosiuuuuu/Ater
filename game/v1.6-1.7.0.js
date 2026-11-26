@@ -26,7 +26,7 @@ function tagNet(){ if(!TG) return undefined; const one=o=>[o.id,o.key,Math.round
 /* 교대 요청 처리(방장): 자격 · 대기시간을 보고 바꾼다. 싸우던 캐릭터가 쓰러진 1초 사이면 '다음에 나설 캐릭터'로 정해 둔다 */
 function tagAsk(who,id){ if(!TG||over) return ''; let tm=-1,o=null; for(const t of [0,1]){ const x=TG.bench[t].find(q=>q.id===id); if(x){ tm=t; o=x; } } if(!o||o.dead) return '';
   if(!tagMay(who,tm,o)) return '그 캐릭터는 다른 사람 몫이다'; const cur=tagAct(tm); if(!cur||cur.dead){ TG.pick[tm]=o; return '다음에 나설 캐릭터 · '+short(o); } const w=tagWhy(tm); if(w) return '지금은 교대할 수 없다 · '+w; tagSwap(tm,o); return ''; }
-{ const hm4=hostMsg; hostMsg=function(pid,d){ if(d&&NET.host&&d.t==='tag'){ const r=tagAsk(pid,+d.id); if(r&&NET.tx) NET.tx.send(pid,{t:'note',text:r}); return; } if(d&&NET.host&&d.t==='pick'){ const p=NET.players.find(x=>x.pid===pid); if(p) p.tag=(Array.isArray(d.tag)?d.tag:[]).filter(k=>okKey(k)).slice(0,2); } return hm4(pid,d); };
+{ onMsg('host',{pre(pid,d){ if(d&&NET.host&&d.t==='tag'){ const r=tagAsk(pid,+d.id); if(r&&NET.tx) NET.tx.send(pid,{t:'note',text:r}); return true; } if(d&&NET.host&&d.t==='pick'){ const p=NET.players.find(x=>x.pid===pid); if(p) p.tag=(Array.isArray(d.tag)?d.tag:[]).filter(k=>okKey(k)).slice(0,2); } }});
   /* 들어온 캐릭터는 다음 상태 묶음에서 모든 정보를 보낸다(손님 화면에 바로 보이게) */
   const ts1=tagSwap; tagSwap=function(tm,nx,forced){ const r=ts1(tm,nx,forced); if(r&&NET.known) NET.known.delete(nx.id); return r; };
   /* 끊긴 손님의 대기 캐릭터는 컴퓨터가 맡고, 다시 들어오면 돌려준다 */
@@ -50,9 +50,9 @@ tagUi=function(){ let el=document.getElementById('tagbar'); const V=(running||ov
 /* 손님의 보상: 쓰러뜨린 캐릭터 수만큼(방장이 보낸 수로 센다) */
 { const en3=earn; earn=function(win){ if(!(NET.client&&mode===7&&NET.tg)) return en3(win); const g=en3(win); PF.coin-=g.c; PF.star-=g.st; const m=DIFFPAY[typeof NET.hdiff==='number'?NET.hdiff:diff]||1,k=Math.max(0,Math.min(6,Math.floor(+(Array.isArray(NET.tg.k)?NET.tg.k[NET.flip?1:0]:0))||0)); g.c=Math.round(k*TAG.pay*m); g.st=k>=3?1:0; PF.coin+=g.c; PF.star+=g.st; g.note='캐릭터 '+k+'명 쓰러뜨림'; return g; }; }
 /* 손님: 방장이 태그매치를 고르면 내 쪽도 3대3으로 맞춰 '우리 팀' 칸 둘을 고를 수 있게 한다(방을 나가면 원래대로) */
-{ const cm2=clientMsg; clientMsg=function(d){ cm2(d); if(!d||d.t!=='lobby'||!NET.client) return; NET.hm=d.hm;
-    if(d.hm===7&&!(mode===7&&!practice)){ if(!NET.gkeep) NET.gkeep={mode,teamN,practice}; NET.tagSync=true; practice=false; mode=7; teamN=3; try{ modeNote(); drawSel(); }catch(x){} toast('방장이 태그매치를 골랐다 · 캐릭터 탭에서 우리 팀 칸 둘도 고른다',4200); NET.pick(); }
-    else if(d.hm!==7&&NET.tagSync){ NET.tagSync=false; const k=NET.gkeep; if(k){ mode=k.mode; teamN=k.teamN; practice=k.practice; try{ modeNote(); drawSel(); }catch(x){} } } };
+{ onMsg('client',{post(d){ if(!d||d.t!=='lobby'||!NET.client) return; NET.hm=d.hm;
+    if(d.hm===7&&!(mode===7&&!practice)){ if(!NET.gkeep) NET.gkeep={mode,teamN,practice}; NET.tagSync=true; practice=false; mode=7; teamN=3; try{ modeNote(); drawSel(); }catch(x){} if(!running) toast('방장이 태그매치를 골랐다 · 캐릭터 탭에서 우리 팀 칸 둘도 고른다',4200); NET.pick(); }
+    else if(d.hm!==7&&NET.tagSync){ NET.tagSync=false; const k=NET.gkeep; if(k){ mode=k.mode; teamN=k.teamN; practice=k.practice; try{ modeNote(); drawSel(); }catch(x){} } } }});
   const pc0=pickCh; pickCh=function(k){ const r=pc0(k); if((NET.client||NET.host)&&typeof slot==='string'&&slot.slice(0,2)==='al') NET.pick(); return r; };
   /* 모인 사람 명단에 태그 캐릭터 셋을 보여 준다 */
   const dn3=drawNet; drawNet=function(){ dn3(); const tg=NET.host?mode===7&&!practice:NET.client&&NET.hm===7; if(!tg||!(NET.host||NET.client)) return; $('n-list').querySelectorAll('.pl').forEach((el,i)=>{ const p=NET.players[i]; if(!p) return; const L=(p.host&&NET.host?[sel.al[0],sel.al[1]]:(p.tag||[])).filter(k=>k&&CH[k]); const sp=el.querySelectorAll('span')[0]; if(sp&&!sp.dataset.tg){ sp.dataset.tg=1; sp.insertAdjacentHTML('beforeend',' <small style="color:var(--muted)">+ '+(L.length?L.map(k=>CH[k].name.split(', ')[1]).join(' + '):'칸 비움(가진 캐릭터 무작위)')+'</small>'); } }); }; }
@@ -158,11 +158,11 @@ function roomDiff(){ const cur=new Map(NET.players.map(p=>[p.pid||'host',{name:p
     /* 큰 단추 · 결과 화면 단추 이름 */ if(!running){ const mine=myP(),[r,n]=readyN(); if(NET.client){ $('start').textContent=mine&&mine.ready?'✔ 준비 완료':'준비하기'; $('netbar').textContent+=mine&&mine.ready?' · 방장이 시작하면 함께 들어간다':' · 준비하기를 눌러 알린다'; $('again').textContent=mine&&mine.ready?'✔ 준비 완료':'한 판 더 · 준비'; } else if(NET.host&&n){ $('again').textContent='다시 · 준비 '+r+'/'+n; } }
     /* 함께 탭 명단: 방장은 사람을 눌러 편을 바꾼다 */ if(NET.host){ const L=$('n-list'); if(L&&!L.dataset.rt){ L.dataset.rt=1; L.addEventListener('click',e=>{ const row=e.target.closest('.pl'); if(!row||!NET.host) return; const i=[...L.querySelectorAll('.pl')].indexOf(row),p=NET.players[i]; if(!p||p.host) return; p.team=p.team?0:1; p.prevTeam=null; lobbyOut(); toast((p.name||'손님')+' → '+(p.team?'상대 편':'방장 편'),1800); }); } if(L&&!$('n-lhint')) L.insertAdjacentHTML('afterend','<p class="note" id="n-lhint" style="margin-top:4px">방장은 사람을 눌러 편을 바꾼다. 내보내기는 두 번 누른다.</p>'); } }; }
 /* 손님: 방장이 정한 판 정보를 받는다 */
-{ const cm3=clientMsg; clientMsg=function(d){ if(d&&d.t==='lobby') NET.hs=d.hs||NET.hs; const r=cm3(d); if(d&&d.t==='lobby'&&NET.client) try{ drawSum(); }catch(x){} return r; }; }
+{ onMsg('client',{pre(d){ if(d&&d.t==='lobby') NET.hs=d.hs||NET.hs; },post(d){ if(d&&d.t==='lobby'&&NET.client) try{ drawSum(); }catch(x){} }}); }
 /* 방장: 방식 · 맵 · 실력을 바꾸면 손님에게 바로 알린다 */
 { const sv2=save; save=function(){ const r=sv2(); if(NET.host&&NET.tx&&!running){ clearTimeout(save.t); save.t=setTimeout(()=>{ try{ lobbyOut(); }catch(x){} },150); } return r; }; }
 /* 모두 준비되면 방장에게 알린다 */
-{ const hm5=hostMsg; hostMsg=function(pid,d){ const r=hm5(pid,d); if(d&&d.t==='rdy'&&NET.host&&!running){ const [a,n]=readyN(); if(n&&a===n) setTimeout(()=>{ toast('모두 준비됐다 · 싸우기를 누른다',2800); sfx('win'); },300); } return r; }; }
+{ onMsg('host',{post(pid,d){ if(d&&d.t==='rdy'&&NET.host&&!running){ const [a,n]=readyN(); if(n&&a===n) setTimeout(()=>{ toast('모두 준비됐다 · 싸우기를 누른다',2800); sfx('win'); },300); } }}); }
 /* 큰 단추: 손님 = 준비, 방장 = 아직 준비 안 한 사람이 있으면 한 번 더 눌러 시작 */
 { let arm=0; const confirmStart=()=>{ const [r,n]=readyN(); if(n&&r<n&&performance.now()>arm){ arm=performance.now()+2600; toast('아직 준비 안 한 사람이 있다 ('+r+'/'+n+') · 한 번 더 누르면 시작',2600); return false; } arm=0; return true; };
   const st0=$('start').onclick; $('start').onclick=function(e){ if(NET.client&&inRoom()){ readyToggle(); return; } if(NET.host&&inRoom()&&!practice&&!confirmStart()) return; return st0.call(this,e); };

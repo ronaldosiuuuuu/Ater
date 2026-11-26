@@ -54,7 +54,6 @@
 on('end',w=>{ if(!NET.host||!NET.tx) return; const m={t:'ov',w:w&&w.id?w.id:0,wt:w?w.team:-1,at:r2(now)}; sendAll(m); setTimeout(()=>{ if(NET.host&&NET.tx) sendAll(m); },1000); });
 { const showEnd=(w,t)=>{ if(!NET.client||!NET.playing||over) return; over={winner:w,t:t}; setTimeout(()=>{ if(NET.client&&over&&NET.playing){ NET.playing=false; showResult(); } },900); };
   const guess=()=>{ const t=NET.tg; if(t&&t.ad&&Array.isArray(t.b)){ const gone=[0,1].find(tm=>t.ad[tm]&&Array.isArray(t.b[tm])&&t.b[tm].every(x=>Array.isArray(x)&&x[4])); if(gone!==undefined) return ents.find(o=>o.teamRaw===1-gone&&!o.dead)||ents.find(o=>o.teamRaw===1-gone)||null; } return null; };
-  const cmO=clientMsg; clientMsg=function(d){
-    if(d&&d.t==='ov'&&typeof d==='object'){ const id=+d.w||0; showEnd(id&&NET.em.get(id)||(d.wt===0||d.wt===1?ents.find(o=>o.teamRaw===d.wt):null)||null,Number.isFinite(+d.at)?+d.at:now); return; }
-    if(d&&d.t==='pg'&&NET.client){ if(NET.playing&&d.lv===0&&!over){ NET.lvOff=NET.lvOff||performance.now(); if(performance.now()-NET.lvOff>3000){ NET.lvOff=0; showEnd((d.ow&&NET.em.get(+d.ow))||(d.owt===0||d.owt===1?ents.find(o=>o.teamRaw===d.owt):null)||guess(),now); } } else NET.lvOff=0; }
-    return cmO(d); }; }
+  onMsg('client',{pre(d){
+    if(d&&d.t==='ov'&&typeof d==='object'){ const id=+d.w||0; showEnd(id&&NET.em.get(id)||(d.wt===0||d.wt===1?ents.find(o=>o.teamRaw===d.wt):null)||null,Number.isFinite(+d.at)?+d.at:now); return true; }
+    if(d&&d.t==='pg'&&NET.client){ if(NET.playing&&d.lv===0&&!over){ NET.lvOff=NET.lvOff||performance.now(); if(performance.now()-NET.lvOff>3000){ NET.lvOff=0; showEnd((d.ow&&NET.em.get(+d.ow))||(d.owt===0||d.owt===1?ents.find(o=>o.teamRaw===d.owt):null)||guess(),now); } } else NET.lvOff=0; } }}); }

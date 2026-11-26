@@ -614,13 +614,13 @@ try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d){ if([1,2
     if(d.v>=3&&d.CFG){ $('s-speed').value=d.CFG.speed; $('s-atk').value=d.CFG.atkInt; $('s-reach').value=d.CFG.reach; if(d.CFG.kb!==undefined) $('s-kb').value=d.CFG.kb; } sandHp=d.sandHp||1000; $('s-sand').value=sandHp; sandInf=!!d.sandInf; sandAct=d.sandAct|0;
     $('sinf').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===(sandInf?1:0))); $('sact').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===sandAct)); setMode(d.m===0?0:(d.m===3?3:d.m===4?4:d.m===5?5:d.m===6?6:d.m===7?7:1)); tab=CH[sel.me].cls; } }catch(x){}
 bind('s-speed','o-speed','speed','칸/초'); bind('s-atk','o-atk','atkInt','초'); bind('s-reach','o-reach','reach','칸'); bind('s-kb','o-kb','kb','칸');
-{ const i=$('s-sand'),o=$('o-sand'),f=()=>{ sandHp=+i.value; o.textContent=sandHp; }; i.addEventListener('input',f); i.addEventListener('change',save); f(); }
-['s-speed','s-atk','s-reach','s-kb'].forEach(id=>$(id).addEventListener('change',save));
+{ const i=$('s-sand'),o=$('o-sand'),f=()=>{ sandHp=+i.value; o.textContent=sandHp; }; i.addEventListener('input',f); i.addEventListener('change',()=>save()); f(); }
+['s-speed','s-atk','s-reach','s-kb'].forEach(id=>$(id).addEventListener('change',()=>save()));
 /* 손가락 기기: 설정(화면 방향·전체 화면)에 따라 전체 화면으로 바꾸고 방향을 고정한다. 자동이거나 고정이 안 되는 기기에서는 지금 방향 그대로 시작한다. */
 async function goOri(){ if(FINE) return; try{ const d=document.documentElement,so=screen.orientation,lock=OPT.ori!=='auto'; if((OPT.full||lock)&&!document.fullscreenElement&&d.requestFullscreen) await d.requestFullscreen({navigationUI:'hide'});
   if(so){ if(lock&&so.lock){ const wl=OPT.ori==='land'; await so.lock(wl?'landscape':'portrait'); for(let i=0;i<12&&(innerWidth>innerHeight)!==wl;i++) await new Promise(r=>setTimeout(r,50)); } else if(!lock&&so.unlock) so.unlock(); } }catch(x){} }
 let starting=false; async function launch(){ if(NET.client){ NET.wait(); return; } if(starting) return; starting=true; audioOn(); try{ await Promise.race([goOri(),new Promise(r=>setTimeout(r,1500))]); } finally { starting=false; } begin(); }
-$('start').onclick=launch; $('again').onclick=launch;
+$('start').onclick=()=>launch(); $('again').onclick=()=>launch();   /* 이름으로 부른다(뒤의 판에서 감싼 launch가 듣게) */
 $('back').onclick=()=>{ $('res').hidden=true; $('sel').hidden=false; drawSel(); bgmStart(); };
 $('sel').addEventListener('pointerdown',()=>{ if(!$('sel').hidden&&!running) bgmStart(); },{passive:true});
 $('bgmb').onclick=e=>{ e.stopPropagation(); bgmOff=!bgmOff; $('bgmb').textContent=bgmOff?'음악 켜기':'음악 끄기'; if(bgmOff) bgmStop(); else bgmStart(); };

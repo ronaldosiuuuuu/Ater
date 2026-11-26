@@ -15,5 +15,3 @@ function randShort(){ if(!freePlay()) return null; const own=ownedKeys(),tag=typ
 { const la6=launch; launch=function(){ const s=randShort(); if(s){ sfx('ui'); toast('가진 캐릭터가 모자라 이 판을 열 수 없다 · '+(s.tm?'상대':'우리')+' 편 빈 칸 '+s.need+'개에 쓸 수 있는 캐릭터 '+s.have+'명 · 칸을 직접 고르거나 인원을 줄이거나 뽑기로 더 얻는다',5200); return; } return la6.apply(this,arguments); }; }
 /* 상대 무작위 단추: 자유 대전이면 가진 캐릭터에서 */
 { const r0=$('rand').onclick; $('rand').onclick=function(){ if(!freePlay()) return r0.apply(this,arguments); const k=ownedKeys().filter(x=>x!==sel.me); if(!k.length) return toast('상대로 고를 수 있는 가진 캐릭터가 없다',2600); sel.foeR=false; sel.foe=k[Math.floor(Math.random()*k.length)]; tab=CH[sel.foe].cls; slot='foe'; drawSel(); save(); toast('상대 · '+CH[sel.foe].name.split(', ')[1]); }; }
-/* 싸우기 · 다시 단추는 엔진의 처음 launch에 바로 묶여 있어서 단추에도 같은 검사를 건다 */
-for(const id of ['start','again']){ const f0=$(id).onclick; $(id).onclick=function(e){ if(!(id==='again'&&showResult.last)&&!(NET.client&&typeof inRoom==='function'&&inRoom())&&randShort()) return launch(); return f0.call(this,e); }; }

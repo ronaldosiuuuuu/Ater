@@ -11,7 +11,7 @@
 
 설치 없이 휴대폰 · PC 브라우저에서 바로 된다. 홈 화면에 추가하면 앱처럼 쓸 수 있다(PWA).
 
-![버전](https://img.shields.io/badge/버전-1.8.6-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
+![버전](https://img.shields.io/badge/버전-1.8.7-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
 </div>
 
@@ -56,6 +56,8 @@
 1. 한 사람이 **함께** 탭 → **방 만들기**를 누르고, 코드나 **초대 링크**를 보낸다.
 2. 나머지는 링크를 열고 **들어가기**를 누르거나, 함께 탭에서 코드를 적고 들어온다.
 3. 각자 캐릭터를 고르고 **준비하기**를 누른다. 방장이 방식을 정하고 **싸우기**를 누른다.
+
+같은 방에 있었던 사람은 함께 탭 **최근 함께한 사람**에 남는다. **친구로**를 눌러 두면 다음부터는 방을 만든 뒤 친구 옆 **초대**로 바로 부른다(친구가 게임을 켜 두고 있을 때).
 
 모두 같은 판(버전)이어야 들어갈 수 있다. 판이 다르다고 나오면 새로고침한다.
 

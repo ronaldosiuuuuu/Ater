@@ -21,3 +21,5 @@ jobs:
       - run: pip install playwright && python -m playwright install --with-deps chromium
       - name: 게임을 열고 대전표 · 저장 파일을 확인한다
         run: python tools/smoke.py --chars 40 --n 1
+      - name: 함께 하기(방 · 채팅 · 1대1 · 태그매치 끝 · 친구 초대 · 내보내기)를 확인한다
+        run: python tools/mp_check.py

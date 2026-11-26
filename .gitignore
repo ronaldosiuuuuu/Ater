@@ -20,4 +20,6 @@ desktop.ini
 *.zip
 *.log
 node_modules/
+__pycache__/
+*.pyc
 tmp/

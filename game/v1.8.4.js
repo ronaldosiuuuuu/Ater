@@ -5,7 +5,7 @@
 { const pidOk=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(v),num=(v,a,b,f)=>{ v=+v; return Number.isFinite(v)?Math.min(b,Math.max(a,v)):f; },arr=(v,n)=>Array.isArray(v)?v.slice(0,n):[];
   const colOk=v=>typeof v==='string'&&/^(#[0-9a-f]{3,8}|rgba?\([\d.,\s%]+\)|var\(--[\w-]+\))$/i.test(v)?v:'';
   const fix={
-    lobby(d){ d.players=arr(d.players,12).filter(p=>p&&typeof p==='object'&&pidOk(p.pid)).map(p=>({pid:p.pid,name:cleanName(p.name)||'손님',key:okKey(p.key)?p.key:'ei',re:!!p.re,team:p.team===1?1:0,host:!!p.host,ready:!!p.ready,done:okKey(p.done)?p.done:'',tag:arr(p.tag,2).filter(okKey)}));
+    lobby(d){ d.players=arr(d.players,12).filter(p=>p&&typeof p==='object'&&pidOk(p.pid)).map(p=>({pid:p.pid,name:cleanName(p.name)||'손님',key:okKey(p.key)?p.key:'ei',re:!!p.re,team:p.team===1?1:0,host:!!p.host,ready:!!p.ready,done:okKey(p.done)?p.done:'',tag:arr(p.tag,2).filter(okKey),fc:typeof p.fc==='string'&&/^[A-HJ-NP-Z2-9]{10}$/.test(p.fc)?p.fc:''}));
       d.code=typeof d.code==='string'&&/^[A-Z0-9]{4,6}$/.test(d.code)?d.code:NET.code; d.you=pidOk(d.you)?d.you:NET.pid; d.hm=num(d.hm,0,9,0)|0;
       if(typeof d.tok==='string'&&/^[A-Za-z0-9]{8,32}$/.test(d.tok)){ NET.tok=d.tok; try{ sessionStorage.setItem('aetherTok',(d.code||NET.code)+':'+d.tok); }catch(x){} } else delete d.tok;
       const hs=d.hs&&typeof d.hs==='object'?d.hs:null; d.hs=hs?{sum:cleanText(hs.sum,200),m:num(hs.m,0,9,0)|0,n:num(hs.n,1,6,1)|0,mon:cleanText(hs.mon,40)}:undefined; },
@@ -20,7 +20,7 @@
     tw(d){ d.end=cleanText(d.end,140); d.floor=num(d.floor,0,9999,0)|0; d.what=cleanText(d.what,200); d.best=num(d.best,0,9999,0)|0; d.pw=arr(d.pw,60).map(x=>cleanText(x,40)); d.gear=arr(d.gear,6).map(x=>cleanText(x,40)); d.sig=cleanText(d.sig,2000);
       d.ch=arr(d.ch,10).filter(c=>c&&typeof c==='object').map(c=>({a:['rw','path','buy'].includes(c.a)?c.a:'rw',t:cleanText(c.t,80),p:String(c.p==null?'':c.p).slice(0,500),col:colOk(c.col),dis:!!c.dis}));
       d.votes=arr(d.votes,12).filter(Array.isArray).map(v=>[num(v[0],0,9,0)|0,cleanName(v[1])||'손님',pidOk(v[2])?v[2]:'']); } };
-  const cmS=clientMsg; clientMsg=function(d){ if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.t!=='string') return; const f=hasK(fix,d.t)?fix[d.t]:null; if(f){ try{ f(d); }catch(x){ return; } } return cmS(d); }; }
+  onMsg('client',{pre(d){ if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.t!=='string') return true; const f=hasK(fix,d.t)?fix[d.t]:null; if(f){ try{ f(d); }catch(x){ return true; } } }}); }
 /* 방장: 함께 탭 명단에서 사람을 내보낸다(두 번 눌러야 한다). 내보낸 사람은 그 자리 표로 이 방에 다시 들어오지 못한다 */
 { const st=document.createElement('style'); st.textContent='#n-list .pl .kick{margin-left:auto;height:30px;min-height:30px;padding:0 10px;border:1px solid var(--foe);border-radius:8px;background:transparent;color:var(--foe);font-size:12px;flex:0 0 auto}'; document.head.appendChild(st);
   const dnK=drawNet; drawNet=function(){ dnK(); if(!NET.host) return; const L=$('n-list'); if(!L) return; L.querySelectorAll('.pl').forEach((el,i)=>{ const p=NET.players[i]; if(!p||p.host||el.querySelector('.kick')) return; el.insertAdjacentHTML('beforeend','<button type="button" class="kick" data-kick="'+esc(p.pid)+'">내보내기</button>'); }); };

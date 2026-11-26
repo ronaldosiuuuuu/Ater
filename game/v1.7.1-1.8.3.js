@@ -24,9 +24,9 @@ if(!PF.open&&typeof locked==='function'&&CH[kOf('me')]&&locked(kOf('me'))){ sel.
 /* 함께 레이드 · 등반 단추는 태그 인원 되돌리기를 하지 않는다 */
 document.addEventListener('click',e=>{ if(e.target.closest('#n-qraid,#n-qtower')&&window.tagPrevReset) tagPrevReset(); },true);
 /* 손님이 스스로 편을 바꾸면 '함께 레이드 전 편' 기억을 지운다 */
-{ const hm6=hostMsg; hostMsg=function(pid,d){ if(d&&NET.host&&d.t==='pick'&&(d.team===0||d.team===1)){ const p=NET.players.find(x=>x.pid===pid); if(p&&p.team!==d.team) p.prevTeam=null; } return hm6(pid,d); }; }
+{ onMsg('host',{pre(pid,d){ if(d&&NET.host&&d.t==='pick'&&(d.team===0||d.team===1)){ const p=NET.players.find(x=>x.pid===pid); if(p&&p.team!==d.team) p.prevTeam=null; } }}); }
 /* 손님: 방장이 보낸 짧은 안내 · 다시 이어지면 재접속 횟수를 되돌린다 · 판이 시작되면 열려 있던 창을 닫는다 */
-{ const cm4=clientMsg; clientMsg=function(d){ if(d&&d.t==='note'&&NET.client){ toast(String(d.text||'').slice(0,60),1800); return; } if(d&&d.t==='lobby') NET.retry=0; return cm4(d); };
+{ onMsg('client',{pre(d){ if(d&&d.t==='note'&&NET.client){ toast(String(d.text||'').slice(0,60),1800); return true; } if(d&&d.t==='lobby') NET.retry=0; }});
   const cs2=clientStart; clientStart=function(d){ ['bagv','achv','keysv','patchv','chatv'].forEach(id=>{ const x=document.getElementById(id); if(x) x.remove(); }); $('tower').hidden=true; return cs2(d); }; }
 /* 레이드는 사람 모두가 한 편이다: 방 정보 띠에서도 한 편으로 보이고, 방장 '상대' 칸은 보스 그대로 */
 { const rd0=roomDraw; roomDraw=function(){ const hs=NET.host?roomHS():(NET.hs||{}); if(hs.m===6&&inRoom()){ const keep=NET.players.map(p=>p.team); NET.players.forEach(p=>{ p.team=0; }); try{ rd0(); } finally { NET.players.forEach((p,i)=>{ p.team=keep[i]; }); } } else rd0();
