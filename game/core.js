@@ -8,7 +8,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.9.4';
+const VER='1.9.5';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
 { const N=v=>{ v=+v; return Number.isFinite(v)?Math.max(0,v):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
@@ -100,7 +100,7 @@ function gachaScreen(res){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통�
    길: 싸움 층을 넘을 때마다 다음 길을 고른다. 평범한 길 · 험한 길(정예: 체력 ×1.6, 피해 +20%, 보상 둘) · 저주받은 길(불리한 조건, 보상은 권능만) · 쉼터 · 상인.
    5층마다 보스: 몬스터(코르헨 → 골렘 → 거대 골렘 → 히드라)와 마왕(히든·신화 캐릭터, 체력 3배)이 번갈아 나온다. */
 const TIER=[['고화'],['고화','서사'],['서사'],['서사','전설'],null,['전설'],['전설'],['전설'],['전설','신화'],null];
-const BOONS={train:{name:'단련',text:'최대 체력 +80, 그만큼 회복한다.',price:25},hone:{name:'연마',text:'기본 공격 +1.',price:25},rest:{name:'휴식',text:'체력을 모두 회복한다.',price:20}};
+const BOONS={train:{name:'단련',text:'최대 체력 +50, 그만큼 회복한다.',price:25},hone:{name:'연마',text:'기본 공격 +1.',price:25},rest:{name:'휴식',text:'체력을 모두 회복한다.',price:20}};
 const CURSES={frail:{name:'깨진 갑옷',text:'이 층에서는 받는 피해가 25% 는다.'},swift:{name:'쫓기는 길',text:'이 층의 상대는 기동력이 25% 높다.'},dry:{name:'마른 샘',text:'이 층은 이겨도 체력이 돌아오지 않는다.'}};
 const TPOW=()=>Object.keys(POWERS).filter(id=>!POWERS[id].active&&!POWERS[id].gear);
 const lvCap=f=>f<=3?3:f<=6?5:f<=10?7:9;      /* 층이 높을수록 높은 단계의 권능이 나온다 */
@@ -138,7 +138,7 @@ on('begin',()=>{ if(!TW||!TW.on) return; const f=TW.floor,n=TW.next; { const ids
   msg([['등반 '+f+'층 ','#e3c377'],[(n.boss?'보스 ':n.lord?'마왕 ':n.elite?'정예 ':n.curse?'저주 · ':n.horde?'무리 '+(n.horde.length+1)+' · ':'')+short(foe),'#fff6d6'],[' · 체력 '+foe.max,'#97a1cf']],1,true); });
 function rollRewards(allPw){ const f=TW.floor-1,cap=lvCap(f),left=TPOW().filter(id=>!TW.pw.includes(id)&&POWERS[id].lv<=cap&&POWERS[id].lv>=cap-4).sort(()=>Math.random()-.5),L=[]; const np=allPw?2:1; left.slice(0,np).forEach(id=>L.push({t:'pw',id})); { const g=rollGear(f,allPw); if(g) L.push({t:'gear',id:g}); }
   for(const b of ['train','hone','rest'].sort(()=>Math.random()-.5)){ if(L.length>=3) break; if(b==='rest'&&TW.hp>=twMax()*.85) continue; L.push({t:'boon',id:b}); } while(L.length<3) L.push({t:'boon',id:'train'}); return L; }
-function gain(r){ if(r.t==='gear'){ const G=GEAR[r.id],old=TW.hp==null?null:twMax(); TW.gear[G.slot]=r.id; if(old!=null) TW.hp=Math.max(1,Math.min(twMax(),TW.hp+Math.max(0,twMax()-old))); TW.picks.push(G.name); return; } if(r.t==='pw') TW.pw.push(r.id); else if(r.id==='train'){ TW.hpB+=80; TW.hp+=80; } else if(r.id==='hone') TW.atkB+=1; else TW.hp=twMax(); TW.picks.push(r.t==='pw'?POWERS[r.id].name:BOONS[r.id].name); }
+function gain(r){ if(r.t==='gear'){ const G=GEAR[r.id],old=TW.hp==null?null:twMax(); TW.gear[G.slot]=r.id; if(old!=null) TW.hp=Math.max(1,Math.min(twMax(),TW.hp+Math.max(0,twMax()-old))); TW.picks.push(G.name); return; } if(r.t==='pw') TW.pw.push(r.id); else if(r.id==='train'){ TW.hpB+=50; TW.hp+=50; } else if(r.id==='hone') TW.atkB+=1; else TW.hp=twMax(); TW.picks.push(r.t==='pw'?POWERS[r.id].name:BOONS[r.id].name); }
 function towerTake(r){ gain(r); TW.rewN--; if(TW.rewN>0) TW.rew=rollRewards(TW.rewPw); else { TW.rew=null; genFork(); } twStore(); towerScreen(); }
 function towerPath(i){ const n=TW.fork[i]; if(!n) return; if(n.t==='fight'){ TW.next=n; TW.fork=null; } else if(n.t==='rest'){ TW.hp=Math.min(twMax(),TW.hp+Math.round(twMax()*.5)); TW.rested=true; TW.picks.push('쉼터'); genFork(); toast('쉼터에서 체력을 절반 되찾았다'); }
   else { TW.rested=true; const cap=lvCap(TW.floor),left=TPOW().filter(id=>!TW.pw.includes(id)&&POWERS[id].lv<=cap).sort(()=>Math.random()-.5).slice(0,2),gs=[rollGear(TW.floor,true),rollGear(TW.floor)].filter((x,i,a)=>x&&a.indexOf(x)===i); TW.shop=left.map(id=>({t:'pw',id,price:20+POWERS[id].lv*5})).concat(gs.map(id=>({t:'gear',id,price:20+GEAR[id].gi*10})),['train','hone','rest'].map(id=>({t:'boon',id,price:BOONS[id].price}))); TW.fork=null; } twStore(); towerScreen(); }

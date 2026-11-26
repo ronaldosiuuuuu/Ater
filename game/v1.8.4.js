@@ -9,7 +9,7 @@
       d.code=typeof d.code==='string'&&/^[A-Z0-9]{4,6}$/.test(d.code)?d.code:NET.code; d.you=pidOk(d.you)?d.you:NET.pid; d.hm=num(d.hm,0,9,0)|0;
       if(typeof d.tok==='string'&&/^[A-Za-z0-9]{8,32}$/.test(d.tok)){ NET.tok=d.tok; try{ sessionStorage.setItem('aetherTok',(d.code||NET.code)+':'+d.tok); }catch(x){} } else delete d.tok;
       const hs=d.hs&&typeof d.hs==='object'?d.hs:null; d.hs=hs?{sum:cleanText(hs.sum,200),m:num(hs.m,0,9,0)|0,n:num(hs.n,1,6,1)|0,mon:cleanText(hs.mon,40)}:undefined; },
-    start(d){ d.mode=num(d.mode,0,9,1)|0; d.teamN=num(d.teamN,1,6,1)|0; if(!hasK(MAPS,d.map)) d.map='basic'; d.team=d.team===1?1:0; if('diff' in d) d.diff=num(d.diff,0,9,1); if('mon' in d) d.mon=(okKey(d.mon)||hasK(CH,d.mon)&&CH[d.mon].mon)?d.mon:''; if('cap' in d) d.cap=num(d.cap,1,99999,100); },
+    start(d){ d.mode=num(d.mode,0,9,1)|0; d.teamN=num(d.teamN,1,6,1)|0; if(!hasK(MAPS,d.map)) d.map='basic'; d.team=d.team===1?1:0; if('diff' in d) d.diff=num(d.diff,0,9,1); if('mon' in d) d.mon=(okKey(d.mon)||hasK(CH,d.mon)&&CH[d.mon].mon)?d.mon:''; if('cap' in d) d.cap=num(d.cap,1,99999,100); if('kit' in d) d.kit=arr(d.kit,40).filter(id=>typeof id==='string'&&hasK(POWERS,id)); },
     s(d){ for(const k of ['e','p','f','z','w','fl','ft']) d[k]=Array.isArray(d[k])?d[k].filter(x=>x&&typeof x==='object'):[]; d.n=num(d.n,0,1e7,0);
       for(const k of ['sc','cp']) d[k]=Array.isArray(d[k])?[num(d[k][0],0,1e6,0),num(d[k][1],0,1e6,0)]:[0,0]; d.ch=Array.isArray(d.ch)?[num(d.ch[0],0,1e7,0),cleanText(d.ch[1],40)]:[0,'']; },
     chat(d){ d.name=cleanName(d.name)||'손님'; d.text=cleanText(d.text,80); d.team=d.team===1?1:0; d.pid=pidOk(d.pid)?d.pid:''; },
