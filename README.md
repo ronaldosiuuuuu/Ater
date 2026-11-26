@@ -11,7 +11,7 @@
 
 설치 없이 휴대폰 · PC 브라우저에서 바로 가능합니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
 
-![버전](https://img.shields.io/badge/버전-1.9.5-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-133명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
+![버전](https://img.shields.io/badge/버전-1.9.6-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-134명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
 </div>
 
@@ -28,7 +28,7 @@
 
 ## 무엇을 하는 게임인가
 
-- **카드 그대로의 캐릭터 133명**: 고화 26 · 서사 35 · 전설 29 · 히든 5 · 신화 3명과 재림 카드 35장. 스킬 수치는 카드 원문을 따른다.
+- **카드 그대로의 캐릭터 134명**: 고화 26 · 서사 35 · 전설 30 · 히든 5 · 신화 3명과 재림 카드 35장. 스킬 수치는 카드 원문을 따른다.
 - **여러 방식**
   - 1대1 단판 · 5판 3선승, 2 · 3 · 5대 팀 섬멸전 · 킬 선취, 점령전, 대돌격(마왕 하나 대 용사 넷)
   - 3대3 태그매치: 셋을 골라 한 명씩 나서고 교대하며 싸운다.

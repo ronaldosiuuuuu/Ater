@@ -8,7 +8,7 @@
 - `boot.js`: 맨 먼저 읽는다(예전 기록 지우기 같은 것)
 - `engine.js`: 엔진(경기장 · 캐릭터 · 스킬 · 판 진행 · 고르는 화면). 1.8.3까지 `index.html` 안에 있던 것
 - `start.js`: 맨 나중에 읽는다(서비스 워커 걸기 · 새 판 알림)
-- `cardtext*.js`, `chars.js`, `seosa*.js`, `jeon*.js`, `sinhwa.js`, `rebirth.js`: 카드 원문과 캐릭터
+- `cardtext*.js`, `chars.js`, `seosa*.js`, `jeon*.js`, `sinhwa.js`, `rebirth.js`, `igril.js`(1.9.6 이그릴 · 카드 원문 포함): 카드 원문과 캐릭터
 - `brain*.js`: 컴퓨터 조작, `kits.js` · `wkits*.js` · `pkits.js` · `build.js`: 스킬 꾸러미
 - `net.js`: 함께 하기(PeerJS · 방장 기기에서 판이 돈다)
 - `game/`: 게임다운 겉옷(등반 · 뽑기 · 임무 · 업적 · 태그매치 …). 판(버전)마다 앞의 함수를 감싸 고치는 덩어리로 쌓여 있다.
@@ -24,7 +24,7 @@
 2. 새 파일에서 정의한 함수를 앞 파일이 읽는 즉시(파일을 읽는 동안) 부르면 안 된다. 그래야 하면 그 함수를 `game/hoisted.js`로 옮긴다.
 3. 판 번호: `game/core.js`의 `VER`, `net.js`의 `APPV`(함께 하기에서 같은 판인지 보는 숫자), `game/v1.0-1.2.js`의 `PATCH` 맨 위, `CHANGELOG.md`, `README.md` 배지, `sw.js`의 `V`.
 4. 파일을 더하거나 빼면 `sw.js`의 `FILES`도 고친다.
-5. 점검: `python tools/smoke.py`. 동작을 바꾸지 않는 정리라면 `--chars 133`의 지문이 그대로여야 한다.
+5. 점검: `python tools/smoke.py`. 동작을 바꾸지 않는 정리라면 `--chars 134`의 지문이 그대로여야 한다(1.9.6부터 134명).
 
 ## 지킬 규칙 (요청에 없어도 늘 지킨다)
 
