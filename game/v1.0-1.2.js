@@ -7,7 +7,6 @@ for(const k of Object.keys(CH)){ const c=CH[k]; if(!c.re||!CH[c.base]) continue;
 /* ── 뽑기: 캐릭터 대신 파편이 3~5개 나온다. 파편 10개가 모이면 캐릭터가 되고, 이미 가진 캐릭터라면 '중복' 하나가 된다(재림에 쓴다).
    확률은 고화 60 · 서사 30 · 전설 10. 신화와 히든은 나오지 않는다. ── */
 PF.shard=PF.shard||{}; PF.dup=PF.dup||{};
-GRATE.length=0; GRATE.push(['고화',75],['서사',22],['전설',3]);
 const SHARDN=10, RDUP={고화:3,서사:2,전설:1,히든:0,신화:0};
 pullOne=function(minIdx){ PF.pity=(PF.pity||0)+1; const force=PF.pity>=PITY?2:(minIdx||0),L=GRATE.slice(Math.min(force,GRATE.length-1)); let tot=L.reduce((a,x)=>a+x[1],0),x=Math.random()*tot,g=L[L.length-1][0]; for(const q of L){ if((x-=q[1])<0){ g=q[0]; break; } }
   const pool=gachaPool(g),k=pool[Math.floor(Math.random()*pool.length)]; if(!k) return null;
@@ -29,6 +28,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); i
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return cleanName(v||($('n-name')&&$('n-name').value)||'')||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.8.15','2026-11',['[안정성] 쓰이지 않던 옛 뽑기 값과 없어진 「골라서 데려오기」 흔적을 정리했습니다. 게임 내용은 그대로입니다.']],
  ['1.8.14','2026-11',['[개선] 창 머리와 닫기 단추 모양이 통일되었습니다. 닫기는 어두운 단추, 금색 단추는 주요 행동에만 쓰입니다.','[개선] 창 안의 단추 줄이 늘 화면 아래쪽에 놓이고, 알림이 작아지며 잇달아 오면 한 칸에 모여 뜹니다.','[개선] 판 시작 편성 표시가 체력 막대를 가리지 않게 아래로 옮겨졌습니다.','[개선] 함께 하기에서 무작위로 고른 사람은 방 목록 · 준비 칸 · 편성 표시에 「무작위」로 표시됩니다.','[신규] 설정에 「글자 크기(메뉴)」가 추가되었습니다.','[신규] 무작위로 정한 판이 끝나면 결과 창에서 「같은 상대로 다시」를 할 수 있습니다.','[안정성] 게임을 고치는 데 쓰려고 접속 · 판 수와 화면 오류 내용을 익명으로 모읍니다(이름 · 기기 정보 · 기록은 모으지 않습니다). 설정 「익명 통계 보내기」에서 끌 수 있습니다.']],
  ['1.8.13','2026-11',['[신규] 판이 시작될 때 이번 판 편성(우리 편 · 상대 편)이 화면 위쪽에 잠깐 표시됩니다. 무작위로 정해진 캐릭터에는 「무작위」 표시가 붙습니다.','[개선] 함께 하기에서는 판마다 편성이 표시되어 서로 어떤 캐릭터로 싸우는지 바로 알 수 있습니다.']],
  ['1.8.12','2026-11',['[개선] 내 캐릭터 · 상대를 무작위로 고르면 이름 대신 「무작위」로 표시됩니다. 혼자 할 때는 판을 시작할 때마다 새로 정해집니다.']],
@@ -82,7 +82,7 @@ function drawBag(){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰�
     h+='<div class="row" style="margin-top:12px"><button type="button" data-pull="1"'+(PF.coin<PULL?' style="opacity:.5"':'')+'>1번 더<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL.toLocaleString()+'</small></button><button type="button" data-pull="10"'+(PF.coin<PULL10?' style="opacity:.5"':'')+'>10번 더<small style="display:block;font-size:10.5px;opacity:.75">코인 '+PULL10.toLocaleString()+'</small></button></div><div class="dock"><button class="go" id="tw-out" type="button">가방으로</button></div>';
     $('tw-body').innerHTML=h; $('tower').hidden=false; $('tower').scrollTop=0; if(page!=='bag') goPage('bag'); };
   const gp3=goPage; goPage=function(p){ gp3(p); if(p==='bag') drawBag(); };
-  document.addEventListener('click',e=>{ if(e.target.closest('#tw-out,[data-get]')) setTimeout(drawBag,0); });
+  document.addEventListener('click',e=>{ if(e.target.closest('#tw-out')) setTimeout(drawBag,0); });
   /* 기록 화면에서는 모두 열기 단추 · 보유 · 숙련을 뺀다(가방 탭으로 옮겼다) */
   const dr3=drawRec; drawRec=function(){ dr3(); const el=$('rec'); if(!el) return; const b=$('rec-open'); if(b){ const n=b.nextElementSibling; if(n&&n.classList.contains('note')) n.remove(); b.remove(); }
     for(const t of ['보유','숙련']){ const hh=[...el.querySelectorAll('h2')].find(x=>x.textContent===t); if(!hh) continue; let n=hh.nextElementSibling; while(n&&n.tagName!=='H2'&&n.id!=='ach-open'){ const nx=n.nextElementSibling; n.remove(); n=nx; } hh.remove(); }
@@ -155,9 +155,9 @@ function bagPop(kind){ const old=document.getElementById('bagv'); if(old) old.re
   else if(kind==='dup'){ h=head('DUPLICATES','중복 캐릭터','재림에 쓴다')+(B.D.length?B.D.map(k=>'<div class="pl" style="border-left-color:'+GCOL[CH[k].grade]+'"><b>'+nm(k)+' <small style="color:var(--muted)">'+CH[k].grade+' '+CH[k].cls+'</small></b><span style="color:var(--muted)">중복 '+PF.dup[k]+' / 재림에 '+(RDUP[CH[k].grade]||0)+'</span></div>').join(''):'<p class="sub">아직 없다. 가진 캐릭터의 파편 '+SHARDN+'개가 모이면 중복 하나가 된다.</p>'); }
   else { h=head('RULES','확률 · 규칙','뽑기가 어떻게 되는지')+GRATE.map(g=>'<div class="pl" style="border-left-color:'+GCOL[g[0]]+'"><b>'+g[0]+'</b><span style="color:var(--muted)">'+g[1]+'%</span></div>').join('')+'<p class="note" style="white-space:pre-line">신화 · 히든은 뽑기에서 나오지 않는다.\n처음 나온 캐릭터는 그 자리에서 바로 얻는다.\n이미 가진 캐릭터가 나오면 파편이 3~5개 나온다. 파편 '+SHARDN+'개는 \'중복\' 하나가 되고, 재림 · 완성에 쓴다.\n'+PITY+'번 안에 전설 파편이 한 번은 나온다(지금 '+Math.max(0,PITY-(PF.pity||0))+'번 남음).\n10번 뽑기는 서사 이상이 하나는 나온다.</p>'; }
   d.innerHTML='<div class="wrap">'+h+'<div class="dock"><button class="go" id="bag-out" type="button">닫기</button></div></div>'; document.body.appendChild(d); }
-document.addEventListener('click',e=>{ const t=e.target.closest('[data-bag],#bag-out,#sh-f button,#bagv [data-sb],#bagv [data-re2]'); if(!t) return; const v=document.getElementById('bagv');
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-bag],#bag-out,#sh-f button,#bagv [data-re2]'); if(!t) return; const v=document.getElementById('bagv');
   if(t.dataset.bag) return bagPop(t.dataset.bag); if(t.id==='bag-out'){ v&&v.remove(); return drawBag(); } if(t.dataset.f){ bagPop.f=t.dataset.f; return bagPop('sh'); }
-  if(t.dataset.sb){ v&&v.remove(); return; } if(t.dataset.re2) setTimeout(()=>{ if(document.getElementById('bagv')) bagPop('re'); },30); });
+  if(t.dataset.re2) setTimeout(()=>{ if(document.getElementById('bagv')) bagPop('re'); },30); });
 { const bs2=backStep; backStep=function(){ const k=document.getElementById('bagv'); if(k){ k.remove(); return true; } return bs2(); }; }
 drawBag();
 

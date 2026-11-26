@@ -80,7 +80,7 @@ function chatSheet(open){ let d=document.getElementById('chatv'); if(open===fals
 
 /* ════ 1.7.2 별무리 뽑기 ════ 원하는 캐릭터를 골라 데려오던 것을 없애고, 값을 크게 올려 '그 등급 캐릭터 하나(무작위 · 아직 없는 것)'를 얻는다 */
 const SGG=['고화','서사','전설'],SDRAW={고화:30,서사:90,전설:240};
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-sg],[data-sb]'); if(!b) return; e.stopImmediatePropagation(); if(b.dataset.sb){ toast('골라서 데려오기는 없어졌다 · 가방 → 별무리 뽑기',2200); return; }
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-sg]'); if(!b) return; e.stopImmediatePropagation();
   const g=b.dataset.sg,L=gachaPool(g).filter(k=>!PF.own[k]); if(!L.length) return toast(g+' 캐릭터는 모두 가졌다'); if(PF.star<SDRAW[g]) return toast('별무리의 흔적이 모자라다 ('+PF.star+' / '+SDRAW[g]+')');
   const k=L[Math.floor(Math.random()*L.length)]; PF.star-=SDRAW[g]; PF.own[k]=Date.now(); pfSave(); sfx('win'); const v=document.getElementById('bagv'); if(v) v.remove(); drawSel(); gachaScreen([{k,g,dup:false}]); },true);
 
