@@ -42,7 +42,7 @@ Object.assign(BRAIN,{
  stella(e,t,d){ e.ai.want=7; if(d<=9&&go(e,'ult')) return true; if(d<=9&&go(e,'aw')) return true; if(d<=4&&go(e,'n2')) return true; if(d<=11&&go(e,'n1')) return true; if(e.r.st>0&&d<=10){ basic(e); return true; } },
  evangeline(e,t,d){ e.ai.want=6.5; if(d<=6&&go(e,'ult')) return true; if(e.r.nx&&d<=8){ basic(e); return true; } if(d<=5&&go(e,'aw')) return true; if(d<=8&&go(e,'n1')) return true; if(d<=9&&go(e,'n2')) return true; },
  venil(e,t,d){ e.ai.want=4.8; if(d<=8&&go(e,'ult')) return true; if(d<=10&&go(e,'n2')) return true; if(d<=5&&(has(t,'vapor')||e.cd.n2>4)&&go(e,'n1')) return true; if(d<=5&&go(e,'aw')) return true; },
- pastern(e,t,d){ e.ai.want=2.8; if(d<=10&&go(e,'ult')) return true; if(d<=5&&go(e,'aw')) return true; if(d<=4&&(has(t,'paradox')||e.cd.n1>3)&&go(e,'n2')) return true; if(d<=3&&go(e,'n1')) return true; },
+ pastern(e,t,d){ e.ai.want=2.8; if(d<=10&&go(e,'ult')) return true; if(d<=5&&go(e,'aw')) return true; if(d<=4&&(has(t,'paradox')||e.cd.n1>3)&&go(e,'n2')) return true; if(d<=6&&go(e,'n1')) return true; },   /* 1.9.3: 괴리 6칸 */
  rotia(e,t,d){ e.ai.want=6.5; if(d<=10&&go(e,'ult')) return true; if(e.r.go>=60&&d<=10&&go(e,'aw')) return true; if(d<=5&&go(e,'n2')) return true; if(d<=11&&go(e,'n1')) return true; },
  yuri(e,t,d){ e.ai.want=2; if(go(e,'ult')) return true; if(now-e.r.ckT<=.25&&d<=3.2&&go(e,'n1')) return true; if(e.r.ck&&d<=3.2){ basic(e); return true; } if(d<=4&&go(e,'aw')) return true; if(d<=3&&go(e,'n1')) return true; if(d<=4&&go(e,'n2')) return true; },
  alpi(e,t,d){ e.ai.want=2.2; if(d<=6&&go(e,'ult')) return true; if(d<=3&&(has(t,'whirl')||e.cd.n1>4)&&go(e,'aw')) return true; if(d<=4&&go(e,'n1')) return true; if(d>3&&d<=8&&go(e,'n2')) return true; },
