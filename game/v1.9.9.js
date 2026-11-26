@@ -15,7 +15,7 @@ const twInvData=()=>{ if(NET.client){ const I=NET.twInv; return I?{ids:I.ids,atk
 function twInvHtml(){ const D=twInvData(); if(!D) return '<p class="note">등반 중이 아니다.</p>';
   const pw=D.ids.filter(id=>id[0]!=='@'&&POWERS[id]),gr=D.ids.filter(id=>id[0]==='@'&&GEAR[id.slice(1)]).map(id=>id.slice(1));
   const skills=k=>{ const c=k&&CH[k]; return c&&c.skills?Object.values(c.skills).map(s=>s&&s.name).filter(Boolean):[]; };
-  const box=(title,body,col)=>'<div class="bcard" style="border-left-color:'+(col||'var(--gold)')+'"><b>'+title+'</b><p class="note">'+body+'</p></div>';
+  const box=(title,body,col,id)=>'<div class="bcard" style="border-left-color:'+(col||'var(--gold)')+'"><b>'+title+'</b><p class="note">'+body+'</p>'+(id?twTagChips(id):'')+'</div>';
   /* 체력 · 기본 공격 줄 */
   let hp='',atk='';
   if(running&&me&&!me.dead){ hp='체력 '+Math.ceil(me.hp)+' / '+me.max; atk='기본 공격 '+Math.round(me.atk); }
@@ -23,11 +23,11 @@ function twInvHtml(){ const D=twInvData(); if(!D) return '<p class="note">등반
   const line=[hp,atk,'단련 '+D.train+'번 (최대 체력 +'+D.hpB+')','연마 '+D.atkB+'번 (기본 공격 +'+D.atkB+')'].filter(Boolean).join(' · ');
   let h='<p class="sub">'+esc(line)+'</p>';
   h+='<h2>권능 <small style="font-size:13px;color:var(--muted)">'+pw.length+'개</small></h2>';
-  h+=pw.length?pw.map(id=>{ const P=POWERS[id],sk=skills(P.kit); return box('권능 · '+esc(P.name)+' &lt;'+(P.lv|0)+'단계&gt;',esc(P.text)+(P.cd?'\n재사용 대기시간 '+P.cd+'초':'')+(sk.length?'\n붙는 스킬: '+sk.map(esc).join(' · '):'')); }).join(''):'<p class="note">아직 가진 권능이 없다. 층을 넘으면 보상으로 고를 수 있다.</p>';
+  h+=pw.length?pw.map(id=>{ const P=POWERS[id],sk=skills(P.kit),g=pGrade(P.lv); return box(gBadge(g)+' 권능 · '+esc(P.name)+' <small class="lvs">'+(P.lv|0)+'단계</small>',esc(P.text)+(P.cd?'\n재사용 대기시간 '+P.cd+'초':'')+(sk.length?'\n붙는 스킬: '+sk.map(esc).join(' · '):''),GGC[g],id); }).join(''):'<p class="note">아직 가진 권능이 없다. 층을 넘으면 보상으로 고를 수 있다.</p>';
   h+='<h2>장비 <small style="font-size:13px;color:var(--muted)">'+gr.length+' / 3칸</small></h2>';
   h+=['w','a','t'].map(sl=>{ const g=gr.map(x=>GEAR[x]).find(G=>G.slot===sl); if(!g) return box(esc(GSLOT[sl])+' · 비어 있음','아직 끼지 않았다.','var(--line)');
-    const P=POWERS['@'+g.id]||{},card=g.src==='카드'&&P.mods&&P.mods.atk; return box(esc(GSLOT[sl])+' · '+esc(g.name)+' &lt;'+esc(g.grade)+'&gt;',esc(P.text||'')+(g.note?'\n'+esc(g.note):'')+(card?'\n등반에서는 기본 공격 증가가 절반만 든다(+'+Math.round(P.mods.atk*.5)+').':''),GGC[g.grade]); }).join('');
-  h+='<p class="note">기본 효과: 적을 쓰러뜨리면 잃은 체력의 10%를 회복한다.'+(NET.client?' 함께 등반에서는 방장이 고른 권능 · 장비 · 단련이 모두에게 똑같이 든다.':'')+'</p>';
+    const P=POWERS['@'+g.id]||{},card=g.src==='카드'&&P.mods&&P.mods.atk; return box(gBadge(g.grade)+' '+esc(GSLOT[sl])+' · '+esc(g.name),esc(P.text||'')+(g.note?'\n'+esc(g.note):'')+(card?'\n등반에서는 기본 공격 증가가 절반만 든다(+'+Math.round(P.mods.atk*.5)+').':''),GGC[g.grade],'@'+g.id); }).join('');
+  h+=synHtml(D.ids)+'<p class="note">기본 효과: 적을 쓰러뜨리면 잃은 체력의 '+Math.round(TWB.heal.kill*100)+'%를 회복한다.'+(NET.client?' 함께 등반에서는 방장이 고른 권능 · 장비 · 단련이 모두에게 똑같이 든다.':'')+'</p>';
   return h; }
 /* 창: 등반 창 · 멈춤 창 위에 뜬다 */
 const twInv=(()=>{ const el=document.createElement('div'); el.className='overlay'; el.id='twinv'; el.hidden=true; el.style.zIndex='9';

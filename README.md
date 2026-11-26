@@ -11,7 +11,7 @@
 
 설치 없이 휴대폰 · PC 브라우저에서 바로 가능합니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
 
-![버전](https://img.shields.io/badge/버전-1.9.9-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-134명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
+![버전](https://img.shields.io/badge/버전-1.9.10-e3c377?style=flat-square) [![자동 점검](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml/badge.svg)](https://github.com/ronaldosiuuuuu/Ater/actions/workflows/smoke.yml) ![캐릭터](https://img.shields.io/badge/캐릭터-134명-7fe9ff?style=flat-square) ![레이드 보스](https://img.shields.io/badge/레이드_보스-31종-ff7d8c?style=flat-square) ![맵](https://img.shields.io/badge/맵-13개-8fd0a0?style=flat-square)
 
 </div>
 
