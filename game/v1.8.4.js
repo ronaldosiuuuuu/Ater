@@ -9,7 +9,7 @@
       d.code=typeof d.code==='string'&&/^[A-Z0-9]{4,6}$/.test(d.code)?d.code:NET.code; d.you=pidOk(d.you)?d.you:NET.pid; d.hm=num(d.hm,0,9,0)|0;
       if(typeof d.tok==='string'&&/^[A-Za-z0-9]{8,32}$/.test(d.tok)){ NET.tok=d.tok; try{ sessionStorage.setItem('aetherTok',(d.code||NET.code)+':'+d.tok); }catch(x){} } else delete d.tok;
       const hs=d.hs&&typeof d.hs==='object'?d.hs:null; d.hs=hs?{sum:cleanText(hs.sum,200),m:num(hs.m,0,9,0)|0,n:num(hs.n,1,6,1)|0,mon:cleanText(hs.mon,40)}:undefined; },
-    start(d){ d.mode=num(d.mode,0,9,1)|0; d.teamN=num(d.teamN,1,6,1)|0; if(!hasK(MAPS,d.map)) d.map='basic'; d.team=d.team===1?1:0; if('diff' in d) d.diff=num(d.diff,0,9,1); if('mon' in d) d.mon=(okKey(d.mon)||hasK(CH,d.mon)&&CH[d.mon].mon)?d.mon:''; if('cap' in d) d.cap=num(d.cap,1,99999,100); if('kit' in d) if('kit' in d) d.kit=arr(d.kit,40).filter(id=>typeof id==='string'&&hasK(POWERS,id)); },
+    start(d){ d.mode=num(d.mode,0,9,1)|0; d.teamN=num(d.teamN,1,6,1)|0; if(!hasK(MAPS,d.map)) d.map='basic'; d.team=d.team===1?1:0; if('diff' in d) d.diff=num(d.diff,0,9,1); if('mon' in d) d.mon=(okKey(d.mon)||hasK(CH,d.mon)&&CH[d.mon].mon)?d.mon:''; if('cap' in d) d.cap=num(d.cap,1,99999,100); if('kit' in d) if('kit' in d) d.kit=arr(d.kit,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)); },
     s(d){ for(const k of ['e','p','f','z','w','fl','ft']) d[k]=Array.isArray(d[k])?d[k].filter(x=>x&&typeof x==='object'):[]; d.n=num(d.n,0,1e7,0);
       for(const k of ['sc','cp']) d[k]=Array.isArray(d[k])?[num(d[k][0],0,1e6,0),num(d[k][1],0,1e6,0)]:[0,0]; d.ch=Array.isArray(d.ch)?[num(d.ch[0],0,1e7,0),cleanText(d.ch[1],40)]:[0,'']; },
     chat(d){ d.name=cleanName(d.name)||'손님'; d.text=cleanText(d.text,80); d.team=d.team===1?1:0; d.pid=pidOk(d.pid)?d.pid:''; },
@@ -17,7 +17,7 @@
     bye(d){ d.why=cleanText(d.why,140); },
     note(d){ d.text=cleanText(d.text,60); },
     pg(d){ d.ts=num(d.ts,-1e12,1e12,0); },
-    tw(d){ d.end=cleanText(d.end,140); d.floor=num(d.floor,0,9999,0)|0; d.what=cleanText(d.what,200); d.best=num(d.best,0,9999,0)|0; d.pw=arr(d.pw,60).map(x=>cleanText(x,40)); d.gear=arr(d.gear,6).map(x=>cleanText(x,40)); d.sig=cleanText(d.sig,2000); d.ids=arr(d.ids,40).filter(id=>typeof id==='string'&&hasK(POWERS,id)); d.hpB=num(d.hpB,0,1e5,0)|0; d.atkB=num(d.atkB,0,1e4,0)|0; d.train=num(d.train,0,999,0)|0;
+    tw(d){ d.end=cleanText(d.end,140); d.floor=num(d.floor,0,9999,0)|0; d.what=cleanText(d.what,200); d.best=num(d.best,0,9999,0)|0; d.pw=arr(d.pw,60).map(x=>cleanText(x,40)); d.gear=arr(d.gear,6).map(x=>cleanText(x,40)); d.sig=cleanText(d.sig,2000); d.ids=arr(d.ids,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)); d.hpB=num(d.hpB,0,1e5,0)|0; d.atkB=num(d.atkB,0,1e4,0)|0; d.train=num(d.train,0,999,0)|0;
       d.ch=arr(d.ch,10).filter(c=>c&&typeof c==='object').map(c=>({a:['rw','path','buy'].includes(c.a)?c.a:'rw',t:cleanText(c.t,80),p:String(c.p==null?'':c.p).slice(0,500),col:colOk(c.col),dis:!!c.dis}));
       d.votes=arr(d.votes,12).filter(Array.isArray).map(v=>[num(v[0],0,9,0)|0,cleanName(v[1])||'손님',pidOk(v[2])?v[2]:'']); } };
   onMsg('client',{pre(d){ if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.t!=='string') return true; const f=hasK(fix,d.t)?fix[d.t]:null; if(f){ try{ f(d); }catch(x){ return true; } } }}); }

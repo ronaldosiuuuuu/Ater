@@ -8,7 +8,7 @@
 { const cs9=coopSend; coopSend=function(){ const sa=sendAll; sendAll=function(m){ if(m&&m.t==='tw'&&TW){ m.ids=twIds(); m.hpB=TW.hpB|0; m.atkB=TW.atkB|0; m.train=(TW.picks||[]).filter(x=>x===BOONS.train.name).length; } return sa.apply(this,arguments); };
     try{ return cs9.apply(this,arguments); }finally{ sendAll=sa; } }; }
 /* 손님: 받은 목록을 기억한다. 판이 시작될 때 등반 판인지(무기 · 권능 목록이 실려 왔는지)도 기억한다 */
-onMsg('client',{pre(d){ if(!d||!NET.client) return; if(d.t==='tw'){ NET.twInv=d.end?null:{ids:d.ids||[],hpB:d.hpB|0,atkB:d.atkB|0,train:d.train|0}; } else if(d.t==='start'){ NET.twFight=Array.isArray(d.kit); } }});
+onMsg('client',{post(d){ if(!d||!NET.client) return; if(d.t==='tw'){ NET.twInv=d.end?null:{ids:d.ids||[],hpB:d.hpB|0,atkB:d.atkB|0,train:d.train|0}; } else if(d.t==='start'){ NET.twFight=Array.isArray(d.kit); } }});
 
 const twInvData=()=>{ if(NET.client){ const I=NET.twInv; return I?{ids:I.ids,atkB:I.atkB,train:I.train,hpB:I.hpB,key:me&&running?me.key:null}:null; }
   if(!TW) return null; return {ids:twIds(),atkB:TW.atkB|0,hpB:TW.hpB|0,train:(TW.picks||[]).filter(x=>x===BOONS.train.name).length,key:TW.key}; };
@@ -23,7 +23,7 @@ function twInvHtml(){ const D=twInvData(); if(!D) return '<p class="note">등반
   const line=[hp,atk,'단련 '+D.train+'번 (최대 체력 +'+D.hpB+')','연마 '+D.atkB+'번 (기본 공격 +'+D.atkB+')'].filter(Boolean).join(' · ');
   let h='<p class="sub">'+esc(line)+'</p>';
   h+='<h2>권능 <small style="font-size:13px;color:var(--muted)">'+pw.length+'개</small></h2>';
-  h+=pw.length?pw.map(id=>{ const P=POWERS[id],sk=skills(P.kit),g=pGrade(P.lv); return box(gBadge(g)+' 권능 · '+esc(P.name)+' <small class="lvs">'+(P.lv|0)+'단계</small>',esc(P.text)+(P.cd?'\n재사용 대기시간 '+P.cd+'초':'')+(sk.length?'\n붙는 스킬: '+sk.map(esc).join(' · '):''),GGC[g],id); }).join(''):'<p class="note">아직 가진 권능이 없다. 층을 넘으면 보상으로 고를 수 있다.</p>';
+  h+=pw.length?pw.map(id=>{ const P=POWERS[id],sk=skills(P.kit),g=pGrade(P.lv); return box(gBadge(g)+' 권능 · '+esc(P.name)+' <small class="tw-lv">'+(P.lv|0)+'단계</small>',esc(P.text)+(P.cd?'\n재사용 대기시간 '+P.cd+'초':'')+(sk.length?'\n붙는 스킬: '+sk.map(esc).join(' · '):''),GGC[g],id); }).join(''):'<p class="note">아직 가진 권능이 없다. 층을 넘으면 보상으로 고를 수 있다.</p>';
   h+='<h2>장비 <small style="font-size:13px;color:var(--muted)">'+gr.length+' / 3칸</small></h2>';
   h+=['w','a','t'].map(sl=>{ const g=gr.map(x=>GEAR[x]).find(G=>G.slot===sl); if(!g) return box(esc(GSLOT[sl])+' · 비어 있음','아직 끼지 않았다.','var(--line)');
     const P=POWERS['@'+g.id]||{},card=g.src==='카드'&&P.mods&&P.mods.atk; return box(gBadge(g.grade)+' '+esc(GSLOT[sl])+' · '+esc(g.name),esc(P.text||'')+(g.note?'\n'+esc(g.note):'')+(card?'\n등반에서는 기본 공격 증가가 절반만 든다(+'+Math.round(P.mods.atk*.5)+').':''),GGC[g.grade],'@'+g.id); }).join('');
