@@ -6,8 +6,8 @@
 { const st=document.createElement('style'); st.textContent='#revealv{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 112px);transform:translateX(-50%);z-index:60;pointer-events:none;background:rgba(9,13,28,.92);border:1px solid var(--gold);border-radius:14px;padding:10px 16px;min-width:min(360px,calc(100vw - 32px));max-width:calc(100vw - 32px);color:var(--ink);box-shadow:0 8px 30px rgba(0,0,0,.45);transition:opacity .4s}#revealv h4{margin:0 0 6px;font-size:12px;letter-spacing:.2em;color:var(--gold);text-align:center}#revealv .rv{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:start}#revealv .vs{color:var(--gold);font-weight:700;align-self:center}#revealv .sd{display:flex;flex-direction:column;gap:3px;min-width:0}#revealv .sd.r{text-align:right}#revealv .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#revealv .nm.mine{color:#7fe9ff}#revealv .rb{display:inline-block;font-size:10px;font-weight:600;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:0 5px;margin:0 4px;vertical-align:2px}#revealv .lb{font-size:11px;color:var(--muted)}body.pc #revealv{top:calc(env(safe-area-inset-top,0px) + 84px)}body.land #revealv{top:calc(env(safe-area-inset-top,0px) + 64px)}'; document.head.appendChild(st); }
 let RV={was:false,plan:null,t:0};
 /* 판을 열기 직전에 「무엇이 무작위였는지」 적어 둔다(시작 뒤에는 무작위 표시가 이미 풀려 있을 수 있어서) */
-{ const la13=launch; launch=function(){ const N=typeof TN==='function'?TN():1;
-    RV.plan={me:!!sel.meRnd,foe:!!sel.foeRnd&&!RAID(),al:Array.from({length:Math.max(0,N-1)},(_,i)=>!(sel.al&&sel.al[i])),fo:Array.from({length:Math.max(0,N-1)},(_,i)=>!(sel.fo&&sel.fo[i])),at:Date.now()};
+{ const la13=launch; launch=function(){ const N=typeof TN==='function'?TN():1,free=!NET.client&&!KEEP&&!(typeof TW!=='undefined'&&TW&&TW.on)&&!(typeof TUT!=='undefined'&&(TUT.on||TUT.active));   /* 1.9.11: 등반 · 이야기 · 오늘의 도전 · 첫 판 안내의 정해진 캐릭터는 무작위가 아니다 */
+    RV.plan={me:free&&!!sel.meRnd,foe:free&&!!sel.foeRnd&&!RAID(),al:Array.from({length:Math.max(0,N-1)},(_,i)=>free&&!(sel.al&&sel.al[i])),fo:Array.from({length:Math.max(0,N-1)},(_,i)=>free&&!(sel.fo&&sel.fo[i])),at:Date.now()};
     return la13.apply(this,arguments); }; }
 function revealShow(){ if(!running||!me) return; const old=$('revealv'); if(old) old.remove();
   const multi=!!(NET.host||NET.client), P=RV.plan&&Date.now()-RV.plan.at<15000?RV.plan:null;
@@ -15,7 +15,7 @@ function revealShow(){ if(!running||!me) return; const old=$('revealv'); if(old)
   const side=t=>tagOn?tagAll(t).filter(Boolean):ents.filter(o=>o.team===t&&CH[o.key]&&!o.summoned&&!o.mob&&o.hp>0);
   const myT=me.team, A=side(myT), B=side(1-myT); if(!A.length||!B.length) return;
   /* 무작위 표시: 내 캐릭터(손님은 내가 누른 무작위), 혼자 할 때 상대, 비워 둔 팀 칸 */
-  const rnd=new Set(); if(sel.meRnd||P&&P.me) rnd.add(me);
+  const rnd=new Set(); if(multi?(sel.meRnd&&!(NET.host&&typeof TW!=='undefined'&&TW&&TW.on)):(P&&P.me)) rnd.add(me);
   if(!multi&&P){ if(P.foe&&foe) rnd.add(foe); const mark=(L,flags,skip)=>{ let i=0; for(const o of L){ if(o===skip) continue; if(flags[i]) rnd.add(o); i++; } }; mark(A,P.al||[],me); mark(B,P.fo||[],foe); }
   if(multi) for(const o of A.concat(B)){ const p=o.pname&&NET.players.find(x=>x.name===o.pname); if(p&&p.rnd) rnd.add(o); }
   if(!multi&&!rnd.size) return;

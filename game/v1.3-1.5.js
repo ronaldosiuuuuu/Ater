@@ -38,7 +38,7 @@ const DONEHP=50,DONEATK=2,DONECD=.9;
 on('begin',()=>{ if(NET.client) return; for(const e of ents){ let want=false,keep=null;
     if(e===me){ want=e.key===sel.me&&!sel.meR&&isDone(e.key)&&canDone(e.key); if(want&&TW&&TW.on){ e.done=true; e.atk+=DONEATK; continue; } /* 등반은 최대 체력(twMax)에 이미 들어 있다 */ }
     else if(mode===7&&!practice&&e.team===0&&!e.net){ want=isDone(e.key)&&canDone(e.key); }
-    else if(e.net){ const p=NET.players.find(q=>q.pid===e.net.pid); want=!!(p&&p.done&&p.done===e.key&&canDone(e.key)); if(TW&&TW.on&&TW.php&&TW.php[e.net.pid]!=null) keep=TW.php[e.net.pid]; }
+    else if(e.net){ const p=NET.players.find(q=>q.pid===e.net.pid); want=!!(p&&p.done&&p.done===e.key&&canDone(e.key)); if(TW&&TW.on&&TW.php&&TW.php[twSeat(e)]!=null) keep=TW.php[twSeat(e)]; }
     if(!want) continue; e.done=true; e.max+=DONEHP; e.hp=keep==null?e.hp+DONEHP:Math.max(1,Math.min(e.max,keep)); e.atk+=DONEATK; } });
 on('cast',(e,slot)=>{ if(e.done&&slot!=='b'&&slot!=='crouch'&&e.cd[slot]>0) e.cd[slot]*=DONECD; });
 /* 들어온 사람: 고른 캐릭터가 완성인지 방장에게 알린다 */
@@ -112,8 +112,8 @@ function tagUi(){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰지 
    +'body.land #tagbar{top:calc(58px + env(safe-area-inset-top))}'; document.head.appendChild(st);
   document.addEventListener('keydown',e=>{ if(!TG||!running||over||paused) return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')) return; const i=e.code==='KeyQ'?0:e.code==='KeyE'?1:-1; if(i<0) return; const o=TG.bench[0][i]; if(!o||o.dead) return; const w=tagWhy(0); if(w){ toast('지금은 교대할 수 없다 · '+w,1400); return; } tagSwap(0,o); }); }
 /* 고르는 화면: 태그매치는 3대3 고정, 함께 하기에서는 못 한다 */
-{ let prevN=null,lastT=false; window.tagPrevReset=()=>{ prevN=null; }; const mn0=modeNote; modeNote=function(){ const tg=mode===7&&!practice; if(tg){ if(!lastT) prevN=teamN; teamN=3; } else if(lastT&&prevN!=null){ teamN=prevN; prevN=null; } lastT=tg; mn0(); $('size').style.display=mode===7&&!practice?'none':'';
-    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 싸우는 중에도 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 '+TAG.cd+'초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위. 친구와 함께: 편마다 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 나눠 맡는다(남는 칸은 그 편의 첫 사람).'; } };
+{ let prevN=null,lastT=false; window.tagPrevReset=()=>{ prevN=null; }; const mn0=modeNote; modeNote=function(){ const tg=mode===7&&!practice; if(!KEEP){ if(tg){ if(!lastT) prevN=teamN; teamN=3; } else if(lastT&&prevN!=null){ teamN=prevN; prevN=null; } lastT=tg; } else if(tg) teamN=3; mn0(); $('size').style.display=mode===7&&!practice?'none':'';
+    if(mode===7&&!practice){ $('size').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===3)); $('modenote').textContent='캐릭터 셋을 고른다(내 캐릭터 + 우리 팀 칸 둘). 경기장에는 한 명씩 나서고, 싸우는 중에도 대기 중인 캐릭터와 교대할 수 있다(재사용 대기시간 '+TAG.cd+'초, PC는 Q · E). 들어온 캐릭터는 1초 동안 피해를 받지 않고 스킬도 쓸 수 없다. 대기하는 캐릭터는 체력과 궁극기 조건을 그대로 지닌다. 셋이 모두 쓰러진 편이 진다. 보상은 쓰러뜨린 캐릭터 하나에 코인 '+TAG.pay+' × 컴퓨터 실력 배율(쉬움 '+DIFFPAY[0]+' · 보통 '+DIFFPAY[1]+' · 어려움 '+DIFFPAY[2]+')'+'. 우리 팀 칸은 가진 캐릭터만 고를 수 있고, 비워 두면 가진 캐릭터 가운데 무작위. 친구와 함께: 편마다 사람이 한 명이면 그 사람이 셋을 다 몰고, 여럿이면 한 명씩 나눠 맡는다(남는 칸은 그 편의 첫 사람).'; } };
   
   modeNote(); }
 /* 보상: 쓰러뜨린 캐릭터 수만큼 */

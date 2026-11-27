@@ -249,7 +249,7 @@ body.lefty.land #szone{left:auto;right:0}
 body.lefty:not(.land):not(.pc) #pad{grid-template-columns:1fr 128px}
 body.lefty:not(.land):not(.pc) #stick{order:2}
 body.lefty:not(.land):not(.pc) #szone{left:auto;right:0}
-#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:20;max-width:86vw;padding:9px 14px;border-radius:12px;background:rgba(23,32,71,.96);border:1px solid var(--gold);color:var(--ink);font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:59;max-width:86vw;padding:9px 14px;border-radius:12px;background:rgba(23,32,71,.96);border:1px solid var(--gold);color:var(--ink);font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 body.land #toast{bottom:16px}
 [hidden]{display:none!important}
@@ -614,6 +614,7 @@ body.xs .sk[data-s^="x"]{border-color:color-mix(in srgb,var(--kc) 38%,var(--line
 <script src="game/v1.9.8.js"></script>
 <script src="game/v1.9.9.js"></script>
 <script src="game/v1.9.10.js"></script>
+<script src="game/v1.9.11.js"></script>
 <script src="story2.js"></script>
 <script src="start.js"></script>
 </body>

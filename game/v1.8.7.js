@@ -82,7 +82,7 @@ function frDraw(){ const sec=document.querySelector('section[data-page="net"]');
 /* 설정: 친구 초대 받기 */
 SETTINGS.push({k:'frOn',name:'친구 초대 받기',opts:[[1,'켬'],[0,'끔']],note:'켜 두면 게임을 연 동안 친구의 초대를 기다린다(중계 서버로만 오간다). 끄면 초대가 오지 않는다.',apply:()=>{ if(OPT.frOn) frStart(); else frStop(); }});
 if(OPT.frOn===undefined) OPT.frOn=1;
-try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d&&d.OPT&&(d.OPT.frOn===0||d.OPT.frOn===1)) OPT.frOn=d.OPT.frOn; }catch(x){}
+try{ const d=SAVE1; if(d&&d.OPT&&(d.OPT.frOn===0||d.OPT.frOn===1)) OPT.frOn=d.OPT.frOn; }catch(x){}
 try{ drawOpts(); }catch(x){}
 setTimeout(frStart,1500);
 

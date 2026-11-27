@@ -82,7 +82,7 @@ RB('manannan',{name:'제살검제, 마나난',
    n1:{name:'제왕검',cd:8,r:3,cast(e){ const G2=foes(e).filter(t=>CH.manannan_r.gz(e,t)); S.arc(e,3,8,'제왕검'); after(.15,()=>{ if(!e.dead) S.circle(e,3,10,'제왕검',{v:'spin'}); }); if(G2.length) after(.3,()=>{ if(!e.dead) S.line(e,3,14,'제왕검 (관조)',{v:'cut'}); }); }},
    n2:{name:'암검',cd:12,ai:(e,d)=>d>2.5&&d<=6,cast(e){ const G2=foes(e).filter(t=>CH.manannan_r.gz(e,t)),dir=moveDir(e),p0=S.blink(e,dir,4),hit=S.seg(e,p0,{x:e.x,y:e.y},1.4,12,'암검',{v:'dash'}); if(hit.some(t=>G2.includes(t))) after(.15,()=>{ if(e.dead) return; const p1=S.blink(e,dir,6); S.seg(e,p1,{x:e.x,y:e.y},1.4,18,'암검 (관조)',{v:'dash'}); }); }},
    aw:{name:'인살의 검',cd:45,r:9,can:e=>!!tgt(e,10),need:'10칸 안의 적',cast(e){ const t=tgt(e,10); S.leap(e,norm(t.x-e.x,t.y-e.y),Math.min(8,Math.max(0,dist(e,t)-1.5)),30,()=>{ if(t.dead) return; air(t,7); after(.3,()=>{ if(e.dead||t.dead) return; near(e,t); e.z=t.z; e.vz=t.vz;
-        add(t,'silence',1.25,0,{by:e,end:()=>{ if(e.dead||t.dead) return; const n=e.r.sim; damage(e,t,6*n,'인살의 검 (6 x 심검)',{skill:true}); if(n>=5&&!t.dead) damage(e,t,20,'인살의 검 (마무리)',{skill:true}); if(n>=10) e.cd.aw=Math.max(0,e.cd.aw-15); if(n>=20){ e.r.sim=0; if(!t.dead&&t.hp<=t.max*.2) damage(e,t,t.hp+999,'인살의 검 (처형)',{fixed:true,amp:true}); } }}); }); },true); }}
+        add(t,'silence',1.25,0,{by:e,end:()=>{ if(e.dead||t.dead) return; const n=e.r.sim; damage(e,t,6*n,'인살의 검 (6 x 심검)',{skill:true}); if(n>=5&&!t.dead) damage(e,t,20,'인살의 검 (마무리)',{skill:true}); if(n>=10) e.cd.aw=Math.max(0,e.cd.aw-15); if(n>=20){ e.r.sim=0; if(!t.dead&&t.hp<=t.max*.2) damage(e,t,t.hp+1,'인살의 검 (처형)',{fixed:true,amp:true}); } }}); }); },true); }}
   },note:'7칸 안의 적이 스킬을 쓰면 0.5초 동안 관조한다. 관조 한 번에 심검은 한 번만 쌓인다.'});
 RB('nertina',{name:'신궁, 네르티나',
   init:e=>{e.r={ar:0,acc:0,sg:0,ys:0}}, hud:e=>'화살 '+e.r.ar+'/12'+(e.r.sg>now?' · 신궁 · 영사 '+e.r.ys:''),
@@ -208,7 +208,7 @@ RB('mor',{name:'밤하늘 군주, 모르',
 RB('irenio',{name:'맹약의 대재판관, 이레니오',
   init:e=>{e.r={am:0,h:0,ak:0,pan:0,spent:0,l1:-99}}, hud:e=>'탄환 '+e.r.am+'/6'+(e.r.ak>now?' · 악도':'')+(e.r.pan>now?' · 판결':''),
   load(e){ if(e.r.am<6){ e.r.am=Math.min(6,e.r.am+2); proc(e,'맹약','탄환 +2'); } },
-  bullet(e,dir,home,exec){ const A=e.r.ak>now; S.proj(e,dir,{speed:30,range:16,dmg:16+(A?8:0),label:'맹약',v:'bullet',home,z:home?home.z:e.z,o:{air:A?.5:0,post:t=>{ if(exec&&!t.dead&&t.hp<t.max*.15){ damage(e,t,t.hp+999,'징멸 선고 (처형)',{fixed:true,amp:true}); if(t.dead) foes(e).filter(aired).forEach(x=>CH.irenio_r.bullet(e,norm(x.x-e.x,x.y-e.y),x,true)); } }}}); },
+  bullet(e,dir,home,exec){ const A=e.r.ak>now; S.proj(e,dir,{speed:30,range:16,dmg:16+(A?8:0),label:'맹약',v:'bullet',home,z:home?home.z:e.z,o:{air:A?.5:0,post:t=>{ if(exec&&!t.dead&&t.hp<t.max*.15){ damage(e,t,t.hp+1,'징멸 선고 (처형)',{fixed:true,amp:true}); if(t.dead) foes(e).filter(aired).forEach(x=>CH.irenio_r.bullet(e,norm(x.x-e.x,x.y-e.y),x,true)); } }}}); },
   shoot(e,n){ for(let i=0;i<n*(e.r.ak>now?2:1);i++) after(i*.1,()=>{ if(!e.dead) CH.irenio_r.bullet(e,e.aim); }); },
   onDeal(e,t,amt,label,o){ if(o&&o.amp) return; if(++e.r.h%3===0) CH.irenio_r.load(e); },
   onCast(e,s){ if(s!=='n1'&&s!=='n2') return; if(e.r.am>=1){ e.r.am--; e.x-=e.aim.x; e.y-=e.aim.y; clamp(e); CH.irenio_r.shoot(e,1); } },

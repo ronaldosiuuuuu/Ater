@@ -8,12 +8,13 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.9.10';
+const VER='1.9.11';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
-{ const N=v=>{ v=+v; return Number.isFinite(v)?Math.max(0,v):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
+{ const N=v=>{ v=+v; return Number.isFinite(v)?Math.min(1e9,Math.max(0,v)):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
   for(const k of ['w','l','streak','dstreak','dwin','coin','star','xp','pity']) if(k in PF) PF[k]=N(PF[k]);
-  for(const k of ['shard','dup','mon']) if(k in PF) PF[k]=NM(PF[k]);
+  for(const k of ['shard','dup','mon']) if(k in PF) PF[k]=NM(PF[k]); if(PF.shard) for(const k of Object.keys(PF.shard)) PF.shard[k]=Math.min(PF.shard[k],1e4);
+  /* 1.9.11 임무 목록: 꼴이 깨졌으면 다시 뽑게 지운다 */ if('ms' in PF){ const M=O(PF.ms),ok=L=>Array.isArray(L)&&L.every(m=>m&&typeof m==='object'&&!Array.isArray(m)); for(const [l,d] of [['dl','d'],['wl','w']]) if(l in M&&!ok(M[l])){ delete M[l]; delete M[d]; } for(const l of ['dl','wl']) if(Array.isArray(M[l])) M[l].forEach(m=>{ for(const k of ['p','n','coin','star']) m[k]=N(m[k]); for(const k of ['t','txt','cls']) if(k in m) m[k]=String(m[k]).slice(0,80); m.c=!!m.c; }); PF.ms=M; }
   /* cnt 안의 cls(직업별 승리 수)는 표다. 숫자로 덮으면 손님 승리 때 멈췄다(1.9.4) */
   if('cnt' in PF){ const c=O(PF.cnt); for(const k of Object.keys(c)) c[k]=k==='cls'?NM(c[k]):N(c[k]); PF.cnt=c; }
   for(const k of ['own','re','ach','achPaid','codes','done','rf','beat','daily','ms']) if(k in PF) PF[k]=O(PF[k]);
@@ -24,7 +25,9 @@ const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||
   if(PF.daily.d!==undefined&&typeof PF.daily.d!=='string') PF.daily.d='';
   for(const k of ['open','palace']) if(k in PF) PF[k]=k==='open'?!!PF[k]:(PF[k]?1:0); }
 for(const k of ['ei','vira']) PF.own[k]=PF.own[k]||1;
-const pfSave=()=>{ for(const k of ['coin','star']) if(!Number.isFinite(PF[k])||PF[k]<0) PF[k]=0; try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };   /* 코인 · 별무리가 수가 아니거나 0보다 작으면 0으로 */
+/* 1.9.11: 기록을 지우는 중이거나 다른 창이 더 새 진행을 저장했으면 이 창은 저장하지 않는다(game/v1.9.11.js) */
+let PFLOCK=false;
+const pfSave=()=>{ if(PFLOCK) return; for(const k of ['coin','star']) if(!Number.isFinite(PF[k])||PF[k]<0) PF[k]=0; try{ localStorage.setItem('aetherProfile',JSON.stringify(PF)); }catch(x){} };   /* 코인 · 별무리가 수가 아니거나 0보다 작으면 0으로 */
 const baseKey=k=>CH[k]&&CH[k].re?CH[k].base:k;
 const stars=k=>{ const w=(PF.ch[k]||{}).w||0; return w>=15?3:w>=5?2:w>=1?1:0; };
 function mastery(k){ const n=stars(k); return n?' <span style="color:#e3c377;letter-spacing:1px" title="숙련">'+'★'.repeat(n)+'</span>':''; }
@@ -162,7 +165,7 @@ const twLoad=()=>{ try{ const d=JSON.parse(localStorage.getItem('aetherTower')||
   for(const m of ['php','pmax']){ const p=d[m]&&typeof d[m]==='object'?d[m]:{},q={}; for(const k of Object.keys(p)) if(Number.isFinite(+p[k])&&+p[k]>0) q[k]=+p[k]; d[m]=q; } if(d.rank!==undefined&&!['S','A','B','C',''].includes(d.rank)) d.rank='';
   d.pw=(Array.isArray(d.pw)?d.pw:[]).filter(id=>typeof id==='string'&&hasK(POWERS,id)); d.picks=(Array.isArray(d.picks)?d.picks:[]).map(x=>String(x).slice(0,60)); if(d.gear&&typeof d.gear!=='object') d.gear={};
   if(Array.isArray(d.shop)) d.shop=d.shop.filter(x=>x&&typeof x==='object').map(x=>Object.assign(x,{price:N(x.price)})); else if(d.shop) d.shop=null;
-  return Object.assign({gold:0,rewN:0,gear:{}},d,{on:false}); }catch(x){ return null; } };
+  delete d.fin; delete d.lostView; return Object.assign({gold:0,rewN:0,gear:{}},d,{on:false}); }catch(x){ return null; } };
 const twStore=()=>{ try{ if(TW) localStorage.setItem('aetherTower',JSON.stringify(TW)); else localStorage.removeItem('aetherTower'); }catch(x){} };
 const isBoss=f=>f%5===0, twMax=()=>CH[TW.key].hp+TW.hpB+statOf(twIds()).hp+(typeof isDone==='function'&&isDone(TW.key)&&canDone(TW.key)?50:0), rnd=a=>a[Math.floor(Math.random()*a.length)];
 function twPool(gr){ return Object.keys(CH).filter(k=>{ const c=CH[k]; return !c.re&&!c.built&&!c.custom&&!c.mon&&gr.includes(c.grade)&&k!==TW.key&&k!==(TW.last||''); }); }
@@ -174,8 +177,8 @@ function towerFoe(f,up){ if(isBoss(f)){ const i=f/5,B=typeof TBOSS!=='undefined'
 function towerHorde(f){ if(typeof MOBS==='undefined') return null; const T=Math.min(5,1+Math.floor((f-1)/TWB.horde.step)),pool=MOBS.filter(m=>m[2]<=T&&m[2]>=T-1).map(m=>m[0]),n=twBand(TWB.horde.n,f),L=[]; for(let i=0;i<n;i++) L.push(rnd(pool)); return {t:'fight',k:L[0],horde:L.slice(1)}; }
 function genFork(){ const f=TW.floor; if(isBoss(f)){ TW.next=towerFoe(f); TW.fork=null; return; } const L=[towerFoe(f)]; const hard=Math.random()<TWB.path.hard?Object.assign(towerFoe(f,true),{elite:true}):Object.assign(towerFoe(f),{curse:rnd(Object.keys(CURSES))}); L.push(hard); { const hd=towerHorde(f); if(hd) L.push(hd); }
   if(!TW.rested&&Math.random()<TWB.path.side) L.push({t:Math.random()<TWB.path.rest||TW.gold<TWB.path.restGold?'rest':'shop'}); TW.fork=L; TW.next=null; }
-function towerStart(resume){ if(NET.client) return toast('함께 오르는 등반은 방장이 시작한다'); if(!resume){ const k=kOf('me'); if(CH[k].mon) return; if(CH[k].custom||CH[k].built) return toast('조합 · 카드로 만든 캐릭터로는 등반할 수 없다',3000); if(locked(k)) return toast('내 캐릭터가 아직 잠겨 있다 · '+lockWhy(k),3000); TW={best0:PF.tw.best,key:k,floor:1,pw:[],hpB:0,atkB:0,hp:null,t:0,last:'',picks:[],gold:0,rewN:0,gear:{},php:{}}; TW.next=towerFoe(1); PF.tw.runs++; pfSave(); twStore(); } else TW=twLoad(); if(!TW) return; towerScreen(); }
-function towerGo(){ if(!TW||TW.on||!TW.next) return; const n=TW.next,N=coopN(); if(N>1){ NET.players.forEach(p=>{ p.team=0; }); lobbyOut(); }
+function towerStart(resume){ if(NET.client) return toast('함께 오르는 등반은 방장이 시작한다'); if(NET.host&&NET.players.length>5) return toast('함께 등반은 5명까지 할 수 있다 · 지금 방에 '+NET.players.length+'명',3200); if(!resume){ const k=kOf('me'); if(CH[k].mon) return; if(CH[k].custom||CH[k].built) return toast('조합 · 카드로 만든 캐릭터로는 등반할 수 없다',3000); if(locked(k)) return toast('내 캐릭터가 아직 잠겨 있다 · '+lockWhy(k),3000); TW={best0:PF.tw.best,key:k,floor:1,pw:[],hpB:0,atkB:0,hp:null,t:0,last:'',picks:[],gold:0,rewN:0,gear:{},php:{}}; TW.next=towerFoe(1); PF.tw.runs++; pfSave(); twStore(); } else { TW=twLoad(); if(TW&&!PF.open&&locked(TW.key)&&!(typeof NET!=='undefined'&&(NET.host||NET.client)&&NET.temp&&NET.temp.includes(TW.key))){ const k=TW.key; TW=null; return toast('이 등반의 캐릭터를 지금은 쓸 수 없다 · '+lockWhy(k),3200); } } if(!TW) return; towerScreen(); }
+function towerGo(){ if(!TW||TW.on||!TW.next) return; if(NET.host&&NET.players.length>5) return toast('함께 등반은 5명까지 할 수 있다 · 지금 방에 '+NET.players.length+'명',3200); const n=TW.next,N=coopN(); if(N>1){ NET.players.forEach(p=>{ p.team=0; }); lobbyOut(); }
   setup({me:TW.key,foe:n.boss?null:n.k,mon:n.boss?n.k:null,mode:n.boss?6:1,teamN:N,fo:N>1&&!n.boss?Array.from({length:N-1},()=>towerFoe(TW.floor).k):[],diff:n.elite?2:twDiff(TW.floor)}); TW.on=true; $('tower').hidden=true; launch(); }
 on('begin',()=>{ if(!TW||!TW.on) return; const f=TW.floor,n=TW.next; { const ids=twIds(); me.c=empower(me.c,ids,twAtk()); } me.atk=me.c.atk; me.r=me.r||{}; me.r._w={}; for(const id of twIds()){ const P=me.r._w[id]={cdT:0}; if(POWERS[id].init) POWERS[id].init(P); } kitInit(me,twIds()); uiBegin();
   me.max=twMax(); me.hp=Math.max(1,Math.min(me.max,TW.hp==null?me.max:TW.hp));
@@ -207,7 +210,10 @@ const head=(small,h1,p)=>'<header class="brand" style="padding-top:10px"><small>
 const card=(attr,title,body,col)=>'<button type="button" class="bcard" '+attr+' style="display:block;width:100%;text-align:left;color:var(--ink);font:inherit;border-left-color:'+(col||'var(--gold)')+'"><b>'+title+'</b><p class="note">'+body+'</p></button>';
 /* 보상 · 상인 칸 제목: 등급 딱지 + 이름. 딱지 뒤의 빈칸은 함께 등반 손님 화면(글만 받는다)에서 딱지를 다시 그릴 때 쓴다 */
 const rwTitle=r=>r.t==='gear'?gBadge(GEAR[r.id].grade)+' '+GSLOT[GEAR[r.id].slot]+' · '+esc(GEAR[r.id].name):r.t==='pw'?gBadge(pGrade(POWERS[r.id].lv))+' 권능 · '+esc(POWERS[r.id].name)+' <small class="tw-lv">'+POWERS[r.id].lv+'단계</small>':esc(BOONS[r.id].name);
-const rwBody=r=>{ if(r.t==='gear'){ const G=GEAR[r.id],cur=GEAR[TW.gear[G.slot]]; return esc(POWERS['@'+r.id].text)+(G.note?'\n'+esc(G.note):'')+(cur?'\n지금 낀 '+esc(cur.name)+' ('+cur.grade+')과 바뀐다.':''); } const d=r.t==='pw'?POWERS[r.id]:BOONS[r.id]; return esc(d.text)+(d.cd?'\n재사용 대기시간 '+d.cd+'초':''); };
+/* 1.9.11: 빈 스킬 칸(5~8번)이 없는 캐릭터에게는 무기 · 권능 스킬이 붙지 않는다고 알린다 */
+const twKitFree=k=>['x1','x2','x3','x4'].filter(s=>!((CH[k]||{}).skills||{})[s]).length;
+const twKitNote=id=>POWERS[id]&&POWERS[id].kit&&TW&&twKitFree(TW.key)===0?'\n이 캐릭터는 빈 스킬 칸이 없어 스킬이 붙지 않는다.':'';
+const rwBody=r=>{ if(r.t==='gear'){ const G=GEAR[r.id],cur=GEAR[TW.gear[G.slot]]; return esc(POWERS['@'+r.id].text)+(G.note?'\n'+esc(G.note):'')+twKitNote('@'+r.id)+(cur?'\n지금 낀 '+esc(cur.name)+' ('+cur.grade+')과 바뀐다.':''); } const d=r.t==='pw'?POWERS[r.id]:BOONS[r.id]; return esc(d.text)+(d.cd?'\n재사용 대기시간 '+d.cd+'초':'')+(r.t==='pw'?twKitNote(r.id):''); };
 const rwCol=r=>r.t==='gear'?GGC[GEAR[r.id].grade]:r.t==='pw'?GGC[pGrade(POWERS[r.id].lv)]:'var(--aether)';
 const foeLine=n=>{ const c=CH[n.k]; if(n.horde){ const cnt={}; [n.k].concat(n.horde).forEach(k=>{ const nm=CH[k].name.split(', ')[1]; cnt[nm]=(cnt[nm]||0)+1; }); return '적 무리 · '+Object.keys(cnt).map(k=>esc(k)+(cnt[k]>1?' ×'+cnt[k]:'')).join(', '); } return (n.boss?'보스 몬스터 · ':n.lord?'마왕 · ':c.grade+' '+c.cls+' · ')+esc(c.name); };
 function towerScreen(lost){ const el=$('tw-body'); let h='';
@@ -217,10 +223,15 @@ function towerScreen(lost){ const el=$('tw-body'); let h='';
   else if(TW.fork){ h=head('TOWER',TW.floor+'층으로 가는 길','길을 하나 고른다')+twLine()+TW.fork.map((n,i)=>n.t==='rest'?card('data-path="'+i+'"','쉼터','싸우지 않고 체력을 '+Math.round(TWB.heal.rest*100)+'% 되찾는다. 그 뒤 다시 길을 고른다.','var(--ok)'):n.t==='shop'?card('data-path="'+i+'"','상인','증표로 권능 · 장비 · 단련을 산다. 그 뒤 다시 길을 고른다.','var(--ok)'):n.elite?card('data-path="'+i+'"','험한 길 · 정예',foeLine(n)+'\n상대 체력 ×'+TWB.elite.hp+', 주는 피해 +'+Math.round((TWB.elite.dmg-1)*100)+'%, 난이도 어려움. 이기면 보상을 두 번 고르고 증표를 더 받는다.','var(--foe)'):n.curse?card('data-path="'+i+'"','저주받은 길 · '+CURSES[n.curse].name,foeLine(n)+'\n'+CURSES[n.curse].text+' 이기면 권능 보상이 둘 나오고(장비는 한 등급 위) 증표를 더 받는다.','#b48cff'):n.horde?card('data-path="'+i+'"','무리의 길',foeLine(n)+'\n약한 적 여럿과 한꺼번에 싸운다. 모두 쓰러뜨려야 한다.','#8fd0a0'):card('data-path="'+i+'"','평범한 길',foeLine(n),'var(--aether)')).join(''); }
   else { const n=TW.next,c=CH[n.k]; h=head('TOWER',TW.floor+'층',foeLine(n))+twLine()+'<p class="note">'+(n.boss?'5분 안에 쓰러뜨려야 한다. ':n.lord?'마왕은 체력이 '+TWB.lordHp+'배다. ':'')+(n.elite?'정예: 체력 ×'+TWB.elite.hp+', 주는 피해 +'+Math.round((TWB.elite.dmg-1)*100)+'%. ':'')+(n.curse?CURSES[n.curse].name+': '+CURSES[n.curse].text+' ':'')+'난이도 '+['쉬움','보통','어려움'][n.elite?2:twDiff(TW.floor)]+(twStatTxt(TW.floor)?' · '+twStatTxt(TW.floor):'')+'. 지면 등반이 끝난다.</p><div class="dock"><button class="go" id="tw-go" type="button">올라간다</button><button class="ghost" id="tw-info" type="button">상대 스킬 보기</button><button class="ghost" id="tw-out" type="button">쉬었다 가기 (저장됨)</button></div>'; }
   el.innerHTML=h; $('tower').hidden=false; $('tower').scrollTop=0; }
-function towerEnd(w){ TW.t+=over.t; const n=TW.next;
-  if(w.team===0){ sfx('win'); TW.rank=rankOf(); const mx=me.max; TW.hp=Math.max(1,me.hp); if(n.curse!=='dry') TW.hp=Math.min(mx,TW.hp+Math.round(mx*TWB.heal.win)); TW.last=n.k; const f=TW.floor,big=n.boss||n.lord,G=TWB.gold; TW.gold+=G.win+(TW.rank==='S'?G.s:0)+(n.elite||n.curse?G.hard:0)+(n.horde?G.horde:0)+(big?G.big:0); if(f>PF.tw.best){ PF.tw.best=f; PF.tw.key=TW.key; } pfSave(); achCheck({});
-    TW.floor++; TW.rested=false; TW.next=null; TW.rewPw=!!(big||n.curse); TW.rewN=n.elite?2:1; TW.rew=rollRewards(TW.rewPw); TW.on=false; keepBack(); twStore(); $('sel').hidden=false; over=null; towerScreen(); }
-  else { sfx('lose'); const lost=Object.assign({},TW,{rec:TW.floor-1>0&&TW.floor-1>(TW.best0==null?PF.tw.best-1:TW.best0)}); TW=null; keepBack(); twStore(); $('sel').hidden=false; over=null; towerScreen(lost); } }
+/* 1.9.11: 등반 결과는 판이 끝나는 순간(game/v1.9.11.js의 'end')에 twSettle로 확정해 저장한다. 0.9초 뒤의 towerEnd는 화면만 그린다
+   (예전에는 그 사이에 앱을 닫으면 코인만 받고 층은 그대로 남았다). twSettle은 한 판에 한 번만 돈다(TW.fin) */
+function twSettle(w){ if(!TW||!TW.on||TW.fin) return; TW.t+=over?over.t:0; const n=TW.next;
+  if(w.team===0){ TW.rank=rankOf(); const mx=me.max; TW.hp=Math.max(1,me.hp); if(n.curse!=='dry') TW.hp=Math.min(mx,TW.hp+Math.round(mx*TWB.heal.win)); TW.last=n.k; const f=TW.floor,big=n.boss||n.lord,G=TWB.gold; TW.gold+=G.win+(TW.rank==='S'?G.s:0)+(n.elite||n.curse?G.hard:0)+(n.horde?G.horde:0)+(big?G.big:0); if(f>PF.tw.best){ PF.tw.best=f; PF.tw.key=TW.key; } pfSave(); achCheck({});
+    TW.floor++; TW.rested=false; TW.next=null; TW.rewPw=!!(big||n.curse); TW.rewN=n.elite?2:1; TW.rew=rollRewards(TW.rewPw); twStore(); TW.fin='win'; }
+  else { TW.lostView=Object.assign({},TW,{rec:TW.floor-1>0&&TW.floor-1>(TW.best0==null?PF.tw.best-1:TW.best0)}); try{ localStorage.removeItem('aetherTower'); }catch(x){} TW.fin='lose'; } }
+function towerEnd(w){ twSettle(w); const fin=TW.fin; delete TW.fin;
+  if(fin==='win'){ sfx('win'); TW.on=false; keepBack(); twStore(); $('sel').hidden=false; over=null; towerScreen(); }
+  else { sfx('lose'); const lost=TW.lostView; delete lost.lostView; delete lost.fin; TW=null; keepBack(); twStore(); $('sel').hidden=false; over=null; towerScreen(lost); } }
 
 /* ───── 이야기: 정리본에 적힌 싸움을 차례로 겨룬다. 사이의 글은 정리본 문장을 옮긴 것이다 ───── */
 const STORY=[
@@ -287,7 +298,7 @@ function drawRec(){ const el=$('rec'); if(!el) return; const tot=PF.w+PF.l,L=Obj
    +'<h2>숙련</h2>'+(L.length?L.map(([k,c])=>'<div class="pl"><b>'+esc(CH[k].name.split(', ')[1])+mastery(k)+'</b><span style="color:var(--muted)">'+c.w+'승 '+c.l+'패</span></div>').join('')+'<p class="note">★ 1승 · ★★ 5승 · ★★★ 15승. 캐릭터 고르는 칸에도 뜬다.</p>':'<p class="sub">아직 싸운 기록이 없다.</p>')
    +'<h2>업적 '+got+' / '+ACH.length+'</h2>'+ACH.map(a=>'<div class="pl" style="border-left-color:'+(PF.ach[a[0]]?'var(--gold)':'var(--line)')+';opacity:'+(PF.ach[a[0]]?1:.55)+'"><b>'+(PF.ach[a[0]]?'◆ ':'◇ ')+a[1]+'</b><span style="color:var(--muted)">'+a[2]+'</span></div>').join('')
    +'<button class="ghost" id="rec-reset" type="button" style="margin-top:14px">기록 모두 지우기</button>'; }
-{ let armed=0; document.addEventListener('click',e=>{ if(!e.target.closest('#rec-reset')) return; const t=performance.now(); if(t-armed>2600){ armed=t; toast('한 번 더 누르면 기록을 모두 지운다'); return; } armed=0; Object.assign(PF,{w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,beat:{},own:{ei:1,vira:1},re:{},coin:1500,star:0}); pfSave(); drawRec(); hubCard(); drawSel(); });
+{ document.addEventListener('click',e=>{ if(e.target.closest('#rec-reset')) resetAsk(); });   /* 1.9.11: 닉네임을 적어야 지워지는 확인 창(game/v1.9.11.js) */
   const gp0=goPage; goPage=function(p){ gp0(p); if(p==='rec') drawRec(); if(p==='play') hubCard(); if(p==='chars') drawSel(); }; }
 hubCard();
 

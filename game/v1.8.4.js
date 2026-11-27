@@ -11,7 +11,9 @@
       const hs=d.hs&&typeof d.hs==='object'?d.hs:null; d.hs=hs?{sum:cleanText(hs.sum,200),m:num(hs.m,0,9,0)|0,n:num(hs.n,1,6,1)|0,mon:cleanText(hs.mon,40)}:undefined; },
     start(d){ d.mode=num(d.mode,0,9,1)|0; d.teamN=num(d.teamN,1,6,1)|0; if(!hasK(MAPS,d.map)) d.map='basic'; d.team=d.team===1?1:0; if('diff' in d) d.diff=num(d.diff,0,9,1); if('mon' in d) d.mon=(okKey(d.mon)||hasK(CH,d.mon)&&CH[d.mon].mon)?d.mon:''; if('cap' in d) d.cap=num(d.cap,1,99999,100); if('kit' in d) if('kit' in d) d.kit=arr(d.kit,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)); },
     s(d){ for(const k of ['e','p','f','z','w','fl','ft']) d[k]=Array.isArray(d[k])?d[k].filter(x=>x&&typeof x==='object'):[]; d.n=num(d.n,0,1e7,0);
-      for(const k of ['sc','cp']) d[k]=Array.isArray(d[k])?[num(d[k][0],0,1e6,0),num(d[k][1],0,1e6,0)]:[0,0]; d.ch=Array.isArray(d.ch)?[num(d.ch[0],0,1e7,0),cleanText(d.ch[1],40)]:[0,'']; },
+      for(const k of ['sc','cp']) d[k]=Array.isArray(d[k])?[num(d[k][0],0,1e6,0),num(d[k][1],0,1e6,0)]:[0,0]; d.ch=Array.isArray(d.ch)?[num(d.ch[0],0,1e7,0),cleanText(d.ch[1],40)]:[0,''];
+      /* 1.9.11 태그매치 상태: 정해진 꼴(편마다 두 칸)만 남긴다 */ if('tg' in d){ const t=d.tg; if(!t||typeof t!=='object'||Array.isArray(t)) delete d.tg; else { const two=(v,f)=>{ const a=Array.isArray(v)?v:[]; return [f(a[0]),f(a[1])]; },n0=v=>num(v,0,1e9,0)|0;
+        d.tg={a:two(t.a,n0),ao:two(t.ao,v=>pidOk(v)||v==='host'||v==='ai'?v:''),b:two(t.b,v=>arr(v,8).filter(Array.isArray).map(x=>[n0(x[0]),hasK(CH,x[1])?x[1]:'',num(x[2],0,1e7,0),num(x[3],1,1e7,1),!!x[4],cleanText(x[5],64)])),w:two(t.w,v=>cleanText(v,80)),p:two(t.p,n0),ad:two(t.ad,v=>!!v),k:two(t.k,v=>num(v,0,99,0)|0)}; } } },
     chat(d){ d.name=cleanName(d.name)||'손님'; d.text=cleanText(d.text,80); d.team=d.team===1?1:0; d.pid=pidOk(d.pid)?d.pid:''; },
     pz(d){ d.name=cleanName(d.name); d.who=pidOk(d.who)?d.who:'host'; d.on=!!d.on; d.host=!!d.host; },
     bye(d){ d.why=cleanText(d.why,140); },
