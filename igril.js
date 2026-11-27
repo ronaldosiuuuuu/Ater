@@ -18,12 +18,11 @@ CH.igril={name:'염세의 진룡, 이그릴',cls:'전사',grade:'전설',range:2
     if(e.r.st>now){ if(!e.r.stHit){ e.r.stHit=true; CH.igril.gain(e); after(.02,()=>{ if(!e.dead) S.arc(e,4,12,'위검',{air:3,v:'slash',el:'fire'}); }); } return amt*.2; }
     return amt; },
   onDeal(e,t,amt,label,o){ if(o&&o.amp) return; if(e.r.zone>now&&e.r.zc&&!t.dead&&Math.hypot(t.x-e.r.zc.x,t.y-e.r.zc.y)<=10+(t.rad||R)&&CH.igril.burning(e,t)){ damage(e,t,4,'염세',{amp:true}); CH.igril.gain(e); } },
-  speedMod:e=>e.r.ywang>now?1.2:1,
   /* 역린을 쓴 다음 기본 공격: 타오르는 참격 */
   altBasic(e){ if(!e.r.nx) return false; if(e.cd.b>0) return true; e.cd.b=CFG.atkInt; e.r.nx=false; e.swingT=now; swingSnd(e); S.arc(e,4,20,'진룡(염)',{basic:true,v:'slash',el:'fire',post:t=>CH.igril.burn(e,t,3)}); return true; },
   dive(e,id){ if(e.dead||e.r.uid!==id) return; const t=tgt(e,8),p=t?{x:t.x,y:t.y}:{x:e.x+e.aim.x*4,y:e.y+e.aim.y*4}; e.x=p.x; e.y=p.y; clamp(e); e.z=0; e.vz=0; e.r.up=0; shake=Math.max(shake,.25);
     const n=e.r.yl; e.r.yl=0; const per=(30+n*10)/4; let ok=false;
-    for(let i=0;i<4;i++) after(i*.08,()=>{ if(e.dead) return; S.circle(e,2,per,'열도 일합',{zfree:true,v:'quake',el:'fire',post:x=>{ if(i===0){ if(CH.igril.burning(e,x)) ok=true; x.chant=0; x.busy=Math.min(x.busy||0,now); if(x.dash) x.dash=null; add(x,'silence',1,0,{by:e}); } }}); if(i===0&&ok&&!e.ultUsed){ e.r.ultOk=true; proc(e,'염세 전역','시전 가능'); } }); },
+    for(let i=0;i<4;i++) after(i*.08,()=>{ if(e.dead) return; S.circle(e,2,per,'열도 일합',{zfree:true,v:'quake',el:'fire',post:x=>{ if(i===0){ if(CH.igril.burning(e,x)) ok=true; x.chant=0; if(x.dash) x.dash=null; add(x,'silence',1,0,{by:e}); } }}); if(i===0&&ok&&!e.ultUsed){ e.r.ultOk=true; proc(e,'염세 전역','시전 가능'); } }); },
   skills:{
    n1:{name:'위검',cd:12,r:4,cast(e){ S.arc(e,4,8,'위검',{v:'slash',el:'fire',post:t=>CH.igril.burn(e,t,2)}); e.r.st=now+.5; e.r.stHit=false; }},
    n2:{name:'염린',cd:16,r:5,cast(e){ S.leap(e,e.aim,3,24,()=>{ e.r.nul=now+1; },true); }},

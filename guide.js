@@ -11,7 +11,7 @@ function guideHtml(key){ const c=CH[key],card=parseCard(CARDTEXT[key]||''),P=car
 /* 연습의 할 일 목록 */
 const GD={on:false,tasks:[],doneT:0,key:''};
 const gdDone=()=>{ try{ return JSON.parse(localStorage.getItem('aetherGuide')||'[]'); }catch(x){ return []; } };
-on('begin',()=>{ GD.on=false; if(!practice||!OPT.guide||NET.client||!me) return; const bk=me.c.re?me.c.base:me.key; if(OPT.guide===1&&gdDone().includes(me.key)) return; GD.key=me.key; GD.doneT=0; const T=[]; if(!(me.c.altBasic&&me.c.altBasic(me)===true&&!me.c.skills.b)) T.push({id:'b',t:'기본 공격 맞히기'});
+on('begin',()=>{ GD.on=false; if(!practice||!OPT.guide||NET.client||!me) return; const bk=me.c.re?me.c.base:me.key; if(OPT.guide===1&&gdDone().includes(me.key)) return; GD.key=me.key; GD.doneT=0; const T=[]; { /* 1.9.11: 알아보기만 한다(재사용 대기 중이면 모든 altBasic이 공격 없이 true를 돌려준다) */ const cb=me.cd.b; me.cd.b=1; let alt=false; try{ alt=!!(me.c.altBasic&&me.c.altBasic(me)===true); }finally{ me.cd.b=cb; } if(!(alt&&!me.c.skills.b)) T.push({id:'b',t:'기본 공격 맞히기'}); }
   for(const s of ['n1','n2','aw','crouch','x1','x2','x3','x4']){ const k=me.c.skills[s]; if(!k||(s==='crouch'&&k.name==='호너')) continue; T.push({id:s,t:BTN[s]+' · '+k.name+(k.need?' ('+k.need+')':'')}); }
   if(me.c.skills.ult) T.push({id:'ult',t:'궁극 · '+me.c.skills.ult.name+(me.c.skills.ult.need?' ('+me.c.skills.ult.need+')':'')}); GD.tasks=T; GD.on=T.length>0; });
 function gdMark(id){ if(!GD.on) return; const t=GD.tasks.find(x=>x.id===id&&!x.ok); if(!t) return; t.ok=now; if(GD.tasks.every(x=>x.ok)){ GD.doneT=now; try{ const L=gdDone(); if(!L.includes(GD.key)){ L.push(GD.key); localStorage.setItem('aetherGuide',JSON.stringify(L.slice(-300))); } }catch(x){} toast('길잡이를 다 마쳤다',2600); } }

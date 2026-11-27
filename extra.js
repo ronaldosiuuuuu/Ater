@@ -107,7 +107,7 @@ kivi:{name:'전쟁의 효시, 키비',cls:'암살자',grade:'전설',range:1.4,
    aw:{name:'사살 추섬',cd:30,r:10,cast(e){ add(e,'haste',5,.25); e.cd.n1=0; e.cd.n2=0; e.r.sa=now+5; }},
    ult:{name:'금살 귀천무',cd:0,r:18,can:()=>false,need:'자동 시전: 절단 7회 맞힌 적에게 연결 중 간계 적중',ai:()=>false,cast(e){ e.busy=now+2.3; for(let i=0;i<22;i++) after(i*.1,()=>{ if(!e.dead){ e.z=3; e.vz=0; } });
         for(let i=0;i<4;i++) after(.25+i*.42,()=>{ if(e.dead) return; const a=Math.random()*6.283; S.proj(e,{x:Math.cos(a),y:Math.sin(a)},{speed:36,range:6,dmg:0,nohit:true,ghost:true,pierce:true,label:'금살 귀천무',v:'chain',onEnd:p=>{ if(!e.dead){ const q=inMap(p); e.x=q.x; e.y=q.y; } }}); });
-        after(2.25,()=>{ if(e.dead) return; e.z=0; e.vz=0; const t=tgt(e,22); if(!t) return; near(e,t,1.1); ring(e,1.4,'금살 귀천무','cut',null,t); strike(e,t,40,'금살 귀천무',{knock:0}); if(!t.dead&&t.hp<=t.max*.2) damage(e,t,t.hp+999,'금살 귀천무 (처형)',FIX); }); }},
+        after(2.25,()=>{ if(e.dead) return; e.z=0; e.vz=0; const t=tgt(e,22); if(!t) return; near(e,t,1.1); ring(e,1.4,'금살 귀천무','cut',null,t); strike(e,t,40,'금살 귀천무',{knock:0}); if(!t.dead&&t.hp<=t.max*.2) damage(e,t,t.hp+1,'금살 귀천무 (처형)',FIX); }); }},
    crouch:XCROUCH({cast(e){ e.r.cr=now+(e===me?.4:1); if(e.r.wire&&e.r.wire.until>now&&!e.dash) CH.kivi.dashTo(e); }})
   },note:"웅크리기 단추를 누르고 있는 동안 절단이 든다(맞닿은 거리 1.5칸). 연결의 와이어는 날아가다 멈춘 자리(끝·벽·적)에 걸리고, 2초 안에 웅크리면 그 자리로 간다. 와이어가 적에게 닿으면 '적중'으로 쳐서 대기시간이 준다. 금살 귀천무는 카드 그대로 단추로는 못 쓰고, 연결을 쓴 뒤 4초 안에 간계가 '절단 7회 맞힌 적'에게 맞으면 저절로 나간다. 금색 와이어는 22칸 안의 가장 가까운 적에게 맞는 것으로 처리했다."},
 vivi:{name:'화려한 광기, 비비',cls:'척후병',grade:'전설',range:8,

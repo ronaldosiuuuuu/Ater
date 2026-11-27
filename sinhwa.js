@@ -10,7 +10,7 @@ max:{name:'위대한 하나, 맥스',cls:'신화',grade:'신화',range:2.6,
   /* 1.9.0: 기본 공격 단추가 곧 검격이다(누르고 있으면 0.5초마다 이어서 벤다 · 1.9.2). 일반 ① 칸에서는 뺐다 */
   basicName:'검격', basicSub:'0.5초마다',
   altBasic(e){ if(e.cd.b>0) return true; e.cd.b=.5; swingSnd(e); CH.max.slash(e); return true; },
-  slash(e){ const h=()=>heal(e,2,true); e.swingT=now; if(e.r.step++%2===0) S.circle(e,4,14,'검격',{v:'spin',post:h}); else for(let i=0;i<2;i++) after(i*.12,()=>{ if(!e.dead) S.arc(e,4,9,'검격',{post:h}); }); },
+  slash(e){ /* 1.9.11: 등반 · 완성으로 는 공격력(연마 · 무기)과 기본 공격 적중 효과(권능)도 든다. 맨 몸(공격력 그대로)에서는 예전과 같다 */ const ab=Math.max(0,(e.atk||0)-((CH[e.key]&&CH[e.key].atk)||0)),h=t=>{ heal(e,2,true); if(t&&!t.dead&&e.c.basicBonus) e.c.basicBonus(e,t); }; e.swingT=now; if(e.r.step++%2===0) S.circle(e,4,14+ab,'검격',{v:'spin',post:h}); else for(let i=0;i<2;i++) after(i*.12,()=>{ if(!e.dead) S.arc(e,4,9+Math.round(ab/2),'검격',{post:h}); }); },
   speedMod:e=>e.hp<=e.max/2?1.25:1,
   fixHalf:e=>e.r.god>now,
   onStatus(e,k,t){ add(e,'haste',1,.3,{self:true}); return e.hp>=e.max/2?t*.5:t; },
@@ -39,7 +39,7 @@ girl:{name:'혼돈, 소녀',cls:'신화',grade:'신화',range:6,unknowable:true,
    n2:{name:'무아',cd:5,r:7,cast(e){ S.line(e,7,22,'무아',{silence:1,knock:2,v:'beam'}); }},
    aw:{name:'병리',kind:'일반',cd:6,r:9,cast(e){ S.circle(e,2,26,'병리',{stun:1,air:2,v:'hex',zfree:true},spot(e,9,4)); }},
    x1:{name:'혼돈 세계',kind:'신화',cd:180,r:99,cast(e){ e.r.world=now+60; chaosUntil=now+60; chaosName='혼돈 세계'; add(e,'resist',60,.5); ents.forEach(o=>{ if(!o.dead) add(o,'slow',60,.2,{by:e,self:o===e}); });
-        for(let i=1;i<=60;i++) after(i,()=>{ if(e.dead){ chaosUntil=0; return; } ents.forEach(o=>{ if(o.dead) return; damage(e,o,2,'붕괴',{amp:true}); if(!o.dead&&o.hp<=o.max*.1) damage(e,o,o.hp+999,'붕괴 (사망)',FIX); }); }); }}
+        for(let i=1;i<=60;i++) after(i,()=>{ if(e.dead){ chaosUntil=0; return; } ents.forEach(o=>{ if(o.dead) return; damage(e,o,2,'붕괴',{amp:true}); if(!o.dead&&o.hp<=o.max*.1) damage(e,o,o.hp+1,'붕괴 (사망)',FIX); }); }); }}
   },note:"불가해: 고정 피해가 아닌 모든 피해를 절반만 받는다. 병리는 9칸 안의 적이 선 자리에 일어난다. 혼돈 세계 60초 동안은 소녀 자신을 포함한 모두가 붕괴된다(기동력 20% 감소, 매초 2 피해, 체력 10% 이하면 사망). 재림 카드는 '궁창의 혼재, 아에르'다."},
 arthur:{name:'전란의 휘광, 아서',cls:'신화',grade:'신화',range:2.5,
   init:e=>{e.r={hn:0,dn:0,open:0,king:0,holy:0,rf:0}}, hud:e=>(e.r.king>now?'왕의 귀환 · ':e.r.open>now?'성검 개방 · ':'')+'신성 '+e.r.holy,
@@ -108,7 +108,7 @@ CH.girl_r={name:'궁창의 혼재, 아에르',cls:'신화',grade:'신화',range:
    aw:{name:'추상',kind:'일반',cd:7,r:9,cast(e){ const p=spot(e,9,4); fx.push({k:'circle',x:p.x,y:p.y,r:4,t0:now,dur:.5,team:e.team,lab:'추상',src:e,v:'hex',el:'spirit'}); after(.5,()=>{ if(!e.dead) S.circle(e,4,30,'추상',{stun:1,air:4,knock:0,v:'burst',el:'spirit',zfree:true},p); }); }},
    x1:{name:'바탕',kind:'기원',cd:3600,r:99,cast(e){ const id=e.r.wid=(e.r.wid||0)+1; if(e.r.wz) e.r.wz.until=now; /* 다시 펼치면 앞의 바탕은 접는다 */ e.r.world=now+600; chaosUntil=e.r.world; chaosName='바탕';
         const z=zone(e,{x:W/2,y:H/2,r:99,dur:600,hid:true,onCast:(zz,who,slot)=>{ const k=who.c.skills[slot]; if(who===e||!k||(k.kind||KIND[slot])!=='기원'||e.r.world<=now) return; e.r.world-=60; chaosUntil=e.r.world; zz.until=e.r.world; proc(e,'바탕','지속시간 -10%'); }}); e.r.wz=z;
-        for(let i=1;i<=600;i++) after(i,()=>{ if(e.r.wid!==id) return; if(e.dead){ if(chaosName==='바탕') chaosUntil=0; return; } if(e.r.world<=now) return; ents.forEach(o=>{ if(o.dead) return; add(o,'nojump',1.1,0,{by:e,self:o===e}); damage(e,o,5,'망아',{amp:true}); if(!o.dead&&o.hp<=o.max*.1) damage(e,o,o.hp+999,'망아 (사망)',FIX); }); }); }}
+        for(let i=1;i<=600;i++) after(i,()=>{ if(e.r.wid!==id) return; if(e.dead){ if(chaosName==='바탕') chaosUntil=0; return; } if(e.r.world<=now) return; ents.forEach(o=>{ if(o.dead) return; add(o,'nojump',1.1,0,{by:e,self:o===e}); damage(e,o,5,'망아',{amp:true}); if(!o.dead&&o.hp<=o.max*.1) damage(e,o,o.hp+1,'망아 (사망)',FIX); }); }); }}
   },note:"@전설 @재림 카드다(체력 600, 공격력 20). 불가변성은 자기가 일으킨 망아 피해에도 든다(매초 3, 바탕에서는 1). 청정의 투사체 사거리(11칸), 추상의 지정 거리(9칸)와 '잠시 후'(0.5초), 관념의 끌고 미는 거리(2칸 끌고 0.25초 뒤 3칸 밀기)는 카드에 없어 정했다. 이름 없는 기원은 '바탕'이라 불렀다: 600초 동안 아에르를 포함한 모두가 망아(점프 불가, 매초 5 피해, 체력 10% 이하면 사망)에 들고, 다른 사람이 기원 스킬을 쓸 때마다 60초 줄어든다. 형이상학은 바탕에서도 대기시간 초기화는 한다."};
 for(const k of ['max','girl','arthur','arthur_r','max_r','girl_r']){ const c=CH[k]; c.key=k; c.hp=550; c.atk=18; }
 CH.max.atk=0; CH.girl_r.hp=600; CH.girl_r.atk=20; CH.max_r.hp=600; CH.max_r.atk=20; CH.arthur_r.hp=600; CH.arthur_r.atk=20;

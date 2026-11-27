@@ -28,7 +28,7 @@
     if(el&&el.classList.contains('on')&&n-lastT<1600&&lastS&&t&&t!==lastS&&!lastS.includes('\n')){ lastS=lastS+'\n'+t; lastT=n; return t0(lastS,Math.max(ms||2200,2600)); }
     lastT=n; lastS=t||''; place(); return t0(t,ms); };
   /* 알림 자리: 맨 위에 보이는 창의 단추 줄 바로 위(없으면 원래 자리) */
-  const place=()=>{ const el=$('toast'); if(!el) return; el.style.bottom=''; if(running) return; let best=null;
+  const place=()=>{ const el=$('toast'); if(!el||running) return; el.style.bottom=''; let best=null;
     for(const d of document.querySelectorAll('.overlay:not([hidden]) .dock')){ const r=d.getBoundingClientRect(); if(r.height>0&&r.top<innerHeight&&r.bottom>0) best=r; }
     if(best) el.style.bottom=Math.max(16,Math.round(innerHeight-best.top+8))+'px'; };
   const t1=toast; toast=function(t,ms){ const r=t1(t,ms); place(); return r; }; }
@@ -53,7 +53,7 @@ const statOn=()=>OPT.stat!==0&&/^https:$/.test(location.protocol)&&location.host
 function statSend(o){ if(!statOn()) return; try{ const b=JSON.stringify(Object.assign({ver:VER,dev:document.body.classList.contains('pc')?'pc':'m'},o)); fetch(STAT_URL,{method:'POST',body:b,headers:{'Content-Type':'application/json'},keepalive:true,credentials:'omit',referrerPolicy:'no-referrer'}).catch(()=>{}); }catch(x){} }
 SETTINGS.push({k:'stat',name:'익명 통계 보내기',opts:[[1,'켬'],[0,'끔']],note:'접속 · 판 수와 화면 오류 내용만 보낸다(이름 · 기기 정보 · 기록은 보내지 않는다). 게임을 고치는 데 쓴다.',apply:()=>{}});
 if(OPT.stat===undefined) OPT.stat=1;
-try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d&&d.OPT&&(d.OPT.stat===0||d.OPT.stat===1)) OPT.stat=d.OPT.stat; }catch(x){}
+try{ const d=SAVE1; if(d&&d.OPT&&(d.OPT.stat===0||d.OPT.stat===1)) OPT.stat=d.OPT.stat; }catch(x){}
 setTimeout(()=>statSend({t:'hit',k:'v'}),3000);
 { let was=false; setInterval(()=>{ if(running&&!was){ was=true; if(!NET.client) statSend({t:'hit',k:NET.host?'mp':'m'}); } else if(!running) was=false; },1000); }
 { const seen=new Set(); let n=0; const rep=(msg,src,line)=>{ msg=String(msg||'').slice(0,200); const s=String(src||'').split('/').pop().split('?')[0].slice(0,60),k=msg+s+line; if(!msg||seen.has(k)||++n>5) return; seen.add(k); statSend({t:'err',msg,src:s,line:+line||0}); };
@@ -64,10 +64,11 @@ setTimeout(()=>statSend({t:'hit',k:'v'}),3000);
 SETTINGS.push({k:'uiz',name:'글자 크기(메뉴)',opts:[['s','작게'],['m','보통'],['l','크게']],note:'메뉴와 창의 글자 · 단추 크기를 바꾼다. 싸움 화면은 그대로다.',apply:()=>uizSet()});
 function uizSet(){ document.body.classList.toggle('uiS',OPT.uiz==='s'); document.body.classList.toggle('uiL',OPT.uiz==='l'); }
 if(OPT.uiz===undefined) OPT.uiz='m';
-try{ const d=JSON.parse(localStorage.getItem('aether1')||'null'); if(d&&d.OPT&&['s','m','l'].includes(d.OPT.uiz)) OPT.uiz=d.OPT.uiz; }catch(x){}
+try{ const d=SAVE1; if(d&&d.OPT&&['s','m','l'].includes(d.OPT.uiz)) OPT.uiz=d.OPT.uiz; }catch(x){}
 uizSet(); try{ drawOpts(); }catch(x){}
 /* 무작위로 정한 판이 끝나면 결과 창에 「같은 상대로 다시」: 방금 나온 캐릭터 그대로 한 판 더 */
 { const b=document.createElement('button'); b.type='button'; b.className='ghost re2'; b.id='again2'; b.textContent='같은 상대로 다시'; b.hidden=true;
   const dock=document.querySelector('#res .dock'); if(dock) dock.insertBefore(b,$('back'));
-  b.addEventListener('click',()=>{ const m=sel.meRnd,f=sel.foeRnd; sel.meRnd=false; sel.foeRnd=false; try{ launch(); }finally{ sel.meRnd=m; sel.foeRnd=f; } });
-  setInterval(()=>{ const r=$('res'); if(!r||r.hidden) return; b.hidden=!(!NET.client&&!KEEP&&!NET.host&&(sel.meRnd||sel.foeRnd)); },400); }
+  let ok2=false,from2=false; { const la2=launch; launch=function(){ ok2=from2||(!NET.client&&!NET.host&&!KEEP&&!(typeof TW!=='undefined'&&TW&&TW.on)&&!(typeof TUT!=='undefined'&&(TUT.on||TUT.active))&&!!(sel.meRnd||sel.foeRnd)); from2=false; return la2.apply(this,arguments); }; }   /* 1.9.11 */
+  b.addEventListener('click',()=>{ const m=sel.meRnd,f=sel.foeRnd; sel.meRnd=false; sel.foeRnd=false; from2=true; try{ launch(); }finally{ sel.meRnd=m; sel.foeRnd=f; from2=false; } });
+  setInterval(()=>{ const r=$('res'); if(!r||r.hidden) return; b.hidden=!(ok2&&!NET.client&&!KEEP&&!NET.host); },400); }
