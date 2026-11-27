@@ -22,12 +22,13 @@ gachaShow=function(res,done){ const el=$('tw-body'); let fin=false; const end=()
 const reNeed=k=>{ const c=CH[k],w=(PF.ch[k]||{}).w||0,d=PF.dup[k]||0,nd=RDUP[c.grade]||0,st=RECOST[c.grade]||50; return {w,d,nd,st,ok:w>=REWIN&&d>=nd&&PF.star>=st}; };
 lockWhy=function(k){ const b=baseKey(k); if(!PF.own[b]) return '가방 탭의 뽑기에서 처음 나오면 바로 얻는다'; if(CH[k].re){ const n=reNeed(b); return '재림: '+REWIN+'승('+n.w+') · 중복 '+n.nd+'('+n.d+') · 별무리 '+n.st+' — 가방 → 재림 · 완성에서 연다'; } return ''; };
 /* gachaScreen: 뒤의 판에서 다시 통째로 바꿨다(지운 옛 대입) */
-document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); if(!t) return; const k=t.dataset.re2,n=reNeed(k); if(!n.ok) return toast('조건이 모자라다'); PF.star-=n.st; PF.dup[k]=(PF.dup[k]||0)-n.nd; PF.re[k]=Date.now(); pfSave(); sfx('win'); toast(CH[k+'_r'].name+' · 재림했다',3600); achCheck({}); drawSel(); gachaScreen(); });
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-re2]'); if(!t) return; const k=t.dataset.re2,n=reNeed(k); if(PF.re[k]) return; if(!n.ok) return toast('조건이 모자라다'); PF.star-=n.st; PF.dup[k]=(PF.dup[k]||0)-n.nd; PF.re[k]=Date.now(); pfSave(); sfx('win'); toast(CH[k+'_r'].name+' · 재림했다',3600); achCheck({}); drawSel(); gachaScreen(); });
 
 /* ── 닉네임 ── */
 const nickOf=()=>{ let v=''; try{ v=localStorage.getItem('aetherName')||''; }catch(x){} return cleanName(v||($('n-name')&&$('n-name').value)||'')||'나'; };
 /* ── 패치 내역: 새 판을 내보낼 때 맨 위에 한 덩이를 더한다 ── */
 const PATCH=[
+ ['1.9.10','2026-11',['[밸런스] 모험 등반의 상대 강화 방식이 새로 바뀌었습니다. 층마다 체력 · 스킬 피해가 2.5%(16층부터 체력 7.5% · 스킬 피해 3.5%), 5층마다 체력 4% · 기본 공격 피해(5~15층 4%, 20층 8%, 25층부터 7.5%), 10층마다 체력 7.5% · 스킬 피해 2.5%가 더 늘어납니다(체력 10층 ×1.38 · 20층 ×2.04 · 30층 ×2.94).', '[밸런스] 모험 등반의 컴퓨터 실력 구간이 1~3층 쉬움 · 4~7층 보통 · 8층부터 어려움으로 조정되었습니다(판 승리 코인은 예전 그대로입니다).', '[밸런스] 모험 등반 1~10층의 상대 등급이 1~3층 고화 · 4~7층 서사 · 8~10층 서사/전설로 조정되었습니다.', '[밸런스] 모험 등반 1~10층의 층 보상 코인과 첫 돌파 코인이 20% 하향되었습니다.', '[개선] 모험 등반의 보상 · 상인에서 높은 층에서도 낮은 등급의 권능 · 장비가 나올 수 있게 바뀌었습니다. 그 층의 기준 등급이 가장 잘 나오고, 등급이 낮을수록 덜 나옵니다.', '[개선] 장비와 권능에 등급(공설 · 고화 · 설화 · 서사 · 전설 · 신화) 색 딱지가 붙어 한눈에 구분됩니다. 권능은 단계에 따라 등급이 정해집니다(1~2단계 공설 · 3 고화 · 4~5 설화 · 6 서사 · 7~8 전설 · 9 신화).', '[신규] 보유 권능 및 장비 창에 꼬리표(공격 · 방어 · 회복 등)가 표시됩니다. 꼬리표는 앞으로 추가될 시너지에 쓰입니다.', '[버그 수정] 모험 등반을 시작하고 첫 싸움 전에 쉬었다 가기를 누른 뒤 이어서 오르면 체력 1로 시작하던 현상이 수정되었습니다(이미 그렇게 저장된 등반도 바로잡힙니다).', '[버그 수정] 모험 등반 층 시작 안내에 상대 체력이 실제보다 낮게 보이던 현상(보스 층 포함)이 수정되었습니다.', '[버그 수정] 보스가 싸우는 중에 부르는 졸개에게 층 보정이 붙지 않던 현상이 수정되었습니다.', '[버그 수정] 함께 등반에서 휴식 · 쉼터 · 단련 · 장비로 늘어나는 체력이 손님에게는 들지 않던 현상이 수정되었습니다.', '[버그 수정] 함께 등반 중 다시 접속한 손님의 권능 · 무기 스킬 단추가 사라지던 현상이 수정되었습니다.', '[버그 수정] 함께 등반 보스 층에서 손님이 레이드 보상을 받던 현상이 수정되었습니다.', '[버그 수정] 함께 등반 험한 길(정예)에서 사람 수만큼 늘어난 상대에게 주는 피해 증가가 붙지 않던 현상이 수정되었습니다.', '[버그 수정] 조합 · 카드로 만든 캐릭터로 등반하면 싸움이 멈추던 현상이 수정되었습니다(등반은 일반 캐릭터로 오릅니다).', '[버그 수정] 등반에서 지면 예전 최고 층과 같기만 해도 「새 기록」이 뜨던 현상이 수정되었습니다.', '[버그 수정] 저주받은 길의 설명이 실제 보상(권능 둘 · 한 등급 위 장비)과 다르게 적혀 있던 현상이 수정되었습니다.', '[버그 수정] 재림 단추를 빠르게 두 번 누르면 비용이 두 번 빠지던 현상이 수정되었습니다.', '[버그 수정] 일부 저장 파일을 가져오면 게임이 멈추던 현상이 수정되었습니다.', '[안정성] 함께 하기 접속 안정성이 개선되었습니다.']],
  ['1.9.9','2026-11',['[신규] 모험 등반 화면과 싸우는 중 멈춤 창에 「보유 권능 및 장비」 버튼이 추가되었습니다. 지금 가진 권능 · 장비의 효과, 재사용 대기시간, 붙는 스킬과 단련 · 연마 횟수를 한눈에 볼 수 있습니다(함께 등반 포함).','[버그 수정] 모험 등반 층 화면에서 기본 효과 안내가 권능 목록 끝에 붙어 보이던 현상이 수정되었습니다.']],
  ['1.9.8','2026-11',['[신규] 모험 등반에 기본 효과가 추가되었습니다. 적을 쓰러뜨리면 쓰러뜨린 캐릭터가 잃은 체력의 10%를 회복합니다(함께 등반 포함).','[밸런스] 모험 등반에서 층마다 적이 강해지는 폭이 3% → 2%로 하향되었습니다(10층 +27% → +18%, 20층 +57% → +38%).']],
  ['1.9.7','2026-11',['[이벤트] 새 보상 코드가 추가되었습니다. 입력하면 코인 40,000개를 받을 수 있습니다.']],
@@ -105,16 +106,19 @@ function drawBag(){ /* 뒤의 판에서 통째로 바꿨다. 이 몸통은 쓰�
 
 /* ── 보상: 판마다 받는 기본 코인에 더해, 레이드 · 등반 · 이야기 · 오늘의 도전은 따로 얹어 준다 ── */
 const RAIDPAY={coin:[300,500,700,1200,1500],star:[0,.5,1,2,3],fcoin:[600,1000,1800,3000,5000],fstar:[1,2,3,5,8],fshard:[1,2,3,4,5]};   /* 난이도(소란~위신)별 · f = 첫 처치 */
-const TWPAY={coin:f=>50+f*25,boss:f=>f>=20?2:1,mcoin:f=>f*150,mstar:f=>f/5};                                                        /* 층마다 · 보스 층 별무리 · 5층 단위 첫 돌파 */
+/* 1.9.10: 등반 보상 숫자는 game/core.js의 등반 수치표(TWB.pay)에 있다. 1~10층의 층 코인 · 첫 돌파 코인은 ×0.8 */
+const twLow=(f,c)=>f<=TWB.pay.low[0]?Math.round(c*TWB.pay.low[1]):c;
+const TWPAY={coin:f=>twLow(f,TWB.pay.coin[0]+f*TWB.pay.coin[1]),boss:f=>twBand(TWB.pay.boss,f),mcoin:f=>twLow(f,f*TWB.pay.mcoin),mstar:f=>f/TWB.pay.mstar};                                                        /* 층마다 · 보스 층 별무리 · 5층 단위 첫 돌파 */
 const STPAY={first:[750,2],two:[750,2],again:100,all:[2500,5]}, DYPAY=[500,2];
 const payTxt={ raid:k=>{ const t=tierOf(k),f=!(PF.rf||{})[k]; return '이기면 코인 +'+RAIDPAY.coin[t]+(RAIDPAY.star[t]?' · 별무리 '+(RAIDPAY.star[t]<1?'0~1':'+'+RAIDPAY.star[t]):'')+(t>=2?' · 가끔 파편':'')+(f?'\n첫 처치: 코인 +'+RAIDPAY.fcoin[t].toLocaleString()+' · 별무리 +'+RAIDPAY.fstar[t]+' · 서사 이상 파편 '+RAIDPAY.fshard[t]+'개':'\n첫 처치 보상은 이미 받았다'); },
   story:(s,ci)=>{ const was=(PF.story[s.id]||[])[ci]||0; return '보상 · '+(was?'':'첫 승리 코인 +'+STPAY.first[0]+' · 별무리 +'+STPAY.first[1]+' / ')+(was<2?'★★ 코인 +'+STPAY.two[0]+' · 별무리 +'+STPAY.two[1]+' / ':'다시 이기면 코인 +'+STPAY.again+' / ')+'이야기를 끝까지 넘기면 코인 +'+STPAY.all[0].toLocaleString()+' · 별무리 +'+STPAY.all[1]; },
-  tower:()=>'보상 · 층을 넘을 때마다 코인(1층 '+TWPAY.coin(1)+' → 20층 '+TWPAY.coin(20)+'), 보스 · 마왕 층은 별무리 +1(20층부터 +2). 5 · 10 · 15…층을 처음 넘으면 코인 층×150 · 별무리 층÷5.' };
+  tower:()=>'보상 · 층을 넘을 때마다 코인(1층 '+TWPAY.coin(1)+' → 20층 '+TWPAY.coin(20)+'), 보스 · 마왕 층은 별무리 +'+TWPAY.boss(5)+'(20층부터 +'+TWPAY.boss(20)+'). 5 · 10 · 15…층을 처음 넘으면 코인 층×'+TWB.pay.mcoin+' · 별무리 층÷'+TWB.pay.mstar+'. 1~'+TWB.pay.low[0]+'층의 코인은 '+Math.round((1-TWB.pay.low[1])*100)+'% 적다.' };
 { const en0=earn; earn=function(win){ const g=en0(win); let c=0,s=0; const N=[];
     try{ if(TW&&TW.on){ if(win){ const f=TW.floor,n=TW.next||{}; c+=TWPAY.coin(f); if(n.boss||n.lord) s+=TWPAY.boss(f); if(f%5===0&&f>PF.tw.best){ c+=TWPAY.mcoin(f); s+=TWPAY.mstar(f); N.push(f+'층 첫 돌파'); } } }
       else if(SPM&&SPM.kind==='story'){ if(win){ const S0=STORY[SPM.si],ch=S0.ch[SPM.ci],a=PF.story[S0.id]||[],was=a[SPM.ci]||0,st=goalOk(ch.goal)?2:1; if(!was){ c+=STPAY.first[0]; s+=STPAY.first[1]; N.push('첫 승리'); } if(st===2&&was<2){ c+=STPAY.two[0]; s+=STPAY.two[1]; N.push('★★'); } if(was>=st) c+=STPAY.again; if(!was&&S0.ch.every((_,j)=>j===SPM.ci||(a[j]||0)>0)){ c+=STPAY.all[0]; s+=STPAY.all[1]; N.push('이야기 완주'); } } }
       else if(SPM&&SPM.kind==='daily'){ if(win&&PF.dpay!==today()){ PF.dpay=today(); c+=DYPAY[0]; s+=DYPAY[1]; N.push('오늘의 도전'); } }
-      else if(mode===6&&win&&ents.some(o=>o.c&&o.c.mon)){ const k=ents.find(o=>o.c&&o.c.mon).key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; { const v=RAIDPAY.star[t]; s+=v>=1?v:(Math.random()<v?1:0); } PF.rf=PF.rf||{};
+      else if(mode===6&&win&&!(NET.client&&NET.twFight)&&ents.some(o=>o.c&&o.c.mon)){   /* 1.9.10: 함께 등반 보스 층의 손님은 레이드 보상을 받지 않는다 */
+         const k=ents.find(o=>o.c&&o.c.mon).key,t=tierOf(k),pool=()=>{ const L=gachaPool(t>=3&&Math.random()<.3?'전설':'서사'); return L[Math.floor(Math.random()*L.length)]; }; c+=RAIDPAY.coin[t]; { const v=RAIDPAY.star[t]; s+=v>=1?v:(Math.random()<v?1:0); } PF.rf=PF.rf||{};
         if(!PF.rf[k]){ PF.rf[k]=Date.now(); c+=RAIDPAY.fcoin[t]; s+=RAIDPAY.fstar[t]; N.push('첫 처치'); const q=pool(); if(q) N.push(giveShard(q,RAIDPAY.fshard[t])); } else if(t>=2&&Math.random()<.35){ const q=pool(); if(q) N.push(giveShard(q,1)); } }
     }catch(x){}
     PF.coin+=c; PF.star+=s; g.c+=c; g.st+=s; g.note=N.join(' · '); return g; };
