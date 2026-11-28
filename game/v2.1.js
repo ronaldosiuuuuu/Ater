@@ -38,11 +38,11 @@ const coReroll=()=>{ if(!TW.rew||TW.rr||(TW.gold|0)<1) return false; TW.gold--; 
 /* ── 층을 넘으면: 손님마다 증표 · 보상 ── */
 { const st=twSettle; twSettle=function(w){ const live=typeof TW!=='undefined'&&TW&&TW.on&&!TW.fin,n=live?TW.next:null,r=st.apply(this,arguments);
     try{ if(live&&TW&&TW.fin==='win'){ TW.rr=0; if(coOn()&&n){ const G=TWB.gold,big=n.boss||n.lord,g=G.win+(TW.rank==='S'?G.s:0)+(n.elite||n.curse?G.hard:0)+(n.horde?G.horde:0)+(big?G.big:0);
-          for(const p of coGuests()) coWith(coSeatP(p),coKeyP(p),()=>{ TW.gold=(TW.gold|0)+g; if(syTier('소모라',twCount()['소모라']|0)>=3) TW.gold+=Math.min(10,Math.floor(TW.gold*.1)); TW.rr=0; TW.rewPw=!!(big||n.curse); TW.rewN=n.elite?2:1; TW.rew=rollRewards(TW.rewPw); if(TW.pw.includes('n:피의 맹세')) twGrowAdd('n:피의 맹세',1,15); });
+          for(const p of coGuests()) coWith(coSeatP(p),coKeyP(p),()=>{ { const ge=ents.find(o=>o.net&&o.net.pid===p.pid); TW.gold=(TW.gold|0)+g+(ge&&ge._gold|0); if(ge) ge._gold=0; } if(somT()>=3) TW.gold+=Math.min(10,Math.floor(TW.gold*.1)); TW.rr=0; TW.rewPw=!!(big||n.curse); TW.rewN=n.elite?2:1; TW.rew=rollRewards(TW.rewPw); if(TW.pw.includes('n:피의 맹세')) twGrowAdd('n:피의 맹세',1,15); });
           twStore(); } } }catch(x){ console.error('함께 등반 보상',x); } return r; }; }
 
 /* ── 상인 · 쉼터: 손님마다 자기 상인, 물약 되찾기 ── */
-function coShop(){ const P=rollPw(TW.floor,2),g1=rollGear(TW.floor,true),g2=rollGear(TW.floor,false,g1?[g1]:[]),S=TWB.shop,cut=syTier('소모라',twCount()['소모라']|0)>=2?.85:1,pr=v=>Math.max(1,Math.round(v*cut));
+function coShop(){ const P=rollPw(TW.floor,2),g1=rollGear(TW.floor,true),g2=rollGear(TW.floor,false,g1?[g1]:[]),S=TWB.shop,cut=somT()>=2?.85:1,pr=v=>Math.max(1,Math.round(v*cut));
   const L=P.map(id=>({t:'pw',id,price:pr((S.pw[0]+POWERS[id].lv*S.pw[1])*(POWERS[id].lv>=7?S.hi:1))})).concat([g1,g2].filter(Boolean).map(id=>({t:'gear',id,price:pr((S.gear[0]+GEAR[id].gi*S.gear[1])*(GEAR[id].gi>=4?S.hi:1))})),['train','hone','rest'].map(id=>({t:'boon',id,price:pr(BOONS[id].price+(id==='rest'?0:S.up*((TW.bought||{})[id]|0)))})));
   for(const id of [...new Set([potRoll(TW.floor),potRoll(TW.floor)].filter(Boolean))]) L.push({t:'boon',id,price:pr(BOONS[id].price)}); return L; }
 { const tp=towerPath; towerPath=function(i){ const n=typeof TW!=='undefined'&&TW&&TW.fork&&TW.fork[i],r=tp.apply(this,arguments);
@@ -120,7 +120,8 @@ function coMine(){ const old=$('co-mine'); if(old) old.remove(); if(!NET.client|
     else h+='<p class="note">'+(d.wait.length?'고르기를 마쳤다. 아직 고르는 중: '+d.wait.map(esc).join(' · '):'고르기를 마쳤다. 방장이 올라가면 함께 시작한다.')+'</p>';
     h+='<p class="note" style="white-space:pre-line">함께하는 사람\n'+d.team.map(esc).join('\n')+'</p></div>'; body.insertAdjacentHTML('beforeend',h);
     body.querySelectorAll('#co-mine [data-star]').forEach(b=>{ b.style.boxShadow='0 0 0 1px var(--gold) inset'; }); }); }
-onMsg('client',{post(d){ if(!d||!NET.client) return; if(d.t==='twme'){ NET.twMe=d; NET.twInv={ids:d.pw.concat(gearIds(d.gear)),hpB:d.hpB,atkB:d.atkB,train:d.train}; if(!running&&!$('tower').hidden) coMine(); try{ potBtn(); }catch(x){} if(syWin.on&&$('sywin-b').querySelector('[data-sysk]')) coAsMe(sySkWin); } else if(d.t==='tw'&&d.end) NET.twMe=null; }});
+onMsg('client',{post(d){ if(!d||!NET.client) return; if(d.t==='twme'){ NET.twMe=d; NET.twInv={ids:d.pw.concat(gearIds(d.gear)),hpB:d.hpB,atkB:d.atkB,train:d.train}; if(!running&&!$('tower').hidden) coMine(); try{ potBtn(); }catch(x){} if(syWin.on&&$('sywin-b').querySelector('[data-sysk]')) coAsMe(sySkWin); } else if(d.t==='tw'&&d.end) NET.twMe=null; else if(d.t==='start'&&!Array.isArray(d.kit)){ NET.twSk=null; NET.twMe=null; } }});
+{ const cl=clientLost; clientLost=function(){ NET.twSk=null; NET.twMe=null; return cl.apply(this,arguments); }; }
 { const ci=coopInfo; coopInfo=function(d){ const r=ci.apply(this,arguments); try{ if(d&&!d.end){ const body=$('tw-body'); body.querySelectorAll(':scope>p.note').forEach(x=>x.remove()); /* 보상 · 상인은 저마다 고르므로 방장 것을 추천하는 칸은 길을 고를 때만 둔다 */ if(/보상|상인/.test(String(d.what||''))) body.querySelectorAll(':scope>h2,:scope>.bcard').forEach(x=>x.remove()); const s=body.querySelector(':scope>p.sub'); if(s) s.textContent='길은 방장이 고른다. 보상 · 상인은 저마다 따로 고른다.'; coMine(); } }catch(x){ console.error('함께 등반 손님 화면',x); } return r; }; }
 /* 보유 창 · 시너지 칸: 손님은 자기 것으로 */
 { const sh=synHtml; synHtml=function(ids,key,free){ if(key===undefined&&NET.client&&NET.twMe) return sh.call(this,ids,NET.twMe.key,NET.twMe.free||null); return sh.apply(this,arguments); }; }

@@ -101,8 +101,8 @@ const pctRes=f=>f<TWB.pct.from?0:Math.min(TWB.pct.max,TWB.pct.base+TWB.pct.per10
     if(src&&t&&src!==t&&t.team===1&&!(o&&o._st)&&typeof label==='string'&&/체비/.test(label)&&!/\(고정\)$/.test(label)&&twLive()){ amt*=1-pctRes(TW.floor); if(t.boss||t.c.mon) amt=Math.min(amt,t.max*TWB.pct.bossCap); }
     return d0.call(this,src,t,amt,label,o); }; }
 /* 회복: 흡혈 상한(권능이 타격에 붙여 주는 회복만) · 넘친 회복(생명 · 혈) */
-{ const h0=heal; heal=function(e,amt,quiet){ if(e&&e._inDeal&&e._lk<1) amt*=e._lk; const full=e&&e._sy&&!e.dead&&(tOf(e,'생명')>=2||tOf(e,'혈')>=2||e._ovSh),b=full?e.hp:0,r=h0.call(this,e,amt,quiet);
-    if(full&&amt>0&&e.hp>=e.max-.01&&!has(e,'noheal')&&!has(e,'curse')){ const over=Math.max(0,amt-(e.hp-b)); if(over>0){
+{ const h0=heal; heal=function(e,amt,quiet){ if(e&&e._inDeal&&e._lk<1) amt*=e._lk; const full=e&&e._sy&&!e.dead&&(tOf(e,'생명')>=2||tOf(e,'혈')>=2||e._ovSh),b=full?e.hp:0; let eff=amt; if(full&&amt>0){ if(has(e,'healcut')) eff*=.5; try{ if(e.c.modHeal) eff=e.c.modHeal(e,eff); }catch(x){} } const r=h0.call(this,e,amt,quiet);
+    if(full&&amt>0&&e.hp>=e.max-.01&&!has(e,'noheal')&&!has(e,'curse')){ const over=Math.max(0,eff-(e.hp-b)); if(over>0){
         if(tOf(e,'생명')>=2||e._ovSh){ let s=e.sh.find(q=>q.syL); if(!s||s.v<=0){ s={v:0,until:now+9999,syL:true}; e.sh.push(s); } s.v=Math.min(e.max*.2,s.v+over); }
         if(tOf(e,'혈')>=2) e._ov=Math.min(e.max*.1,(e._ov||0)+over); } }
     return r; }; }
@@ -140,7 +140,7 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
   n.speedMod=x=>(c0.speedMod?c0.speedMod(x):1)*(1+V('질풍',[.06,.12,.18,.25]))*(x._bl&&x._bl.speed?1+x._bl.speed:1);
   n.modHeal=(x,a)=>{ if(c0.modHeal) a=c0.modHeal(x,a); return T('성광')?a*1.3:a; };
   n.onStatus=(x,k,t)=>{ if(c0.onStatus) t=c0.onStatus(x,k,t); if(!(t>0)) return 0; return T('성광')?t*.8:t; };
-  n.onDeal=(x,t,a,l,o)=>{ if(c0.onDeal){ x._inDeal=true; try{ c0.onDeal(x,t,a,l,o); }finally{ x._inDeal=false; } } if((o&&o.amp)||x===t) return;
+  n.onDeal=(x,t,a,l,o)=>{ if(c0.onDeal){ const was=x._inDeal; x._inDeal=true; try{ c0.onDeal(x,t,a,l,o); }finally{ x._inDeal=was||false; } } if((o&&o.amp)||x===t) return;
     if(T('혈')&&a>0) heal(x,a*(T('혈')>=2?.09:.04),true); if(T('심연')>=2&&a>0) heal(x,a*.05,true);
     if(t.dead) return;
     if(T('혈')>=2&&x._ov>0){ const v=x._ov; x._ov=0; damage(x,t,v,'넘친 피',{amp:true}); if(t.dead) return; }
@@ -150,11 +150,11 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
     if(T('선봉')>=2&&!x._vs){ x._vs=true; add(t,'stun',1,0,{by:x}); }
     if(T('강철')>=4&&o&&o.basic) for(const z of zones) if(z.syTur===x) turFire(z,t); };
   n.onHurt=(x,src,a,l,o)=>{ if((o&&o.amp)||!src||src===x){ if(c0.onHurt) c0.onHurt(x,src,a,l,o); return; }
-    x._rfC=[]; try{ if(c0.onHurt) c0.onHurt(x,src,a,l,o); }finally{ var L=x._rfC; x._rfC=null; }
+    const prev=x._rfC; x._rfC=[]; try{ if(c0.onHurt) c0.onHurt(x,src,a,l,o); }finally{ var L=x._rfC||[]; x._rfC=prev||null; }
     let th=0,rf=0; for(const [v,lab] of L){ if(lab==='가시') th+=v; else rf+=v; } if(T('응징')) rf+=a*(T('응징')>=2?.18:.08); if(x._vow) rf*=2; rf=Math.min(rf,a*cap.reflect*(x._vow?2:1));
     if(th+rf>0&&!src.dead&&!x.dead){ damage(x,src,th+rf,'되돌림',{fixed:true,amp:true}); if(T('응징')>=2&&rf>0) heal(x,rf*.3,true); } };
   n.onKill=(x,t)=>{ if(c0.onKill) c0.onKill(x,t); if(!t||t.team===x.team) return;
-    if(T('소모라')){ const B=twBagOf(x); if(B){ B.gold=(B.gold|0)+1; say(x,'증표 +1','#e3c377'); } }
+    if(T('소모라')){ x._gold=(x._gold|0)+1; say(x,'증표 +1','#e3c377'); }   /* 이기면 twSettle에서 주머니에 넣는다 */
     if(T('명계')){ const two=T('명계')>=2,mine=zones.filter(z=>z.syWr===x); if(mine.length>=(two?2:1)) mine[0].until=now; zone(x,{x:t.x,y:t.y,r:1.2,dur:two?8:4,every:.5,label:'망령',syWr:x,tick:z=>{ const f=foes(x)[0]; if(!f) return; const d=norm(f.x-z.x,f.y-z.y),gap=Math.hypot(f.x-z.x,f.y-z.y); if(gap>1.2){ z.x+=d.x*Math.min(gap,3); z.y+=d.y*Math.min(gap,3); } if(Math.hypot(f.x-z.x,f.y-z.y)<=2) damage(x,f,x.atk*(two?.4:.2),'망령',{amp:true}); }}); }
     if(T('맹공')>=3){ const d=T('맹공')>=4?8:4; x._fr=now+d; add(x,'haste',d,.2,{self:true}); proc(x,'광폭',d+'초'); }
     if(T('사냥')>=2) heal(x,(x.max-x.hp)*.08);
@@ -225,11 +225,12 @@ on('begin',()=>{ if(!twOn()) return; const f=TW.floor,nx=TW.next||{},names=[];
     else if(A==='방벽'){ const ot=c.tick; let acc=8; foe.c=Object.assign({},c,{tick:(x,dt)=>{ if(ot) ot(x,dt); acc+=dt; if(acc>=10){ acc-=10; shield(x,Math.round(x.max*.1),10); } }}); }
     if(foe.base0) foe.base0=Object.assign({},foe.base0,{c:foe.c}); msg([['정예 강화 ','#ff7d8c'],[A,'#fff6d6']],1,true); } });
 /* 판이 끝날 때: 늘린 최대 체력을 비율대로 되돌린 뒤 결과를 확정한다 · 소모라 이자 */
-{ const st=twSettle; twSettle=function(w){ if(TW&&TW.on&&!TW.fin){ for(const e of ents) if(e._hpK){ e.hp=Math.max(e.dead?0:1,e.hp/e._hpK); e.max=Math.round(e.max/e._hpK); e._hpK=0; }
-      if(w&&w.team===0&&me&&tOf(me,'소모라')>=3){ const g=Math.min(10,Math.floor(TW.gold*.1)); if(g>0) TW.gold+=g; } }
-    return st.apply(this,arguments); }; }
+const somT=()=>synTiers(twCount(),twIds())['소모라']|0;   /* 지금 TW 자리에 놓인 사람의 소모라 단계 */
+{ const st=twSettle; twSettle=function(w){ const live=TW&&TW.on&&!TW.fin; if(live){ for(const e of ents) if(e._hpK){ e.hp=Math.max(e.dead?0:1,e.hp/e._hpK); e.max=Math.round(e.max/e._hpK); e._hpK=0; } }
+    const r=st.apply(this,arguments);
+    try{ if(live&&TW&&TW.fin==='win'){ if(me&&me._gold){ TW.gold+=me._gold; me._gold=0; } if(somT()>=3) TW.gold+=Math.min(10,Math.floor(TW.gold*.1)); twStore(); } }catch(x){} return r; }; }
 /* 상인: 소모라 2단계는 값이 싸다 · 정예 강화는 길을 고를 때 정해 둔다 */
-{ const tp=towerPath; towerPath=function(i){ const r=tp.apply(this,arguments); try{ if(TW&&TW.shop&&!TW.shopCut&&syTier('소모라',twCount()['소모라']|0)>=2){ TW.shopCut=1; for(const it of TW.shop) it.price=Math.max(1,Math.round(it.price*.85)); twStore(); towerScreen(); } if(TW&&!TW.shop) delete TW.shopCut; }catch(x){} return r; }; }
+{ const tp=towerPath; towerPath=function(i){ const r=tp.apply(this,arguments); try{ if(TW&&TW.shop&&!TW.shopCut&&somT()>=2){ TW.shopCut=1; for(const it of TW.shop) it.price=Math.max(1,Math.round(it.price*.85)); twStore(); towerScreen(); } if(TW&&!TW.shop) delete TW.shopCut; }catch(x){} return r; }; }
 const AFFIX={가시:'받은 피해의 10%를 되돌린다',흡혈:'준 피해의 15%를 회복한다',신속:'기동력 +25%',방벽:'10초마다 최대 체력 10% 보호막'};
 function twAffix(){ if(!TW) return; const n=TW.next; if(n&&n.elite&&TW.floor>=TWB.affixFrom&&!hasK(AFFIX,n.aff)){ n.aff=rnd(Object.keys(AFFIX)); twStore(); } }
 

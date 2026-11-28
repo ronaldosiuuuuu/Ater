@@ -129,7 +129,12 @@ on('begin',()=>{ if(!twOn()) return;
       if(U==='girl'&&st.t%10===0){ const f=foes(x)[0]; if(f&&dist(x,f)<=9){ const k=rnd(['slow','blind','weak','stun']); add(f,k,1,k==='slow'?.3:0,{by:x}); proc(x,'불가해',SNAME[k]||k); } }
       if(U==='girl_r'&&st.t%15===0){ let best=null; for(const s in x.cd) if(s!=='b'&&s!=='crouch'&&x.c.skills[s]&&x.cd[s]>0&&(!best||x.cd[s]>x.cd[best])) best=s; if(best){ x.cd[best]=0; proc(x,'궁창',x.c.skills[best].name); } } };
     { const h0=c0.hud; n.hud=x=>{ let s=''; try{ s=h0?h0(x):''; }catch(z){} const L=s?[s]:[]; if(x._potD>now) L.push('분노'); if(x._cry>now) L.push('함성'); return L.join(' · '); }; }
-    e.c=n; }); });
+    e.c=n; });
+  /* 다시 서는 몸(보스 층 데스카운트)도 시너지 · 세트 · 고유 시너지가 얹힌 몸으로 */
+  for(const e of twMen()) if(e.base0) e.base0=Object.assign({},e.base0,{c:e.c,max:e.max,atk:e.atk}); });
+/* 다시 설 때: 그 사람의 권능으로 다시 채우고, 싸움 동안의 표시(시너지 단계 · 한 번뿐인 효과를 이미 썼는지)를 이어 받는다 */
+{ const or=onRespawn; onRespawn=function(n,t){ const r=or.apply(this,arguments); try{ if(twOn()&&n&&t&&n.team===0&&(t===me||n.net)){ for(const k of Object.keys(t)) if(k[0]==='_'&&!['_rfC','_inDeal','_burn','_cold','_frz','_frzCd','_potD','_cry','_imm','_dr','_fr'].includes(k)) n[k]=t[k];
+        twAs(n,()=>{ const ids=twIds(); n.r=n.r||{}; n.r._w={}; for(const id of ids){ const P=n.r._w[id]={cdT:0}; if(POWERS[id]&&POWERS[id].init) POWERS[id].init(P); } try{ kitInit(n,ids); }catch(x){} }); } }catch(x){ console.error('다시 서기',x); } return r; }; }
 /* 피의 맹세: 층을 넘으면 자란다 */
 { const st=twSettle; twSettle=function(w){ const live=TW&&TW.on&&!TW.fin,r=st.apply(this,arguments); try{ if(live&&TW&&TW.fin==='win'&&TW.pw.includes('n:피의 맹세')){ twGrowAdd('n:피의 맹세',1,15); twStore(); } }catch(x){} return r; }; }
 

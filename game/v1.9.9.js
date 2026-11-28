@@ -27,7 +27,7 @@ function twInvHtml(){ const D=twInvData(); if(!D) return '<p class="note">등반
   h+='<h2>장비 <small style="font-size:13px;color:var(--muted)">'+gr.length+' / 3칸</small></h2>';
   h+=['w','a','t'].map(sl=>{ const g=gr.map(x=>GEAR[x]).find(G=>G.slot===sl); if(!g) return box(esc(GSLOT[sl])+' · 비어 있음','아직 끼지 않았다.','var(--line)');
     const P=POWERS['@'+g.id]||{},card=g.src==='카드'&&P.mods&&P.mods.atk; return box(gBadge(g.grade)+' '+esc(GSLOT[sl])+' · '+esc(g.name),esc(P.text||'')+(g.note?'\n'+esc(g.note):'')+(card?'\n등반에서는 기본 공격 증가가 절반만 든다(+'+Math.round(P.mods.atk*.5)+').':''),GGC[g.grade],'@'+g.id); }).join('');
-  h+=synHtml(D.ids)+'<p class="note">기본 효과: 적을 쓰러뜨리면 잃은 체력의 '+Math.round(TWB.heal.kill*100)+'%를 회복한다.'+(NET.client?' 함께 등반에서는 방장이 고른 권능 · 장비 · 단련이 모두에게 똑같이 든다.':'')+'</p>';
+  h+=synHtml(D.ids)+'<p class="note">기본 효과: 적을 쓰러뜨리면 잃은 체력의 '+Math.round(TWB.heal.kill*100)+'%를 회복한다.'+(NET.client?' 함께 등반에서는 권능 · 장비 · 단련을 저마다 따로 고른다.':'')+'</p>';
   return h; }
 /* 창: 등반 창 · 멈춤 창 위에 뜬다 */
 const twInv=(()=>{ const el=document.createElement('div'); el.className='overlay'; el.id='twinv'; el.hidden=true; el.style.zIndex='9';
