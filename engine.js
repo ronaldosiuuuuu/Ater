@@ -24,7 +24,7 @@ function fire(ev,a,b,c,d,e2){ if(benching) return; const L=HOOKS[ev]; if(L) for(
 const OPT={view:'auto',cap:60,mon:'golem',monhp:'fit',myth:0,guide:1,ui:1,lefty:0,log:'auto',rg:'고화,서사,전설,히든',raid:'hero',imp:1,fst:1,els:1,ori:'auto',full:1,q:'auto',shake:1,stop:1,edge:1,tele:1,nums:1,vib:1,fps:0,map:'basic'};
 const SETTINGS=[
  {k:'view',name:'화면 방식',opts:[['auto','자동'],['pc','컴퓨터'],['m','휴대폰']],note:'자동은 마우스가 있고 창 너비가 820 이상이면 컴퓨터 화면이다. 컴퓨터인데 휴대폰 화면으로 뜨면 「컴퓨터」를 누른다. 누르면 바로 바뀐다.',apply:()=>{ VIEW=OPT.view==='auto'?'':OPT.view; try{ localStorage.setItem('aetherView',VIEW); }catch(x){} pcSet(); toast(PC?'컴퓨터 화면':'휴대폰 화면',1600); }},
- {k:'ori',name:'화면 방향',opts:[['auto','자동'],['land','가로 고정'],['port','세로 고정']],note:'자동은 기기를 돌리는 대로 따른다. 고정은 전체 화면이 되는 휴대폰에서만 듣는다. 경기장은 판을 시작할 때의 화면 방향을 따라 눕거나 선다.',apply:()=>goOri()},
+ {k:'ori',name:'화면 방향',opts:[['auto','자동'],['land','가로 고정'],['port','세로 고정']],note:'자동은 기기를 돌리는 대로 따른다. 고정은 전체 화면이 되는 휴대폰에서만 듣는다(전체 화면이 풀리면 화면을 누를 때 다시 걸린다). 경기장은 판을 시작할 때의 화면 방향을 따라 눕거나 선다.',apply:()=>goOri()},
  {k:'full',name:'전체 화면 (휴대폰)',opts:[[1,'켬'],[0,'끔']]},
  {k:'ui',name:'조작 단추 크기',opts:[[.85,'작게'],[1,'보통'],[1.15,'크게'],[1.3,'아주 크게']],apply:()=>uiApply()},
  {k:'lefty',name:'손 배치',opts:[[0,'오른손 (스틱 왼쪽)'],[1,'왼손 (스틱 오른쪽)']],apply:()=>uiApply()},
