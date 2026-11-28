@@ -19,6 +19,8 @@
     bye(d){ d.why=cleanText(d.why,140); },
     note(d){ d.text=cleanText(d.text,60); },
     pg(d){ d.ts=num(d.ts,-1e12,1e12,0); },
+    /* 2.0: 등반에서 빈 단추에 붙는 스킬(꾸러미 · 칸 · 단추) */
+    twsk(d){ d.sk=arr(d.sk,4).filter(x=>Array.isArray(x)&&x.length===3&&typeof x[0]==='string'&&hasK(CH,x[0])&&CH[x[0]].kit===true&&typeof x[1]==='string'&&hasK(CH[x[0]].skills,x[1])&&['x1','x2','x3','x4'].includes(x[2])).map(x=>[x[0],x[1],x[2]]); },
     tw(d){ d.end=cleanText(d.end,140); d.floor=num(d.floor,0,9999,0)|0; d.what=cleanText(d.what,200); d.best=num(d.best,0,9999,0)|0; d.pw=arr(d.pw,60).map(x=>cleanText(x,40)); d.gear=arr(d.gear,6).map(x=>cleanText(x,40)); d.sig=cleanText(d.sig,2000); d.ids=arr(d.ids,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)); d.hpB=num(d.hpB,0,1e5,0)|0; d.atkB=num(d.atkB,0,1e4,0)|0; d.train=num(d.train,0,999,0)|0;
       d.ch=arr(d.ch,10).filter(c=>c&&typeof c==='object').map(c=>({a:['rw','path','buy'].includes(c.a)?c.a:'rw',t:cleanText(c.t,80),p:String(c.p==null?'':c.p).slice(0,500),col:colOk(c.col),dis:!!c.dis}));
       d.votes=arr(d.votes,12).filter(Array.isArray).map(v=>[num(v[0],0,9,0)|0,cleanName(v[1])||'손님',pidOk(v[2])?v[2]:'']); } };

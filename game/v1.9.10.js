@@ -62,7 +62,7 @@ function twTags(id){ if(typeof id!=='string'||!hasK(POWERS,id)) return []; if(ta
       for(const r of TAGRULE) if(r.re.test(line)&&!(r.not&&r.not.test(line))) s.add(r.t); }
     L=TAGS.filter(t=>s.has(t)); }
   tagCache.set(id,L); return L; }
-const twTagChips=id=>{ const L=twTags(id); return L.length?'<div class="tw-tgs">'+L.map(t=>'<span class="tw-tg">'+esc(t)+'</span>').join('')+'</div>':''; };
+let twTagChips=id=>{ const L=twTags(id); return L.length?'<div class="tw-tgs">'+L.map(t=>'<span class="tw-tg">'+esc(t)+'</span>').join('')+'</div>':''; };
 const tagCount=ids=>{ const n={}; for(const id of ids) for(const t of twTags(id)) n[t]=(n[t]||0)+1; return n; };
 
 /* ── 시너지 ──

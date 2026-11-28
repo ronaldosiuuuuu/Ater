@@ -8,7 +8,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='1.9.11';
+const VER='2.0.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
 { const N=v=>{ v=+v; return Number.isFinite(v)?Math.min(1e9,Math.max(0,v)):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
@@ -113,8 +113,8 @@ const TWB={
   foeHigh:['전설','신화'],                                             /* 11층부터 상대 등급 */
   lord:[[15,['전설']],[Infinity,['전설','신화']]],                      /* 마왕(15 · 30 · 45…층) 등급 */
   stat:{                                                               /* 상대 능력치 보정(퍼센트). 1층을 0으로 두고 더해 간다. 스킬 = 기본 공격이 아닌 모든 피해 */
-    per:[[15,{hp:2.5,skill:2.5}],[Infinity,{hp:7.5,skill:3.5}]],       /* 층마다(2층부터): 15층까지 · 16층부터 */
-    every5:{hp:4,basic:[[15,4],[20,8],[Infinity,7.5]]},                 /* 5층마다 더: 체력 4% · 기본 공격(5~15층 4% · 20층 8% · 25층부터 7.5%) */
+    per:[[15,{hp:2.5,skill:2.5}],[39,{hp:7.5,skill:3.5}],[79,{hp:7.5,skill:5}],[Infinity,{hp:7.5,skill:7}]],   /* 층마다(2층부터): 15층까지 · 16층부터 · 40층부터 · 80층부터(2.0) */
+    every5:{hp:4,basic:[[15,4],[20,8],[49,12],[Infinity,18]]},          /* 5층마다 더: 체력 4% · 기본 공격(5~15층 4% · 20층 8% · 25층부터 12% · 50층부터 18%, 2.0) */
     every10:{hp:7.5,skill:2.5} },                                       /* 10층마다 더 */
   elite:{hp:1.6,dmg:1.2}, lordHp:3, bossPer20:.6,                       /* 길 배율: 정예 체력 · 주는 피해, 마왕 체력, 보스는 20층마다 체력 +60% */
   curse:{frail:1.25,swift:.25},                                         /* 저주: 깨진 갑옷(받는 피해 ×) · 쫓기는 길(상대 기동력 +) */
@@ -124,8 +124,9 @@ const TWB={
   pay:{coin:[50,25],low:[10,.8],boss:[[19,1],[Infinity,2]],mcoin:150,mstar:5,     /* 층 코인 50+층×25 · 1~10층 ×0.8 · 보스/마왕 층 별무리 · 5층마다 처음 넘으면 코인 층×150(1~10층 ×0.8) · 별무리 층÷5 */
     diff:[[2,0],[5,1],[Infinity,2]]},                                  /* 판 승리 코인의 실력 배율 구간(1.9.9 그대로: 1~2층 쉬움 · 3~5층 보통 · 6층부터 어려움, 정예는 어려움). 컴퓨터 실력 구간(diff)과 따로 본다 */
   gold:{win:10,s:5,hard:10,horde:5,big:20},                            /* 증표: 이김 · S 등급 · 정예/저주 · 무리 · 보스/마왕 */
-  heal:{win:.3,kill:.1,rest:.5,restCut:.85},                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
-  shop:{pw:[20,5],gear:[20,10],train:25,hone:25,rest:20},              /* 상인 값(증표): 권능 20+5×단계 · 장비 20+10×등급(공설 0 ~ 신화 5) · 단련 · 연마 · 휴식 */
+  heal:{win:.3,winBy:[[49,.3],[99,.2],[Infinity,.1]],kill:.1,killHorde:.05,rest:.5,restCut:.85},   /* 2.0: 층을 넘는 회복은 50층부터 20% · 100층부터 10%(winBy), 무리 판 처치 회복은 5%(killHorde) */
+  pct:{from:20,base:.2,per10:.1,max:.8,bossCap:.04}, cc:[[49,1],[79,.8],[Infinity,.6]], cap:{take:.6,dodge:.35,reflect:.4,leech:12}, affixFrom:30,   /* 2.0: 체력 비례 피해 저항 · 상대가 받는 상태이상 지속 배율 · 겹침 상한 · 정예 강화가 붙는 층 */                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
+  shop:{pw:[20,5],gear:[20,10],train:25,hone:25,rest:20,up:10,hi:1.5},   /* 2.0: 단련 · 연마는 살 때마다 +up, 7단계 이상 권능 · 전설 이상 장비는 ×hi */              /* 상인 값(증표): 권능 20+5×단계 · 장비 20+10×등급(공설 0 ~ 신화 5) · 단련 · 연마 · 휴식 */
   boon:{train:50,hone:1},                                               /* 단련 최대 체력 · 연마 기본 공격 */
   path:{hard:.5,side:.65,rest:.5,restGold:20},                         /* 길: 험한 길이 정예일 확률(아니면 저주) · 쉼터/상인 길이 하나 더 나올 확률 · 그중 쉼터일 확률(증표가 이보다 적으면 늘 쉼터) */
   horde:{n:[[3,2],[9,3],[Infinity,4]],step:3},                         /* 무리: 마리 수(이 층까지) · 적 세기가 한 단계 오르는 층 간격 */
@@ -200,8 +201,8 @@ function towerTake(r){ gain(r); TW.rewN--; if(TW.rewN>0) TW.rew=rollRewards(TW.r
 function towerPath(i){ const n=TW.fork[i]; if(!n) return; if(n.t==='fight'){ TW.next=n; TW.fork=null; } else if(n.t==='rest'){ if(TW.hp!=null) TW.hp=Math.min(twMax(),TW.hp+Math.round(twMax()*TWB.heal.rest)); twPhp((h,m)=>h+Math.round(m*TWB.heal.rest));   /* 넘친 것은 다음 판 시작 때 최대 체력으로 깎인다(game/meta.js) */ TW.rested=true; TW.picks.push('쉼터'); genFork(); toast('쉼터에서 체력을 '+Math.round(TWB.heal.rest*100)+'% 되찾았다'); }
   /* 상인: 권능 둘 · 장비 둘(하나는 한 등급 위) · 단련 · 연마 · 휴식. 권능 · 장비는 보상과 같은 등급 가중 뽑기 */
   else { TW.rested=true; const P=rollPw(TW.floor,2),g1=rollGear(TW.floor,true),g2=rollGear(TW.floor,false,g1?[g1]:[]),S=TWB.shop;
-    TW.shop=P.map(id=>({t:'pw',id,price:S.pw[0]+POWERS[id].lv*S.pw[1]})).concat([g1,g2].filter(Boolean).map(id=>({t:'gear',id,price:S.gear[0]+GEAR[id].gi*S.gear[1]})),['train','hone','rest'].map(id=>({t:'boon',id,price:BOONS[id].price}))); TW.fork=null; } twStore(); towerScreen(); }
-function towerBuy(i){ const it=TW.shop[i]; if(!it||it.sold) return; if(TW.gold<it.price) return toast('증표가 모자라다'); TW.gold-=it.price; it.sold=true; gain(it); twStore(); towerScreen(); }
+    TW.shop=P.map(id=>({t:'pw',id,price:Math.round((S.pw[0]+POWERS[id].lv*S.pw[1])*(POWERS[id].lv>=7?S.hi:1))})).concat([g1,g2].filter(Boolean).map(id=>({t:'gear',id,price:Math.round((S.gear[0]+GEAR[id].gi*S.gear[1])*(GEAR[id].gi>=4?S.hi:1))})),['train','hone','rest'].map(id=>({t:'boon',id,price:BOONS[id].price+(id==='rest'?0:S.up*((TW.bought||{})[id]|0))}))); TW.fork=null; } twStore(); towerScreen(); }
+function towerBuy(i){ const it=TW.shop[i]; if(!it||it.sold) return; if(TW.gold<it.price) return toast('증표가 모자라다'); TW.gold-=it.price; it.sold=true; if(it.t==='boon'&&it.id!=='rest'){ TW.bought=TW.bought||{}; TW.bought[it.id]=(TW.bought[it.id]|0)+1; } gain(it); twStore(); towerScreen(); }
 /* 가진 권능 · 장비 두 줄(등급 딱지). ids는 twIds() 꼴(장비는 '@' + 장비 id). 함께 등반 손님 화면도 쓴다 */
 const twOwned=(ids,pre)=>{ pre=pre||''; const pw=ids.filter(id=>id[0]!=='@'&&POWERS[id]),gr=ids.filter(id=>id[0]==='@'&&GEAR[id.slice(1)]).map(id=>GEAR[id.slice(1)]);
   return (pw.length?'<p class="note">'+pre+'권능: '+pw.map(id=>gBadge(pGrade(POWERS[id].lv))+esc(POWERS[id].name)).join(' · ')+'</p>':'')+(gr.length?'<p class="note">'+pre+'장비: '+['w','a','t'].map(sl=>gr.find(g=>g.slot===sl)).filter(Boolean).map(g=>gBadge(g.grade)+GSLOT[g.slot]+' '+esc(g.name)).join(' · ')+'</p>':''); };
@@ -226,7 +227,7 @@ function towerScreen(lost){ const el=$('tw-body'); let h='';
 /* 1.9.11: 등반 결과는 판이 끝나는 순간(game/v1.9.11.js의 'end')에 twSettle로 확정해 저장한다. 0.9초 뒤의 towerEnd는 화면만 그린다
    (예전에는 그 사이에 앱을 닫으면 코인만 받고 층은 그대로 남았다). twSettle은 한 판에 한 번만 돈다(TW.fin) */
 function twSettle(w){ if(!TW||!TW.on||TW.fin) return; TW.t+=over?over.t:0; const n=TW.next;
-  if(w.team===0){ TW.rank=rankOf(); const mx=me.max; TW.hp=Math.max(1,me.hp); if(n.curse!=='dry') TW.hp=Math.min(mx,TW.hp+Math.round(mx*TWB.heal.win)); TW.last=n.k; const f=TW.floor,big=n.boss||n.lord,G=TWB.gold; TW.gold+=G.win+(TW.rank==='S'?G.s:0)+(n.elite||n.curse?G.hard:0)+(n.horde?G.horde:0)+(big?G.big:0); if(f>PF.tw.best){ PF.tw.best=f; PF.tw.key=TW.key; } pfSave(); achCheck({});
+  if(w.team===0){ TW.rank=rankOf(); const mx=me.max; TW.hp=Math.max(1,me.hp); if(n.curse!=='dry') TW.hp=Math.min(mx,TW.hp+Math.round(mx*twBand(TWB.heal.winBy,TW.floor))); TW.last=n.k; const f=TW.floor,big=n.boss||n.lord,G=TWB.gold; TW.gold+=G.win+(TW.rank==='S'?G.s:0)+(n.elite||n.curse?G.hard:0)+(n.horde?G.horde:0)+(big?G.big:0); if(f>PF.tw.best){ PF.tw.best=f; PF.tw.key=TW.key; } pfSave(); achCheck({});
     TW.floor++; TW.rested=false; TW.next=null; TW.rewPw=!!(big||n.curse); TW.rewN=n.elite?2:1; TW.rew=rollRewards(TW.rewPw); twStore(); TW.fin='win'; }
   else { TW.lostView=Object.assign({},TW,{rec:TW.floor-1>0&&TW.floor-1>(TW.best0==null?PF.tw.best-1:TW.best0)}); try{ localStorage.removeItem('aetherTower'); }catch(x){} TW.fin='lose'; } }
 function towerEnd(w){ twSettle(w); const fin=TW.fin; delete TW.fin;
