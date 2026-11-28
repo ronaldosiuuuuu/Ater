@@ -91,6 +91,8 @@ syKit('sy_tree','세계수 묘목',{name:'세계수 묘목',cd:25,r:99,txt:'묘�
 const twLive=()=>typeof TW!=='undefined'&&TW&&TW.on&&!NET.client&&running;
 const twMen=()=>ents.filter(e=>e.team===0&&(e===me||e.net));
 const tOf=(e,n)=>(e._sy&&e._sy[n])|0;
+/* 2.1: 함께 등반에서는 사람마다 가진 것이 다르다. twBagOf(e) = 그 사람의 주머니(혼자 · 방장은 TW), twAs(e,fn) = 그 사람의 주머니를 TW 자리에 놓고 fn을 돈다(game/v2.1.js가 갈아 끼운다) */
+let twBagOf=e=>TW, twAs=(e,fn)=>fn();
 
 /* ── 한 번 맞을 때 반사 · 가시는 모았다가 한 번에 · 체력 비례 피해는 층에 따라 덜 받는다 ── */
 const pctRes=f=>f<TWB.pct.from?0:Math.min(TWB.pct.max,TWB.pct.base+TWB.pct.per10*Math.floor((f-TWB.pct.from)/10));
@@ -152,7 +154,7 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
     let th=0,rf=0; for(const [v,lab] of L){ if(lab==='가시') th+=v; else rf+=v; } if(T('응징')) rf+=a*(T('응징')>=2?.12:.05); if(x._vow) rf*=2; rf=Math.min(rf,a*cap.reflect*(x._vow?2:1));
     if(th+rf>0&&!src.dead&&!x.dead){ damage(x,src,th+rf,'되돌림',{fixed:true,amp:true}); if(T('응징')>=2&&rf>0) heal(x,rf*.3,true); } };
   n.onKill=(x,t)=>{ if(c0.onKill) c0.onKill(x,t); if(!t||t.team===x.team) return;
-    if(T('소모라')&&TW&&x===me){ TW.gold++; say(x,'증표 +1','#e3c377'); }
+    if(T('소모라')){ const B=twBagOf(x); if(B){ B.gold=(B.gold|0)+1; say(x,'증표 +1','#e3c377'); } }
     if(T('명계')){ const two=T('명계')>=2,mine=zones.filter(z=>z.syWr===x); if(mine.length>=(two?2:1)) mine[0].until=now; zone(x,{x:t.x,y:t.y,r:1.2,dur:two?8:4,every:.5,label:'망령',syWr:x,tick:z=>{ const f=foes(x)[0]; if(!f) return; const d=norm(f.x-z.x,f.y-z.y),gap=Math.hypot(f.x-z.x,f.y-z.y); if(gap>1.2){ z.x+=d.x*Math.min(gap,3); z.y+=d.y*Math.min(gap,3); } if(Math.hypot(f.x-z.x,f.y-z.y)<=2) damage(x,f,x.atk*(two?.3:.15),'망령',{amp:true}); }}); }
     if(T('맹공')>=3){ const d=T('맹공')>=4?8:4; x._fr=now+d; add(x,'haste',d,.2,{self:true}); proc(x,'광폭',d+'초'); }
     if(T('사냥')>=2) heal(x,(x.max-x.hp)*.08);
@@ -195,14 +197,14 @@ function twSkPick(key,ids,tiers){ const free=['x1','x2','x3','x4'].filter(x=>!((
   const ord=C.filter(c=>want.includes(c.name)).sort((a,b)=>want.indexOf(a.name)-want.indexOf(b.name)).concat(C.filter(c=>!want.includes(c.name)&&!off.includes(c.name)));
   for(const c of ord){ const f=free.shift(); if(!f) break; out.push([c.kit,c.sl,f]); } return out; }
 /* 손님: 방장이 알려 준 대로 단추를 채운다 */
-{ const kf=kitFill; kitFill=function(skills,ids){ if(NET.client&&NET.kit&&Array.isArray(NET.twSk)){ for(const [k,sl,to] of NET.twSk){ const sk=CH[k]&&CH[k].skills&&CH[k].skills[sl]; if(sk&&!skills[to]) skills[to]=sk; } return; } return kf.apply(this,arguments); }; }
+{ const kf=kitFill; kitFill=function(skills,ids){ if(NET.client&&running&&Array.isArray(NET.twSk)){ for(const [k,sl,to] of NET.twSk){ const sk=CH[k]&&CH[k].skills&&CH[k].skills[sl]; if(sk&&!skills[to]) skills[to]=sk; } return; } return kf.apply(this,arguments); }; }
 onMsg('client',{post(d){ if(!d||!NET.client) return; if(d.t==='twsk'){ NET.twSk=d.sk; NET.kitC=null; } else if(d.t==='tw') NET.twSk=null; }});
 { const rs=reseat; reseat=function(p){ const r=rs.apply(this,arguments); try{ const e=p&&ents.find(o=>o.id===p.eid); if(e&&e._twsk&&twLive()) NET.tx.send(p.pid,{t:'twsk',sk:e._twsk}); }catch(x){} return r; }; }
 
 /* ── 판 시작: 시너지 · 상한 · 스킬 · 상대 손질 ── (core · meta · v1.9.10의 시작 처리 뒤에 돈다) */
 const BLESS=[['deal','피해'],['take','방어'],['regen','회복'],['speed','속도']];
-on('begin',()=>{ if(!twOn()) return; const ids=twIds(),f=TW.floor,nx=TW.next||{},names=[];
-  for(const e of twMen()){ const cnt=synCount(ids,e.key,e===me?twFree():null),tiers=synTiers(cnt,ids); e._sy=tiers; synLayer(e,ids);
+on('begin',()=>{ if(!twOn()) return; const f=TW.floor,nx=TW.next||{},names=[];
+  for(const e of twMen()) twAs(e,()=>{ const ids=twIds(),cnt=synCount(ids,e.key,twFree()),tiers=synTiers(cnt,ids); e._sy=tiers; synLayer(e,ids);
     /* 최대 체력: 비율을 지켜 늘린다(판이 끝날 때 twSettle에서 되돌린다) */
     { const m0=e.max; let m=m0; if(tiers['부족']) m+=60; if(tiers['제국']) m*=1.08; m=Math.round(m); if(m!==m0){ e._hpK=m/m0; e.hp=Math.max(1,e.hp*e._hpK); e.max=m; } }
     if((tiers['부족']|0)>=2) add(e,'haste',8,.15,{self:true});
@@ -211,7 +213,7 @@ on('begin',()=>{ if(!twOn()) return; const ids=twIds(),f=TW.floor,nx=TW.next||{}
     if(ids.includes('Kpk_star')&&ids.includes('@g20')){ e._dream={}; if(e===me) names.push('몽환'); }
     /* 스킬 단추 */
     { const base=(CH[e.key]||{}).skills||{},sk=Object.assign({},e.c.skills); for(const x of ['x1','x2','x3','x4']) if(!base[x]) delete sk[x]; const L=twSkPick(e.key,ids,tiers); for(const [k,sl,to] of L) sk[to]=CH[k].skills[sl]; e.c.skills=sk; e._twsk=L; if(e.net){ try{ NET.tx.send(e.net.pid,{t:'twsk',sk:L}); }catch(x){} } }
-    if(e===me) for(const k of SYN_NAMES) if(tiers[k]) names.push(k+' '+tiers[k]); }
+    if(e===me) for(const k of SYN_NAMES) if(tiers[k]) names.push(k+' '+tiers[k]); });
   try{ if(typeof uiBegin==='function') uiBegin(); }catch(x){}
   if(names.length) msg([['시너지 ','#e3c377'],[names.join(' · '),'#fff6d6']],0,true);
   /* 상대: 50층부터 상태이상을 짧게 받는다 · 30층부터 정예는 강화 하나 */

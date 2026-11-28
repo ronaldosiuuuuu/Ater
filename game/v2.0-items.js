@@ -7,8 +7,8 @@
    · 물약: 주머니 두 칸(TW.pot). 보상 · 상인에서 얻고, 싸우는 중 물약 단추(PC는 F · G)로 쓴다. 횟수는 등반 한 판 기준, 쉼터에서 1회씩 되찾는다.
    · 고유 시너지: 신화 · 히든 캐릭터 11명(UNIQ). 그 캐릭터로 등반하면 늘 켜진다. */
 
-const twGrow=id=>(typeof TW!=='undefined'&&TW&&TW.grow&&+TW.grow[id])||0;
-const twGrowAdd=(id,v,max)=>{ if(typeof TW==='undefined'||!TW||NET.client) return 0; TW.grow=TW.grow||{}; const a=+TW.grow[id]||0,b=Math.min(max,a+v); TW.grow[id]=b; return b-a; };
+const twGrow=(id,e)=>{ const B=typeof TW!=='undefined'&&TW?(e?twBagOf(e):TW):null; return (B&&B.grow&&+B.grow[id])||0; };
+const twGrowAdd=(id,v,max,e)=>{ if(typeof TW==='undefined'||!TW||NET.client) return 0; const B=e?twBagOf(e):TW; if(!B) return 0; B.grow=B.grow||{}; const a=+B.grow[id]||0,b=Math.min(max,a+v); B.grow[id]=b; return b-a; };
 const moving=e=>Math.hypot(e.mv.x,e.mv.y)>.1;
 
 /* ── 새 권능 28개 ── [번호, 이름, 단계, 시너지, 수치(modHooks) 또는 null, 글(수치가 없을 때), 끼어들 자리] */
@@ -25,9 +25,9 @@ const moving=e=>Math.hypot(e.mv.x,e.mv.y)>.1;
   N('사슬','사슬',4,['속박'],{onhit:['slow',.08,1,.3]});
   N('모래시계','모래시계',5,['연마'],null,'스킬을 쓸 때마다 다른 스킬의 재사용 대기시간 0.3초 감소.',{onCast(e,s){ if(s==='b'||s==='crouch'||s==='jump') return; for(const k in e.cd) if(k!=='b'&&k!==s&&e.cd[k]>0) e.cd[k]=Math.max(0,e.cd[k]-.3); }});
   N('사냥감 표식','사냥감 표식',5,['사냥'],null,'체력 비율이 가장 낮은 적에게 주는 피해 12% 증가.',{modDeal(e,t,a){ const L=foes(e); if(L.length<2) return a*1.12; return L.every(f=>f===t||f.hp/f.max>=t.hp/t.max)?a*1.12:a; }});
-  N('피의 맹세','피의 맹세',6,['맹공'],null,'층을 넘을 때마다 주는 피해 1% 증가. (최대 15%)',{modDeal:(e,t,a)=>a*(1+twGrow('n:피의 맹세')/100)});
-  N('천 번의 단련','천 번의 단련',6,['연격'],null,'기본 공격 100번마다 기본 공격 피해 +1. (최대 +10)',{basic(e,t,P){ P.n=(P.n||0)+1; if(P.n>=100){ P.n=0; if(twGrowAdd('n:천 번의 단련',1,10)) say(e,'단련 +1','#e3c377'); } },modDeal:(e,t,a,l,o)=>o&&o.basic&&!o.amp?a+twGrow('n:천 번의 단련'):a});
-  N('포식','포식',6,['사냥','생명'],null,'적을 쓰러뜨릴 때마다 체력 5 회복, 다음 층부터 최대 체력 +5. (최대 +100)',{onKill(e,t){ heal(e,5,true); if(typeof TW!=='undefined'&&TW&&!NET.client&&twGrowAdd('n:포식',5,100)) TW.hpB+=5; }});
+  N('피의 맹세','피의 맹세',6,['맹공'],null,'층을 넘을 때마다 주는 피해 1% 증가. (최대 15%)',{modDeal:(e,t,a)=>a*(1+twGrow('n:피의 맹세',e)/100)});
+  N('천 번의 단련','천 번의 단련',6,['연격'],null,'기본 공격 100번마다 기본 공격 피해 +1. (최대 +10)',{basic(e,t,P){ P.n=(P.n||0)+1; if(P.n>=100){ P.n=0; if(twGrowAdd('n:천 번의 단련',1,10,e)) say(e,'단련 +1','#e3c377'); } },modDeal:(e,t,a,l,o)=>o&&o.basic&&!o.amp?a+twGrow('n:천 번의 단련',e):a});
+  N('포식','포식',6,['사냥','생명'],null,'적을 쓰러뜨릴 때마다 체력 5 회복, 다음 층부터 최대 체력 +5. (최대 +100)',{onKill(e,t){ heal(e,5,true); if(typeof TW!=='undefined'&&TW&&!NET.client&&twGrowAdd('n:포식',5,100,e)){ const B=twBagOf(e); if(B) B.hpB=(B.hpB|0)+5; } }});
   N('잔상','잔상',6,['질풍','응징'],null,'받는 피해를 8% 확률로 피하고, 피하면 공격자에게 기본 공격의 50% 고정 피해.',{mods:{dodge:8},modTake(e,src,a,l,o){ if(src===e||!(a>0)||(o&&o.amp)||Math.random()>=.08) return a; say(e,'잔상','#ffe9a0'); if(!src.dead) damage(e,src,e.atk*.5,'잔상',{fixed:true,amp:true}); return 0; }});
   N('첫 일격','첫 일격',6,['선봉'],null,'싸움의 첫 스킬 피해가 2배가 된다.',{modDeal(e,t,a,l,o,P){ if(o&&(o.basic||o.amp)) return a; if(P&&!P.used){ P.used=now; } return P&&now-P.used<.6?a*2:a; }});
   N('요새','요새',7,['철벽'],null,'3초 동안 가만히 서 있으면 받는 피해 25% 감소. (움직이면 풀린다)',{tick(e,dt,P){ P.st=moving(e)?0:(P.st||0)+dt; },modTake:(e,src,a,l,o,P)=>src!==e&&P&&P.st>=3?a*.75:a});
@@ -76,19 +76,20 @@ const potRoll=f=>{ const T=twGearT(f,true),L=Object.values(POT).filter(p=>p.g<=T
 { const tp=towerPath; towerPath=function(i){ const n=TW&&TW.fork&&TW.fork[i],r=tp.apply(this,arguments); try{ if(n&&n.t==='shop'&&TW.shop&&!TW.shop.some(x=>hasK(POT,x.id))){ const a=potRoll(TW.floor),b=potRoll(TW.floor),cut=TW.shopCut?.85:1; for(const id of [...new Set([a,b].filter(Boolean))]) TW.shop.push({t:'boon',id,price:Math.max(1,Math.round(BOONS[id].price*cut))}); twStore(); towerScreen(); }
       if(n&&n.t==='rest'){ for(const p of twPots()) p.n=Math.min(p.max,p.n+1); twStore(); towerScreen(); } }catch(x){} return r; }; }
 /* 쓰기 */
-function potUse(i){ if(!twLive()||over||!me||me.dead) return; const p=twPots()[i]; if(!p||p.n<=0) return toast('물약이 없다'); const P=POT[p.id]; if(p.id==='pot:feather') return toast('부활의 깃털은 쓰러질 때 저절로 쓰인다'); if(me._potCd>now) return; me._potCd=now+1; p.n--; const men=twMen().filter(e=>!e.dead);
+/* 2.1: 물약은 쓴 사람에게만 든다. 손님은 방장에게 알려서 쓴다(u = 쓰는 사람) */
+function potUse(i,u){ if(NET.client){ if(NET.twFight&&running&&NET.tx&&!u) NET.tx.send({t:'twc',a:'pot',i:i|0}); return; } u=u||me; const mine=u===me,tell=m=>{ if(mine) toast(m); }; if(!twLive()||over||!u||u.dead) return; const B=twBagOf(u),p=((B&&B.pot)||[])[i]; if(!p||p.n<=0) return tell('물약이 없다'); const P=POT[p.id]; if(p.id==='pot:feather') return tell('부활의 깃털은 쓰러질 때 저절로 쓰인다'); if(u._potCd>now) return; u._potCd=now+1; p.n--; const men=[u];
   for(const e of men){ switch(p.id){ case 'pot:heal': heal(e,e.max*.2); break; case 'pot:heal2': heal(e,e.max*.4); break; case 'pot:rage': e._potD=now+6; break; case 'pot:iron': add(e,'resist',5,.2,{self:true}); break; case 'pot:wind': add(e,'haste',5,.25,{self:true}); break;
       case 'pot:pure': e.st=e.st.filter(s=>!DEBUFFS.includes(s.k)); e._imm=now+1.5; break; case 'pot:time': for(const k in e.cd) if(k!=='b'&&e.cd[k]>0) e.cd[k]/=2; break; } }
-  if(p.id==='pot:fire'){ const at={x:me.x+me.aim.x*4,y:me.y+me.aim.y*4}; S.circle(me,3,me.atk*1.5,'화염병',{knock:0,v:'flame',el:'fire',post:t=>{ if(!t.dead) t._burn={until:now+2,by:me,k:.5,acc:0}; }},at); }
-  proc(me,P.name,P.text); twStore(); potBtn(); }
+  if(p.id==='pot:fire'){ const at={x:u.x+u.aim.x*4,y:u.y+u.aim.y*4}; S.circle(u,3,u.atk*1.5,'화염병',{knock:0,v:'flame',el:'fire',post:t=>{ if(!t.dead) t._burn={until:now+2,by:u,k:.5,acc:0}; }},at); }
+  proc(u,P.name,P.text); twStore(); potBtn(); if(!mine&&typeof coTell==='function') coTell(u); }
 /* 단추: 싸우는 화면 왼쪽 위(누르면 첫 칸, 길게 누르면 둘째 칸). PC는 F · G */
 const potEl=(()=>{ const b=document.createElement('button'); b.type='button'; b.id='potb'; b.hidden=true; b.style.cssText='position:fixed;left:max(10px,env(safe-area-inset-left));top:calc(env(safe-area-inset-top,0px) + 96px);z-index:6;font:600 12px var(--body);line-height:1.35;color:var(--ink);background:rgba(10,14,32,.82);border:1px solid var(--gold);border-radius:12px;padding:7px 10px;text-align:left;white-space:pre-line;touch-action:manipulation'; document.body.appendChild(b);
   let t=0,long=false; const down=e=>{ long=false; clearTimeout(t); t=setTimeout(()=>{ long=true; potUse(1); },450); },up=e=>{ clearTimeout(t); if(!long) potUse(0); e.preventDefault(); };
   b.addEventListener('pointerdown',down); b.addEventListener('pointerup',up); b.addEventListener('pointerleave',()=>clearTimeout(t)); b.addEventListener('contextmenu',e=>e.preventDefault()); return b; })();
-function potBtn(){ const L=twPots(),show=twLive()&&!over&&L.length>0; potEl.hidden=!show; if(!show) return; const pc=document.body.classList.contains('pc'); potEl.textContent=L.map((p,i)=>(pc?'FG'[i]+' ':i?'길게 ':'')+POT[p.id].name+' ×'+p.n).join('\n'); }
+function potBtn(){ const L=NET.client?((NET.twMe&&NET.twMe.pot)||[]):twPots(),show=(NET.client?!!NET.twFight&&running:twLive())&&!over&&L.length>0; potEl.hidden=!show; if(!show) return; const pc=document.body.classList.contains('pc'); potEl.textContent=L.map((p,i)=>(pc?'FG'[i]+' ':i?'길게 ':'')+POT[p.id].name+' ×'+p.n).join('\n'); }
 on('begin',()=>{ potFix(); potBtn(); }); on('end',()=>{ potEl.hidden=true; });
 addEventListener('keydown',e=>{ if(e.repeat||!running||(e.code!=='KeyF'&&e.code!=='KeyG')) return; const a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; potUse(e.code==='KeyF'?0:1); });
-{ let acc=0; on('step',dt=>{ acc+=dt; if(acc>=.5){ acc=0; if(!potEl.hidden||twLive()) potBtn(); } }); }
+{ let acc=0; on('step',dt=>{ acc+=dt; if(acc>=.5){ acc=0; if(!potEl.hidden||twLive()||(NET.client&&NET.twFight&&running)) potBtn(); } }); }
 
 /* ── 고유 시너지(신화 · 히든) ── 그 캐릭터로 등반하면 늘 켜진다 */
 const UNIQ={
@@ -105,8 +106,8 @@ const UNIQ={
  nagato:['잔상','스킬을 쓰면 2초간 이동속도 30% 증가 · 다음 공격 피해 30% 증가']};
 
 /* ── 판 시작: 얹는 겹(물약 · 세트 · 고유 시너지 · 새 권능의 깃발) ── game/v2.0.js의 겹 위에 한 겹 더 */
-on('begin',()=>{ if(!twOn()) return; const ids=twIds(),setN=twSetN();
-  for(const e of twMen()){ const c0=e.c,n=Object.assign({},c0),U=hasK(UNIQ,e.key)?e.key:null,st={sec:0,t:0,still:0,bolt:0};
+on('begin',()=>{ if(!twOn()) return;
+  for(const e of twMen()) twAs(e,()=>{ const ids=twIds(),setN=twSetN(),c0=e.c,n=Object.assign({},c0),U=hasK(UNIQ,e.key)?e.key:null,st={sec:0,t:0,still:0,bolt:0};
     if(U&&e===me) msg([['고유 시너지 ','#e3c377'],[UNIQ[U][0],'#fff6d6']],0,true);
     n.modDeal=(x,t,a,l,o)=>{ if(c0.modDeal) a=c0.modDeal(x,t,a,l,o); if(!(a>0)||x===t) return a; o=o||{}; let m=1; if(x._potD>now) m*=1.15; if(x._cry>now) m*=1.15;
       if(U==='max'&&x._uq>now&&o.basic) m*=1.1; if(U==='arthur_r'&&x._uq>now) m*=1.25; if(U==='amon'&&!o.basic&&!o.amp) m*=1.15; if(U==='rasa') m*=1.12; if(U==='nagato'&&x._uqN&&!o.amp){ x._uqN=false; m*=1.3; } return a*m; };
@@ -117,7 +118,7 @@ on('begin',()=>{ if(!twOn()) return; const ids=twIds(),setN=twSetN();
     n.onKill=(x,t)=>{ if(c0.onKill) c0.onKill(x,t); if(U==='max'&&t&&t.team!==x.team) x._uq=now+3; };
     n.onCast=(x,s)=>{ if(c0.onCast) c0.onCast(x,s); if(s==='b'||s==='crouch'||s==='jump') return; if(U==='arthur') x._uq=now+3; if(U==='nagato'){ add(x,'haste',2,.3,{self:true}); x._uqN=true; } };
     n.basicBonus=(x,t)=>{ if(c0.basicBonus) c0.basicBonus(x,t); if((setN['폭풍']|0)>=3&&st.bolt>=6&&t&&!t.dead){ st.bolt=0; fx.push({k:'circle',x:t.x,y:t.y,r:3,t0:now,team:x.team,lab:'폭풍',src:x,v:'bolt',el:'thunder'}); for(const f of foes(x)) if(Math.hypot(f.x-t.x,f.y-t.y)<=3.5) damage(x,f,x.atk,'폭풍',{amp:true}); } };
-    n.onFatal=(x,src)=>{ if(c0.onFatal&&c0.onFatal(x,src)) return true; const p=twPots().find(q=>q.id==='pot:feather'&&q.n>0); if(p){ p.n--; x.hp=Math.round(x.max*.3); add(x,'invuln',1,0,{self:true}); proc(x,'부활의 깃털','체력 30%'); twStore(); return true; } return false; };
+    n.onFatal=(x,src)=>{ if(c0.onFatal&&c0.onFatal(x,src)) return true; const B=twBagOf(x),p=((B&&B.pot)||[]).find(q=>q.id==='pot:feather'&&q.n>0); if(p){ p.n--; x.hp=Math.round(x.max*.3); add(x,'invuln',1,0,{self:true}); proc(x,'부활의 깃털','체력 30%'); twStore(); if(x!==me&&typeof coTell==='function') coTell(x); return true; } return false; };
     n.tick=(x,dt)=>{ if(c0.tick) c0.tick(x,dt); if(x.dead) return; st.bolt+=dt; st.still=moving(x)?0:st.still+dt;
       if(U==='max'&&x._uq>now) for(const s in x.cd) if(s!=='b'&&x.cd[s]>0) x.cd[s]=Math.max(0,x.cd[s]-dt*.2);
       if(U==='arthur_r'&&!st.dawn&&x.hp<=x.max*.3){ st.dawn=true; heal(x,x.max*.2); x._uq=now+4; proc(x,'여명','4초'); }
@@ -128,7 +129,7 @@ on('begin',()=>{ if(!twOn()) return; const ids=twIds(),setN=twSetN();
       if(U==='girl'&&st.t%10===0){ const f=foes(x)[0]; if(f&&dist(x,f)<=9){ const k=rnd(['slow','blind','weak','stun']); add(f,k,1,k==='slow'?.3:0,{by:x}); proc(x,'불가해',SNAME[k]||k); } }
       if(U==='girl_r'&&st.t%15===0){ let best=null; for(const s in x.cd) if(s!=='b'&&s!=='crouch'&&x.c.skills[s]&&x.cd[s]>0&&(!best||x.cd[s]>x.cd[best])) best=s; if(best){ x.cd[best]=0; proc(x,'궁창',x.c.skills[best].name); } } };
     { const h0=c0.hud; n.hud=x=>{ let s=''; try{ s=h0?h0(x):''; }catch(z){} const L=s?[s]:[]; if(x._potD>now) L.push('분노'); if(x._cry>now) L.push('함성'); return L.join(' · '); }; }
-    e.c=n; } });
+    e.c=n; }); });
 /* 피의 맹세: 층을 넘으면 자란다 */
 { const st=twSettle; twSettle=function(w){ const live=TW&&TW.on&&!TW.fin,r=st.apply(this,arguments); try{ if(live&&TW&&TW.fin==='win'&&TW.pw.includes('n:피의 맹세')){ twGrowAdd('n:피의 맹세',1,15); twStore(); } }catch(x){} return r; }; }
 

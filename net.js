@@ -25,7 +25,7 @@ function uniqName(n,p){ const used=new Set(NET.players.filter(x=>x!==p).map(x=>x
 const loadPeer=()=>new Promise((ok,no)=>{ if(window.Peer) return ok(); const s=document.createElement('script'); s.src='peerjs.min.js'; s.onload=()=>window.Peer?ok():no(new Error('PeerJS')); s.onerror=()=>no(new Error('peerjs.min.js를 못 읽음')); document.head.appendChild(s); });
 const ROOM=c=>'aether-room-'+c;
 /* 서로 같은 판이어야 화면이 맞는다. 파일을 고쳐 내보낼 때 sw.js의 V와 함께 올린다 */
-const APPV=2000;
+const APPV=2100;
 /* 길 찾기(STUN)는 여러 곳에 묻는다. 직접 길이 안 뚫리면 relay.json에 적힌 곳에서 중계 서버(TURN) 접속 정보를 받아 거친다. relay.json이 없으면 직접 연결만 쓴다 */
 let relayP=null;
 const relayGet=()=>relayP||(relayP=fetch('relay.json',{cache:'no-cache',credentials:'same-origin'}).then(q=>q.ok?q.json():null).then(r=>(r&&typeof r.url==='string'&&/^https:\/\/[A-Za-z0-9.-]+(\/[^\s]*)?$/.test(r.url)&&r.url.length<300)?{url:r.url}:null).catch(()=>null).then(r=>{ if(!r) relayP=null; return r; }));
@@ -39,7 +39,7 @@ function linkKind(c,cb){ try{ c.peerConnection.getStats().then(st=>{ let pair=nu
 /* ───────── 방장 ───────── */
 /* 들어온 사람이 보낸 것: 꼴이 맞는 것만 받고, 한 사람이 1초에 보낼 수 있는 메시지 수를 묶는다(넘치면 버린다).
    계속 퍼부으면 false를 돌려 연결을 끊게 한다. 방 인원보다 많은 연결은 받지 않는다 */
-const HOSTLIM=new Map(),CAPS={hello:2,bye:2,quit:2,pick:8,rdy:6,pdone:4,twv:6,pz:8,tag:8,chat:4};
+const HOSTLIM=new Map(),CAPS={hello:2,bye:2,quit:2,pick:8,rdy:6,pdone:4,twv:6,twc:10,pz:8,tag:8,chat:4};
 const pidOkH=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{6,64}$/.test(v)&&!(v in Object.prototype);
 function hostIn(pid,d){ if(!pidOkH(pid)) return; const t=performance.now(); let L=HOSTLIM.get(pid); if(!L){ if(HOSTLIM.size>64) for(const k of [...HOSTLIM.keys()]) if(!NET.players.some(p=>p.pid===k)) HOSTLIM.delete(k); L={t:0,n:0,bad:0,k:{},late:{}}; HOSTLIM.set(pid,L); }
   if(t-L.t>1000){ L.t=t; L.n=0; L.k={}; } if(++L.n>120){ return ++L.bad>1200?false:undefined; }
@@ -155,7 +155,7 @@ function apply(S){ const E=NET.em,seen=new Set(); now=S.n; const list=[];
   const N=v=>Number.isFinite(+v)?+v:0;
   for(const s of S.e){ if(!s||typeof s!=='object') continue; if(s.key!==undefined&&!hasK(CH,s.key)) s.key='ei'; for(const k of ['x','y','z','hp','max','atk','slot','team']) if(k in s) s[k]=N(s[k]); if(s.key!==undefined) s.aim=Array.isArray(s.aim)?[N(s.aim[0]),N(s.aim[1])]:[0,0]; if('st' in s&&!Array.isArray(s.st)) s.st=[]; if('sh' in s&&!Array.isArray(s.sh)) s.sh=[]; if('pn' in s) s.pn=s.pn?cleanName(s.pn):null; let e=E.get(s.id); if(s.key===undefined){ if(!e) continue; s.key=e.key; s.team=e.teamRaw; s.max=e.max; s.atk=e.atk; s.slot=e.slot; s.uu=e.ultUsed; s.boss=e.boss; s.sand=e.sand; s.pn=e.pname; s.r=e.r; s.hud=e.hudS; s.sl=e.slS; s.can=e.canS; } const fresh=!e||e.key!==s.key; if(fresh){ e={id:s.id,x:s.x,y:s.y,mv:{x:0,y:0},ai:{},dealt:{},r:{},cd:{}}; E.set(s.id,e); } seen.add(s.id);
     e.key=s.key; e.c=hasK(CH,s.key)?CH[s.key]:CH.ei; e.rad=e.c.rad||0;   /* 1.9.5: 보스는 큰 몸으로 */
-    if(NET.kit&&e.id===NET.you&&!e.c.mon){ if(!NET.kitC||NET.kitC.key!==s.key){ const b0=CH[s.key]||CH.ei,sk=Object.assign({},b0.skills); try{ kitFill(sk,NET.kit); }catch(x){} NET.kitC=Object.assign({},b0,{skills:sk,key:s.key}); } e.c=NET.kitC; }   /* 1.9.5: 함께 오르는 등반의 무기 · 권능 스킬 단추 */ e.teamRaw=s.team; e.team=tf(s.team); e.tx=s.x; e.ty=s.y; if(Math.hypot(e.x-s.x,e.y-s.y)>3){ e.x=s.x; e.y=s.y; } e.z=s.z; e.vz=0; e.hp=s.hp; e.max=s.max; e.atk=s.atk; e.dead=s.dead; e.aim={x:s.aim[0],y:s.aim[1]}; e.busy=s.busy; e.chant=s.chant; e.slot=s.slot; e.st=s.st; e.sh=s.sh;
+    if((NET.kit||NET.twSk)&&e.id===NET.you&&!e.c.mon){ if(!NET.kitC||NET.kitC.key!==s.key){ const b0=CH[s.key]||CH.ei,sk=Object.assign({},b0.skills); try{ kitFill(sk,NET.kit||[]); }catch(x){} NET.kitC=Object.assign({},b0,{skills:sk,key:s.key}); } e.c=NET.kitC; }   /* 1.9.5: 함께 오르는 등반의 무기 · 권능 스킬 단추 */ e.teamRaw=s.team; e.team=tf(s.team); e.tx=s.x; e.ty=s.y; if(Math.hypot(e.x-s.x,e.y-s.y)>3){ e.x=s.x; e.y=s.y; } e.z=s.z; e.vz=0; e.hp=s.hp; e.max=s.max; e.atk=s.atk; e.dead=s.dead; e.aim={x:s.aim[0],y:s.aim[1]}; e.busy=s.busy; e.chant=s.chant; e.slot=s.slot; e.st=s.st; e.sh=s.sh;
     if(s.cd||!e.cd||!('b' in e.cd)){ e.cd={b:0,n1:0,n2:0,aw:0,ult:0,crouch:0,x1:0,x2:0,x3:0,x4:0}; Object.assign(e.cd,s.cd||{}); } e.dash=s.dash?{vx:s.dash[0],vy:s.dash[1],until:s.dash[2]}:null; e.castFx=s.cf?{t0:s.cf[0],ult:!!s.cf[1]}:null; e.flash=Math.max(e.flash||-9,s.fl===undefined?-9:s.fl); e.swingT=s.sw; e.swingN=s.sn; e.shotT=s.so;
     e.ultUsed=!!s.uu; e.boss=!!s.boss; e.launched=!!s.la; e.sand=!!s.sand; e.tag=s.tag?{n:s.tag[0],t0:s.tag[1]}:null; e.pname=s.pn||null; e.r=s.r||{}; e.hudS=s.hud||''; e.slS=s.sl||[]; e.canS=s.can||null; if(s.dealt) e.dealt=s.dealt; list.push(e); }
   for(const id of [...E.keys()]) if(!seen.has(id)) E.delete(id);

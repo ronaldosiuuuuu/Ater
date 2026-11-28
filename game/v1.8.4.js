@@ -21,6 +21,15 @@
     pg(d){ d.ts=num(d.ts,-1e12,1e12,0); },
     /* 2.0: 등반에서 빈 단추에 붙는 스킬(꾸러미 · 칸 · 단추) */
     twsk(d){ d.sk=arr(d.sk,4).filter(x=>Array.isArray(x)&&x.length===3&&typeof x[0]==='string'&&hasK(CH,x[0])&&CH[x[0]].kit===true&&typeof x[1]==='string'&&hasK(CH[x[0]].skills,x[1])&&['x1','x2','x3','x4'].includes(x[2])).map(x=>[x[0],x[1],x[2]]); },
+    /* 2.1: 함께 등반에서 내 주머니(권능 · 장비 · 증표 · 물약 · 내 보상 · 내 상인) */
+    twme(d){ const strs=v=>arr(v,40).filter(x=>typeof x==='string').map(x=>x.slice(0,40)),okIt=x=>x&&typeof x==='object'&&((x.t==='pw'&&hasK(POWERS,x.id)&&!POWERS[x.id].gear)||(x.t==='gear'&&hasK(GEAR,x.id))||(x.t==='boon'&&hasK(BOONS,x.id)));
+      d.floor=num(d.floor,1,9999,1)|0; d.key=hasK(CH,d.key)&&!CH[d.key].mon&&!CH[d.key].kit?d.key:'ei'; d.on=d.on?1:0; d.pw=arr(d.pw,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)&&!POWERS[id].gear);
+      { const g=d.gear&&typeof d.gear==='object'?d.gear:{},o={}; for(const s of ['w','a','t']) if(hasK(GEAR,g[s])&&GEAR[g[s]].slot===s) o[s]=g[s]; d.gear=o; }
+      for(const k of ['hpB','atkB','gold','hp','max','train']) d[k]=num(d[k],0,1e6,0)|0; d.pot=arr(d.pot,2).filter(q=>q&&typeof q==='object'&&typeof POT!=='undefined'&&hasK(POT,q.id)).map(q=>({id:q.id,n:num(q.n,0,9,0)|0,max:num(q.max,1,9,1)|0}));
+      d.free=typeof SY!=='undefined'&&hasK(SY,d.free)?d.free:''; d.sk=strs(d.sk); d.skOff=strs(d.skOff); d.rew=Array.isArray(d.rew)&&d.rew.length&&d.rew.every(okIt)?d.rew.slice(0,6).map(x=>({t:x.t,id:x.id})):null; d.rewN=num(d.rewN,0,3,0)|0; d.rr=d.rr?1:0;
+      d.shop=Array.isArray(d.shop)&&d.shop.every(okIt)?d.shop.slice(0,12).map(x=>({t:x.t,id:x.id,price:num(x.price,1,1e5,1)|0,sold:!!x.sold})):null;
+      { const g=d.grow&&typeof d.grow==='object'?d.grow:{},o={}; for(const k of Object.keys(g).slice(0,20)) if(hasK(POWERS,k)) o[k]=num(g[k],0,100,0); d.grow=o; }
+      d.wait=arr(d.wait,6).map(x=>cleanName(x)||'손님'); d.team=arr(d.team,6).map(x=>cleanText(x,80)); },
     tw(d){ d.end=cleanText(d.end,140); d.floor=num(d.floor,0,9999,0)|0; d.what=cleanText(d.what,200); d.best=num(d.best,0,9999,0)|0; d.pw=arr(d.pw,60).map(x=>cleanText(x,40)); d.gear=arr(d.gear,6).map(x=>cleanText(x,40)); d.sig=cleanText(d.sig,2000); d.ids=arr(d.ids,160).filter(id=>typeof id==='string'&&hasK(POWERS,id)); d.hpB=num(d.hpB,0,1e5,0)|0; d.atkB=num(d.atkB,0,1e4,0)|0; d.train=num(d.train,0,999,0)|0;
       d.ch=arr(d.ch,10).filter(c=>c&&typeof c==='object').map(c=>({a:['rw','path','buy'].includes(c.a)?c.a:'rw',t:cleanText(c.t,80),p:String(c.p==null?'':c.p).slice(0,500),col:colOk(c.col),dis:!!c.dis}));
       d.votes=arr(d.votes,12).filter(Array.isArray).map(v=>[num(v[0],0,9,0)|0,cleanName(v[1])||'손님',pidOk(v[2])?v[2]:'']); } };

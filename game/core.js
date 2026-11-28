@@ -8,7 +8,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='2.0.0';
+const VER='2.1.0';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
 { const N=v=>{ v=+v; return Number.isFinite(v)?Math.min(1e9,Math.max(0,v)):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
@@ -113,8 +113,8 @@ const TWB={
   foeHigh:['전설','신화'],                                             /* 11층부터 상대 등급 */
   lord:[[15,['전설']],[Infinity,['전설','신화']]],                      /* 마왕(15 · 30 · 45…층) 등급 */
   stat:{                                                               /* 상대 능력치 보정(퍼센트). 1층을 0으로 두고 더해 간다. 스킬 = 기본 공격이 아닌 모든 피해 */
-    per:[[15,{hp:2.5,skill:2.5}],[39,{hp:7.5,skill:3.5}],[79,{hp:7.5,skill:5}],[Infinity,{hp:7.5,skill:7}]],   /* 층마다(2층부터): 15층까지 · 16층부터 · 40층부터 · 80층부터(2.0) */
-    every5:{hp:4,basic:[[15,4],[20,8],[49,12],[Infinity,18]]},          /* 5층마다 더: 체력 4% · 기본 공격(5~15층 4% · 20층 8% · 25층부터 12% · 50층부터 18%, 2.0) */
+    per:[[15,{hp:2.5,skill:2.5}],[39,{hp:9,skill:4.5}],[79,{hp:9,skill:6.5}],[Infinity,{hp:9,skill:9}]],   /* 층마다(2층부터): 15층까지 · 16층부터 · 40층부터 · 80층부터(2.1에서 더 올렸다) */
+    every5:{hp:4,basic:[[15,4],[20,8],[49,15],[Infinity,24]]},          /* 5층마다 더: 체력 4% · 기본 공격(5~15층 4% · 20층 8% · 25층부터 15% · 50층부터 24%, 2.1) */
     every10:{hp:7.5,skill:2.5} },                                       /* 10층마다 더 */
   elite:{hp:1.6,dmg:1.2}, lordHp:3, bossPer20:.6,                       /* 길 배율: 정예 체력 · 주는 피해, 마왕 체력, 보스는 20층마다 체력 +60% */
   curse:{frail:1.25,swift:.25},                                         /* 저주: 깨진 갑옷(받는 피해 ×) · 쫓기는 길(상대 기동력 +) */
@@ -124,8 +124,8 @@ const TWB={
   pay:{coin:[50,25],low:[10,.8],boss:[[19,1],[Infinity,2]],mcoin:150,mstar:5,     /* 층 코인 50+층×25 · 1~10층 ×0.8 · 보스/마왕 층 별무리 · 5층마다 처음 넘으면 코인 층×150(1~10층 ×0.8) · 별무리 층÷5 */
     diff:[[2,0],[5,1],[Infinity,2]]},                                  /* 판 승리 코인의 실력 배율 구간(1.9.9 그대로: 1~2층 쉬움 · 3~5층 보통 · 6층부터 어려움, 정예는 어려움). 컴퓨터 실력 구간(diff)과 따로 본다 */
   gold:{win:10,s:5,hard:10,horde:5,big:20},                            /* 증표: 이김 · S 등급 · 정예/저주 · 무리 · 보스/마왕 */
-  heal:{win:.3,winBy:[[49,.3],[99,.2],[Infinity,.1]],kill:.1,killHorde:.05,rest:.5,restCut:.85},   /* 2.0: 층을 넘는 회복은 50층부터 20% · 100층부터 10%(winBy), 무리 판 처치 회복은 5%(killHorde) */
-  pct:{from:20,base:.2,per10:.1,max:.8,bossCap:.04}, cc:[[49,1],[79,.8],[Infinity,.6]], cap:{take:.6,dodge:.35,reflect:.4,leech:12}, affixFrom:30,   /* 2.0: 체력 비례 피해 저항 · 상대가 받는 상태이상 지속 배율 · 겹침 상한 · 정예 강화가 붙는 층 */                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
+  heal:{win:.3,winBy:[[49,.25],[99,.15],[Infinity,.08]],kill:.08,killHorde:.04,rest:.5,restCut:.85},   /* 2.0: 층을 넘는 회복은 50층부터 20% · 100층부터 10%(winBy), 무리 판 처치 회복은 5%(killHorde) */
+  pct:{from:20,base:.2,per10:.1,max:.8,bossCap:.04}, cc:[[49,1],[79,.8],[Infinity,.6]], cap:{take:.5,dodge:.3,reflect:.4,leech:10}, affixFrom:20,   /* 2.0: 체력 비례 피해 저항 · 상대가 받는 상태이상 지속 배율 · 겹침 상한 · 정예 강화가 붙는 층 */                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
   shop:{pw:[20,5],gear:[20,10],train:25,hone:25,rest:20,up:10,hi:1.5},   /* 2.0: 단련 · 연마는 살 때마다 +up, 7단계 이상 권능 · 전설 이상 장비는 ×hi */              /* 상인 값(증표): 권능 20+5×단계 · 장비 20+10×등급(공설 0 ~ 신화 5) · 단련 · 연마 · 휴식 */
   boon:{train:50,hone:1},                                               /* 단련 최대 체력 · 연마 기본 공격 */
   path:{hard:.5,side:.65,rest:.5,restGold:20},                         /* 길: 험한 길이 정예일 확률(아니면 저주) · 쉼터/상인 길이 하나 더 나올 확률 · 그중 쉼터일 확률(증표가 이보다 적으면 늘 쉼터) */
@@ -281,7 +281,7 @@ function spGo(m){ if(NET.host||NET.client) return toast('친구와 함께 중에
 /* ───── 대전 화면의 모험 칸 ───── */
 function hubCard(){ const el=$('twcard'); if(!el) return; const s=twLoad(),d=PF.daily.d===today(),st=STORY.reduce((a,x)=>a+x.ch.reduce((b,_,j)=>b+stStar(x,j),0),0),sm=STORY.reduce((a,x)=>a+x.ch.length*2,0);
   el.innerHTML='<b style="font:600 15px var(--display)">모험</b> <small style="color:var(--muted)">코인 '+PF.coin.toLocaleString()+' · 별무리 '+PF.star+'</small><div class="row" style="margin-top:8px"><button type="button" id="hub-ga">뽑기<small style="display:block;font-size:10.5px;opacity:.75">캐릭터 '+Object.keys(CH).filter(k=>!CH[k].re&&PF.own[k]).length+'명</small></button><button type="button" id="hub-tw">등반<small style="display:block;font-size:10.5px;opacity:.75">'+(s?'이어서 '+s.floor+'층':'최고 '+PF.tw.best+'층')+'</small></button><button type="button" id="hub-st">이야기<small style="display:block;font-size:10.5px;opacity:.75">★ '+st+' / '+sm+'</small></button><button type="button" id="hub-dy">오늘의 도전<small style="display:block;font-size:10.5px;opacity:.75">'+(d?(PF.daily.win?'이겼다 '+PF.daily.rank:'졌다'):'아직 안 했다')+'</small></button></div>'; }
-function towerHome(){ const s=twLoad(); $('tw-body').innerHTML=head('TOWER','등반','가장 높이 '+PF.tw.best+'층'+(CH[PF.tw.key]?' · '+CH[PF.tw.key].name.split(', ')[1]:''))+'<p class="note">지금 고른 내 캐릭터('+esc(CH[kOf('me')].name)+')로 층을 오른다. 이길 때마다 보상을 고르고, 다음 길을 고른다. 체력은 이어지고 이기면 최대 체력의 '+Math.round(TWB.heal.win*100)+'%를, 적을 쓰러뜨리면 잃은 체력의 '+Math.round(TWB.heal.kill*100)+'%를 되찾는다. 5층마다 보스 몬스터와 마왕이 번갈아 나온다. 지면 끝난다.</p><div class="dock">'+(s?'<button class="go" id="tw-res" type="button">이어서 · '+s.floor+'층 ('+CH[s.key].name.split(', ')[1]+')</button>':'')+'<button class="'+(s?'ghost':'go')+'" id="tw-new" type="button">'+(s?'새로 오르기 (하던 등반은 지워진다)':'오르기 시작')+'</button><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tower').hidden=false; $('tower').scrollTop=0; }
+function towerHome(){ const s=twLoad(); $('tw-body').innerHTML=head('TOWER','등반','가장 높이 '+PF.tw.best+'층'+(CH[PF.tw.key]?' · '+CH[PF.tw.key].name.split(', ')[1]:''))+'<p class="note">지금 고른 내 캐릭터('+esc(CH[kOf('me')].name)+')로 층을 오른다. 이길 때마다 보상을 고르고, 다음 길을 고른다. 체력은 이어지고 이기면 최대 체력의 '+Math.round(TWB.heal.winBy[0][1]*100)+'%(50층부터 '+Math.round(TWB.heal.winBy[1][1]*100)+'% · 100층부터 '+Math.round(TWB.heal.winBy[2][1]*100)+'%)를, 적을 쓰러뜨리면 잃은 체력의 '+Math.round(TWB.heal.kill*100)+'%를 되찾는다. 5층마다 보스 몬스터와 마왕이 번갈아 나온다. 지면 끝난다.</p><div class="dock">'+(s?'<button class="go" id="tw-res" type="button">이어서 · '+s.floor+'층 ('+CH[s.key].name.split(', ')[1]+')</button>':'')+'<button class="'+(s?'ghost':'go')+'" id="tw-new" type="button">'+(s?'새로 오르기 (하던 등반은 지워진다)':'오르기 시작')+'</button><button class="ghost" id="tw-out" type="button">닫기</button></div>'; $('tower').hidden=false; $('tower').scrollTop=0; }
 document.addEventListener('click',e=>{ const t=e.target.closest('[data-re],#hub-ga,#ga-back,[data-pull],[data-i2],#hub-tw,#hub-st,#hub-dy,#tw-new,#tw-res,#tw-go,#tw-out,#tw-again,#tw-info,#tw-shopout,#st-back,#dy-go,#dy-me,#dy-foe,[data-rw],[data-path],[data-buy],[data-st],[data-sc],[data-sgo]'); if(!t||t.disabled) return; const D=t.dataset;
   if(D.re){ const cost=RECOST[CH[D.re].grade]; if(PF.star<cost) return toast('별무리의 흔적이 모자라다'); PF.star-=cost; PF.re[D.re]=Date.now(); pfSave(); sfx('win'); toast(CH[D.re+'_r'].name+' · 재림을 열었다',3000); drawSel(); return gachaScreen(); }
   if(t.id==='hub-ga'||t.id==='ga-back') return gachaScreen(); if(D.pull){ const r=pulls(+D.pull); if(r){ sfx('win'); gachaScreen(r); drawSel(); } return; } if(D.i2) return info(D.i2);
