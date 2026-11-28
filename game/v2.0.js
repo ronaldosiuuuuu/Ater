@@ -130,11 +130,14 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
     return a*m; };
   n.modTake=(x,src,a,l,o)=>{ let v=c0.modTake?c0.modTake(x,src,a,l,o):a; if(src===x||!(a>0)) return v;
     /* 회피 상한: 권능 · 장비의 회피가 상한을 넘으면 넘는 만큼은 맞은 것으로 친다 */
-    if(!(v>0)&&x._dg>cap.dodge&&Math.random()>cap.dodge/x._dg) v=a*(1-Math.min(cap.take,x._tk));
+    if(!(v>0)&&x._dg>cap.dodge&&Math.random()>cap.dodge/x._dg) v=a*(1-x._tk);
     if(!(v>0)) return v; let m=1;
     if(T('판테온')) m*=.92; if(T('철벽')) m*=1-V('철벽',[.04,.08,.13,.20]); if(T('역경')&&x.hp<=x.max*.35) m*=T('역경')>=2?.8:.9;
     if(T('질풍')>=3&&Math.hypot(x.mv.x,x.mv.y)>.1) m*=T('질풍')>=4?.8:.9; if(x._dr>now) m*=.75; if(x._bl&&x._bl.take) m*=1-x._bl.take;
-    v*=m; v=Math.max(v,a*(1-cap.take)*(base.modTake?.6:1));   /* 받는 피해 감소 상한(제 패시브로 줄이는 캐릭터는 조금 더 준다) */
+    v*=m;
+    /* 받는 피해 감소는 겹칠수록 덜 는다(2.2.2). 모든 감소(캐릭터 패시브 · 권능 · 장비 · 시너지 · 저항 상태)를 방어 점수로 바꿔 더하고(10% 감소 = 약 10.5점, -ln(남는 비율)×100),
+       실제 감소 = 점수 ÷ (점수 + TWB.dr). 점수가 아무리 커도 100%에는 닿지 않는다. 저항 상태는 엔진이 뒤에서 한 번 더 곱하므로 그만큼 미리 되돌려 둔다 */
+    { let rs=0; for(const s of x.st){ if(s.k==='resist') rs+=s.v; else if(s.k==='vuln') rs-=s.v; } rs=Math.max(0,Math.min(.9,rs)); const q=Math.min(1,v/a)*(1-rs); if(q<1){ const P=-Math.log(Math.max(q,1e-6))*100,eff=P/(P+TWB.dr); v=a*(1-eff)/(1-rs)*Math.max(1,v/a); } }
     if(T('철벽')>=3&&!(o&&o.amp)&&x._blk<=now){ x._blk=now+(T('철벽')>=4?8:12); say(x,'막음','#cfd6ff'); return 0; }
     return v; };
   n.speedMod=x=>(c0.speedMod?c0.speedMod(x):1)*(1+V('질풍',[.06,.12,.18,.25]))*(x._bl&&x._bl.speed?1+x._bl.speed:1);
@@ -253,7 +256,7 @@ synHtml=function(ids,key,free){ if(key===undefined){ if(NET.client){ if(running&
   if(!ks.length) return h+'<p class="note">아직 모은 시너지가 없다. 캐릭터 · 권능 · 장비가 시너지 하나에 1점씩 준다.</p>';
   h+=syRow(n); for(const g of ['소속','힘','성향']){ const L=ks.filter(k=>SY[k].group===g); if(!L.length) continue; h+='<p class="sy-g">'+g+'</p>';
     for(const k of L){ const t=syTier(k,n[k]); h+='<div class="bcard" style="border-left-color:'+(t?'var(--gold)':'var(--line)')+'"><b>'+esc(k)+' '+n[k]+'점'+(t?' · '+t+'단계':'')+'</b>'+SY[k].tiers.map((v,i)=>'<span class="sy-t'+(i<t?' on':'')+'">'+v+'점: '+esc(SY[k].tx[i])+'</span>').join('')+'</div>'; } }
-  return h+'<p class="note">같은 시너지는 가장 높은 단계까지의 효과가 모두 든다. 등반에서만 걸린다.</p>'; };
+  return h+'<p class="note">같은 시너지는 가장 높은 단계까지의 효과가 모두 든다. 등반에서만 걸린다.\n받는 피해 감소는 겹칠수록 덜 늘어난다(모두 합쳐 20%면 실제 18%, 50%면 41%, 80%면 62%). 아무리 모아도 100%가 되지 않는다.</p>'; };
 /* 권능 · 장비 하나의 시너지 이름표(game/v1.9.10.js의 꼬리표 칸을 갈아 끼운다) */
 twTagChips=function(id){ const L=synOf(id); return L.length?'<div class="tw-tgs">'+L.map(t=>'<span class="tw-tg">'+esc(t)+'</span>').join('')+'</div>':''; };
 /* 보유 창: 무기 · 권능 카드 원문 */

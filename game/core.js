@@ -8,7 +8,7 @@
    5) 기록: 승패, 숙련, 업적(ACH에 한 줄). 이 기기에만 남는다(aetherProfile).
    6) 평가: 1대1에서 이기면 남은 체력으로 S·A·B·C. */
 /* 판 표기: 대규모 . 중규모 . 마이너(밸런스 · 버그). 고쳐 내보낼 때 여기와 PATCH(맨 아래), sw.js의 V, net.js의 APPV를 함께 올린다 */
-const VER='2.2.1';
+const VER='2.2.2';
 const PF=(()=>{ let d; try{ d=JSON.parse(localStorage.getItem('aetherProfile')||'null'); }catch(x){} d=d||{}; return Object.assign({w:0,l:0,streak:0,ch:{},ach:{},tw:{best:0,key:'',runs:0},mon:{},story:{},daily:{},dstreak:0,dwin:0,open:false,beat:{},own:{},re:{},coin:1500,star:0},d); })();
 /* 1.8.4 저장된 기록의 꼴을 맞춘다: 숫자 칸은 숫자로, 표 칸은 표로(가져온 저장 글에 엉뚱한 값이 섞여 있어도 화면이 깨지지 않게) */
 { const N=v=>{ v=+v; return Number.isFinite(v)?Math.min(1e9,Math.max(0,v)):0; },O=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},NM=o=>{ o=O(o); for(const k of Object.keys(o)) o[k]=N(o[k]); return o; };
@@ -125,7 +125,7 @@ const TWB={
     diff:[[2,0],[5,1],[Infinity,2]]},                                  /* 판 승리 코인의 실력 배율 구간(1.9.9 그대로: 1~2층 쉬움 · 3~5층 보통 · 6층부터 어려움, 정예는 어려움). 컴퓨터 실력 구간(diff)과 따로 본다 */
   gold:{win:10,s:5,hard:10,horde:5,big:20},                            /* 증표: 이김 · S 등급 · 정예/저주 · 무리 · 보스/마왕 */
   heal:{win:.3,winBy:[[49,.2],[99,.12],[Infinity,.06]],kill:.08,killHorde:.04,rest:.5,restCut:.85},   /* 2.0: 층을 넘는 회복은 50층부터 20% · 100층부터 10%(winBy), 무리 판 처치 회복은 5%(killHorde) */
-  pct:{from:10,base:.2,per10:.1,max:.8,bossCap:.04}, cc:[[49,1],[79,.8],[Infinity,.6]], cap:{take:.5,dodge:.3,reflect:.4,leech:10}, affixFrom:20,   /* 2.0: 체력 비례 피해 저항 · 상대가 받는 상태이상 지속 배율 · 겹침 상한 · 정예 강화가 붙는 층 */                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
+  pct:{from:10,base:.2,per10:.1,max:.8,bossCap:.04}, cc:[[49,1],[79,.8],[Infinity,.6]], cap:{dodge:.3,reflect:.4,leech:10}, dr:100, affixFrom:20,   /* 2.2.2: 받는 피해 감소는 상한 대신 계산식(game/v2.0.js). dr = 감소 50%가 되는 방어 점수 */   /* 2.0: 체력 비례 피해 저항 · 상대가 받는 상태이상 지속 배율 · 겹침 상한 · 정예 강화가 붙는 층 */                            /* 회복: 층을 넘으면 최대 체력의 · 적을 쓰러뜨리면 잃은 체력의 · 쉼터는 최대 체력의 · 체력이 이만큼 넘으면 보상에 휴식이 안 나온다 */
   shop:{pw:[20,5],gear:[20,10],train:25,hone:25,rest:20,up:10,hi:1.5},   /* 2.0: 단련 · 연마는 살 때마다 +up, 7단계 이상 권능 · 전설 이상 장비는 ×hi */              /* 상인 값(증표): 권능 20+5×단계 · 장비 20+10×등급(공설 0 ~ 신화 5) · 단련 · 연마 · 휴식 */
   boon:{train:50,hone:1},                                               /* 단련 최대 체력 · 연마 기본 공격 */
   path:{hard:.5,side:.65,rest:.5,restGold:20},                         /* 길: 험한 길이 정예일 확률(아니면 저주) · 쉼터/상인 길이 하나 더 나올 확률 · 그중 쉼터일 확률(증표가 이보다 적으면 늘 쉼터) */
