@@ -15,7 +15,7 @@ const coKeyP=p=>p.re&&hasK(CH,p.key+'_r')?p.key+'_r':(hasK(CH,p.key)?p.key:'ei')
 const coGuests=()=>NET.host?others():[];
 const BAGK=['pw','gear','hpB','atkB','gold','pot','free','sk','skOff','bought','grow','rew','rewN','rewPw','shop','shopCut','picks','rr'];
 const coNew=()=>({pw:[],gear:{},hpB:0,atkB:0,gold:0,pot:[],sk:[],skOff:[],bought:{},grow:{},rew:null,rewN:0,rewPw:false,shop:null,picks:[],rr:0});
-function coBag(seat){ if(!TW.co||typeof TW.co!=='object') TW.co={}; if(!hasK(TW.co,seat)) TW.co[seat]=coNew(); return TW.co[seat]; }
+function coBag(seat){ if(typeof coFixOnce==='function') coFixOnce(); if(!TW.co||typeof TW.co!=='object') TW.co={}; if(!hasK(TW.co,seat)) TW.co[seat]=coNew(); return TW.co[seat]; }
 let BAGON=null;
 function coWith(seat,key,fn){ if(BAGON) return fn(); const B=coBag(seat),S={},k0=TW.key,h0=TW.hp; TW.php=TW.php||{};
   for(const k of BAGK){ S[k]=TW[k]; TW[k]=B[k]; } TW.key=hasK(CH,key)?key:k0; TW.hp=TW.php[seat]==null?null:TW.php[seat]; BAGON=seat;
@@ -89,10 +89,11 @@ function coFix(){ if(typeof TW==='undefined'||!TW) return; const src=TW.co&&type
     B.rew=Array.isArray(b.rew)&&b.rew.length&&b.rew.every(okIt)?b.rew.slice(0,6).map(x=>({t:x.t,id:x.id})):null; B.rewN=B.rew?Math.max(1,N(b.rewN,0,3)|0):0; B.rewPw=!!b.rewPw; B.rr=b.rr?1:0;
     B.shop=Array.isArray(b.shop)&&b.shop.every(okIt)?b.shop.slice(0,12).map(x=>({t:x.t,id:x.id,price:N(x.price,1,1e5)|0,sold:!!x.sold})):null; B.picks=strs(b.picks).concat(); out[seat]=B; }
   TW.co=out; TW.rr=TW.rr?1:0; }
-{ const ts0=towerStart; towerStart=function(resume){ const r=ts0.apply(this,arguments); try{ if(typeof TW!=='undefined'&&TW&&resume) coFix(); }catch(x){} return r; }; }
+/* 등반 하나마다 한 번, 화면을 그리기 전에 다듬는다(이어 하기로 읽은 저장이 망가져 있어도 멈추지 않게) */
+let coFixedFor=null; const coFixOnce=()=>{ if(typeof TW!=='undefined'&&TW&&coFixedFor!==TW){ coFixedFor=TW; try{ coFix(); }catch(x){ TW.co={}; } } };
 
 /* ── 방장 화면: 다시 뽑기 · 함께하는 사람 · 기다리는 사람 ── */
-{ const ts=towerScreen; towerScreen=function(lost){ if(!lost&&typeof TW!=='undefined'&&TW&&coOn()&&!TW.shop){ for(const k in (TW.co||{})) if(TW.co[k].shop){ TW.co[k].shop=null; TW.co[k].shopCut=0; } }
+{ const ts=towerScreen; towerScreen=function(lost){ coFixOnce(); if(!lost&&typeof TW!=='undefined'&&TW&&coOn()&&!TW.shop){ for(const k in (TW.co||{})) if(TW.co[k].shop){ TW.co[k].shop=null; TW.co[k].shopCut=0; } }
     const r=ts.apply(this,arguments);
     try{ if(lost||typeof TW==='undefined'||!TW||$('co-host')) return r; const body=$('tw-body'),at=$('sy-extra')||$('sy-line')||$('tw-inv'); if(!at) return r; let h='';
       if(TW.rew&&!TW.rr&&(TW.gold|0)>=1) h+='<button class="ghost" id="tw-rr" type="button" style="width:100%;margin:0 0 8px">보상 다시 뽑기 (증표 1 · 층마다 한 번)</button>';

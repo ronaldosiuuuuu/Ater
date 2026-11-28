@@ -13,36 +13,36 @@ if(typeof EL!=='undefined'&&!EL.thunder) EL.thunder=['#ffe66b','#ffffff','spark'
 
 /* ── 시너지 표 ── tiers: 단계 점수, tx: 단계마다 효과 글 */
 const SYDEF=[
- ['제국','소속',[2,4],['최대 체력 +8% · 주는 피해 +4%','스킬 「제국의 깃발」: 6초간 깃발 둘레 4칸의 나와 아군이 받는 피해 -15% (재사용 20초)']],
+ ['제국','소속',[2,4],['최대 체력 +8% · 주는 피해 +6%','스킬 「제국의 깃발」: 6초간 깃발 둘레 4칸의 나와 아군이 받는 피해 -15% (재사용 20초)']],
  ['소모라','소속',[2,3,4],['적을 쓰러뜨릴 때마다 증표 +1','상인 값 -15%','층을 넘을 때마다 가진 증표의 10%만큼 이자(최대 +10)']],
- ['판테온','소속',[2,4],['받는 피해 -6%','스킬 「신벽」: 3초간 둘레 3칸의 나와 아군이 받는 피해 -50% (재사용 15초)']],
+ ['판테온','소속',[2,4],['받는 피해 -8%','스킬 「신벽」: 3초간 둘레 3칸의 나와 아군이 받는 피해 -50% (재사용 12초)']],
  ['마탑','소속',[2,4,6,8],['스킬 피해 +8%','스킬 피해 +16%','스킬 피해 +26% · 스킬 3번째마다 마력 구체(기본 공격의 150%)','스킬 피해 +40% · 마력 구체가 2번째마다']],
  ['부족','소속',[2,3],['최대 체력 +60','전투 시작 8초간 이동속도 +15% · 주는 피해 +10%']],
- ['용족','소속',[2,3,4],['내 체력 50% 이하일 때 주는 피해 +10%','체력이 처음 50% 아래로 떨어지면 「용의 각성」 8초: 받는 피해 -30%','각성 중 기본 공격이 앞 3칸에 숨결(기본 공격의 50%)']],
- ['극동','소속',[2,4],['기본 공격이 6% 확률로 1.5배','기본 공격이 15% 확률로 2배 · 치명타마다 스킬 재사용 0.3초 감소']],
+ ['용족','소속',[2,3,4],['내 체력 50% 이하일 때 주는 피해 +10%','체력이 처음 50% 아래로 떨어지면 「용의 각성」 8초: 받는 피해 -25%','각성 중 기본 공격이 앞 3칸에 숨결(기본 공격의 50%)']],
+ ['극동','소속',[2,4],['기본 공격이 10% 확률로 1.5배','기본 공격이 20% 확률로 2배 · 치명타마다 스킬 재사용 0.3초 감소']],
  ['기사단','소속',[2,4,6,8],['받는 보호막 +20%','10초마다 보호막(최대 체력 6%)','보호막이 있는 동안 주는 피해 +15%','보호막을 얻을 때마다 둘레 3칸에 그 보호막만큼 피해']],
- ['명계','소속',[2,4],['쓰러뜨린 자리에 망령이 4초간 남아 가까운 적을 친다(초당 기본 공격의 30%)','망령 8초 · 초당 60% · 동시에 둘']],
- ['바다','소속',[2,4],['기본 공격 4번째마다 물결(적을 2칸 밀침)','물결에 기본 공격의 80% 피해 + 2초 둔화']],
+ ['명계','소속',[2,4],['쓰러뜨린 자리에 망령이 4초간 남아 가까운 적을 친다(초당 기본 공격의 40%)','망령 8초 · 초당 80% · 동시에 둘']],
+ ['바다','소속',[2,4],['기본 공격 3번째마다 물결(적을 2칸 밀침)','물결에 기본 공격의 100% 피해 + 2초 둔화']],
  ['서리','힘',[2,4,6,8],['타격마다 냉기 1(최대 5 · 하나당 이동속도 -6%)','냉기 5면 1초 빙결','빙결된 적에게 주는 피해 +30%','빙결된 적이 쓰러지면 둘레 4칸 적에게 냉기 5']],
- ['화염','힘',[2,4,6,8],['타격마다 화상 3초(초당 기본 공격의 10%)','화상 초당 20%','화상 초당 35% · 화상 입은 적이 쓰러지면 3칸 폭발(기본 공격의 100%)','화상 초당 60% · 폭발이 화상을 다시 건다']],
- ['뇌전','힘',[2,4],['기본 공격 6번째마다 번개가 셋에게 튄다(기본 공격의 50%)','4번째마다 + 스킬 「낙뢰」: 앞 5칸 자리 3칸에 기본 공격의 200% (재사용 12초)']],
+ ['화염','힘',[2,4,6,8],['타격마다 화상 3초(초당 기본 공격의 20%)','화상 초당 40%','화상 초당 60% · 화상 입은 적이 쓰러지면 3칸 폭발(기본 공격의 100%)','화상 초당 100% · 폭발이 화상을 다시 건다']],
+ ['뇌전','힘',[2,4],['기본 공격 5번째마다 번개가 셋에게 튄다(기본 공격의 80%)','3번째마다 + 스킬 「낙뢰」: 앞 5칸 자리 3칸에 기본 공격의 200% (재사용 12초)']],
  ['질풍','힘',[2,4,6,8],['이동속도 +6%','이동속도 +12%','이동속도 +18% · 움직이는 동안 받는 피해 -10%','이동속도 +25% · 움직이는 동안 받는 피해 -20%']],
  ['성좌','힘',[3,5],['싸움마다 별자리 축복 하나(피해 · 방어 · 회복 · 속도 가운데 +10%)','축복 둘 · 효과 1.5배']],
  ['심연','힘',[2,4],['매 초 최대 체력의 0.3%를 잃는 대신 주는 피해 +12%','매 초 0.6%를 잃고 주는 피해 +25% · 준 피해의 5% 회복']],
- ['자연','힘',[2,4],['매 초 최대 체력의 0.6% 회복','스킬 「세계수 묘목」: 8초간 둘레 4칸의 나와 아군이 매 초 최대 체력의 3% 회복 (재사용 25초)']],
- ['강철','힘',[2,4,6,8],['기본 공격 피해 +10%','전투 시작 때 포탑 하나(초당 기본 공격의 20%)','포탑 둘','포탑 셋 · 내 기본 공격을 따라 쏜다']],
- ['혈','힘',[2,4],['준 피해의 3% 회복','준 피해의 7% 회복 · 넘친 회복은 다음 공격에 피해로 더한다(최대 체력의 10%까지)']],
- ['성광','힘',[2,4],['받는 회복 +20% · 받는 상태이상 지속 -20%','10초마다 가장 다친 아군의 상태이상을 풀고 최대 체력의 8% 회복']],
+ ['자연','힘',[2,4],['매 초 최대 체력의 0.8% 회복','스킬 「세계수 묘목」: 8초간 둘레 4칸의 나와 아군이 매 초 최대 체력의 3% 회복 (재사용 25초)']],
+ ['강철','힘',[2,4,6,8],['기본 공격 피해 +10%','전투 시작 때 포탑 하나(초당 기본 공격의 15%)','포탑 둘','포탑 셋 · 내 기본 공격을 따라 쏜다']],
+ ['혈','힘',[2,4],['준 피해의 4% 회복','준 피해의 9% 회복 · 넘친 회복은 다음 공격에 피해로 더한다(최대 체력의 10%까지)']],
+ ['성광','힘',[2,4],['받는 회복 +30% · 받는 상태이상 지속 -20%','10초마다 가장 다친 아군의 상태이상을 풀고 최대 체력의 10% 회복']],
  ['맹공','성향',[2,4,6,8],['주는 피해 +5%','주는 피해 +10%','주는 피해 +18% · 쓰러뜨리면 4초간 「광폭」(이동속도 +20% · 피해 +10%)','주는 피해 +28% · 광폭 8초']],
- ['철벽','성향',[2,4,6,8],['받는 피해 -5%','받는 피해 -10%','받는 피해 -16% · 10초마다 첫 피격 무효','받는 피해 -24% · 6초마다 첫 피격 무효']],
+ ['철벽','성향',[2,4,6,8],['받는 피해 -4%','받는 피해 -8%','받는 피해 -13% · 12초마다 첫 피격 무효','받는 피해 -20% · 8초마다 첫 피격 무효']],
  ['생명','성향',[2,4],['매 초 최대 체력의 0.5% 회복','매 초 1% 회복 · 체력이 가득 찬 뒤 회복은 보호막으로(최대 체력의 20%까지)']],
  ['연마','성향',[2,4,6,8],['재사용 대기시간 6% 빨리','12% 빨리','20% 빨리 · 스킬을 쓰면 다음 기본 공격 +50%','30% 빨리 · 다음 기본 공격 +100%']],
- ['연격','성향',[2,4,6,8],['기본 공격 4번째마다 기본 공격의 40% 추가 피해','80% 추가 피해','150% 추가 피해','3번째마다 200% 추가 피해']],
- ['사냥','성향',[2,4],['체력 30% 이하인 적에게 주는 피해 +12%','+28% · 쓰러뜨리면 잃은 체력의 8% 더 회복']],
+ ['연격','성향',[2,4,6,8],['기본 공격 4번째마다 기본 공격의 35% 추가 피해','70% 추가 피해','120% 추가 피해','3번째마다 170% 추가 피해']],
+ ['사냥','성향',[2,4],['체력 30% 이하인 적에게 주는 피해 +15%','+32% · 쓰러뜨리면 잃은 체력의 8% 더 회복']],
  ['역경','성향',[2,4],['내 체력 35% 이하일 때 받는 피해 -10%','-20% · 싸움마다 한 번 체력 1로 버티고 2초 무적']],
  ['선봉','성향',[2,4],['전투 시작 6초간 주는 피해 +12%','+30% · 처음 맞힌 적을 1초 기절']],
- ['응징','성향',[2,4],['받은 피해의 5%를 되돌린다','12%를 되돌린다 · 되돌린 피해의 30%만큼 회복']],
- ['속박','성향',[2,4],['내가 거는 상태이상 지속 +20%','지속 +40% · 상태이상에 걸린 적에게 주는 피해 +15%']]
+ ['응징','성향',[2,4],['받은 피해의 8%를 되돌린다','18%를 되돌린다 · 되돌린 피해의 30%만큼 회복']],
+ ['속박','성향',[2,4],['내가 거는 상태이상 지속 +20% · 상태이상에 걸린 적에게 주는 피해 +8%','지속 +40% · 상태이상에 걸린 적에게 주는 피해 +20%']]
 ];
 const SY={}; for(const [name,group,tiers,tx] of SYDEF) SY[name]={name,group,tiers,tx};
 const SYN_NAMES=SYDEF.map(x=>x[0]);
@@ -83,7 +83,7 @@ function syKit(key,name,sk){ sk.kit=key; sk.kind='시너지'; Object.definePrope
 const SYSK={제국:['sy_flag',2],판테온:['sy_wall',2],뇌전:['sy_bolt',2],자연:['sy_tree',2]};   /* 시너지 → [스킬 꾸러미, 필요한 단계] */
 const twMates=e=>ents.filter(o=>o.team===e.team&&!o.dead);
 syKit('sy_flag','제국의 깃발',{name:'제국의 깃발',cd:20,r:6,txt:'깃발을 꽂는다. 6초간 둘레 4칸의 나와 아군이 받는 피해 15% 감소.',ai:(e,d)=>d<=6,cast(e){ zone(e,{x:e.x,y:e.y,r:4,dur:6,every:.25,good:true,label:'제국의 깃발',tick:z=>{ for(const a of twMates(e)) if(Math.hypot(a.x-z.x,a.y-z.y)<=z.r+.5){ const s=a.st.find(q=>q.k==='resist'&&q.sy==='flag'); if(s) s.until=now+.5; else add(a,'resist',.5,.15,{self:true,sy:'flag',end:()=>{}}); } }}); proc(e,'제국의 깃발','6초'); }});
-syKit('sy_wall','신벽',{name:'신벽',cd:15,r:6,txt:'3초간 둘레 3칸의 나와 아군이 받는 피해 50% 감소.',ai:(e,d)=>d<=5&&e.hp<e.max*.8,cast(e){ zone(e,{x:e.x,y:e.y,r:3,dur:3,every:.2,good:true,chase:e,speed:99,label:'신벽',tick:z=>{ for(const a of twMates(e)) if(Math.hypot(a.x-z.x,a.y-z.y)<=z.r+.5){ const s=a.st.find(q=>q.k==='resist'&&q.sy==='wall'); if(s) s.until=now+.4; else add(a,'resist',.4,.5,{self:true,sy:'wall',end:()=>{}}); } }}); proc(e,'신벽','3초'); }});
+syKit('sy_wall','신벽',{name:'신벽',cd:12,r:6,txt:'3초간 둘레 3칸의 나와 아군이 받는 피해 50% 감소.',ai:(e,d)=>d<=5&&e.hp<e.max*.8,cast(e){ zone(e,{x:e.x,y:e.y,r:3,dur:3,every:.2,good:true,chase:e,speed:99,label:'신벽',tick:z=>{ for(const a of twMates(e)) if(Math.hypot(a.x-z.x,a.y-z.y)<=z.r+.5){ const s=a.st.find(q=>q.k==='resist'&&q.sy==='wall'); if(s) s.until=now+.4; else add(a,'resist',.4,.5,{self:true,sy:'wall',end:()=>{}}); } }}); proc(e,'신벽','3초'); }});
 syKit('sy_bolt','낙뢰',{name:'낙뢰',cd:12,r:8,txt:'앞 5칸 자리의 둘레 3칸에 기본 공격의 200% 피해.',cast(e){ const at={x:e.x+e.aim.x*5,y:e.y+e.aim.y*5}; S.circle(e,3,e.atk*2,'낙뢰',{knock:0,v:'bolt',el:'thunder'},at); }});
 syKit('sy_tree','세계수 묘목',{name:'세계수 묘목',cd:25,r:99,txt:'묘목을 심는다. 8초간 둘레 4칸의 나와 아군이 매 초 최대 체력의 3% 회복.',ai:e=>e.hp<e.max*.7,cast(e){ zone(e,{x:e.x,y:e.y,r:4,dur:8,every:1,good:true,label:'세계수 묘목',tick:z=>{ for(const a of twMates(e)) if(Math.hypot(a.x-z.x,a.y-z.y)<=z.r+.5) heal(a,a.max*.03,true); }}); proc(e,'세계수 묘목','8초'); }});
 
@@ -120,50 +120,50 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
   e._dg=1-dg; e._tk=1-tk; e._lk=lk>cap.leech?cap.leech/lk:1; e._cnt={b:0,sea:0,bolt:0,cast:0}; e._sec=0; e._t10=0; e._blk=0; e._ov=0;
   const T=k=>tOf(e,k),V=(k,a)=>a[T(k)-1]||0;
   n.modDeal=(x,t,a,l,o)=>{ if(c0.modDeal) a=c0.modDeal(x,t,a,l,o); if(!(a>0)||x===t) return a; o=o||{}; let m=1;
-    if(T('제국')) m*=1.04; if(T('마탑')&&!o.basic&&!o.amp) m*=1+V('마탑',[.08,.16,.26,.40]); if(T('부족')>=2&&now<=8) m*=1.1; if(T('용족')&&x.hp<=x.max*.5) m*=1.1;
-    if(T('극동')&&o.basic&&!o.amp&&Math.random()<(T('극동')>=2?.15:.06)){ m*=T('극동')>=2?2:1.5; say(x,'치명','#ffd36b'); if(T('극동')>=2) for(const k in x.cd) if(k!=='b'&&x.cd[k]>0) x.cd[k]=Math.max(0,x.cd[k]-.3); }
+    if(T('제국')) m*=1.06; if(T('마탑')&&!o.basic&&!o.amp) m*=1+V('마탑',[.08,.16,.26,.40]); if(T('부족')>=2&&now<=8) m*=1.1; if(T('용족')&&x.hp<=x.max*.5) m*=1.1;
+    if(T('극동')&&o.basic&&!o.amp&&Math.random()<(T('극동')>=2?.2:.1)){ m*=T('극동')>=2?2:1.5; say(x,'치명','#ffd36b'); if(T('극동')>=2) for(const k in x.cd) if(k!=='b'&&x.cd[k]>0) x.cd[k]=Math.max(0,x.cd[k]-.3); }
     if(T('기사단')>=3&&x.sh.some(s=>s.v>0)) m*=1.15; if(T('서리')>=3&&t._frz>now) m*=1.3; if(T('심연')) m*=T('심연')>=2?1.25:1.12; if(T('강철')&&o.basic) m*=1.1;
     if(T('맹공')) m*=1+V('맹공',[.05,.10,.18,.28]); if(x._fr>now) m*=1.1;
     if(T('연마')>=3&&o.basic&&!o.amp&&x._nb){ x._nb=false; m*=T('연마')>=4?2:1.5; }
-    if(T('사냥')&&t.hp<=t.max*.3) m*=T('사냥')>=2?1.28:1.12; if(T('선봉')&&now<=6) m*=T('선봉')>=2?1.3:1.12;
-    if(T('속박')>=2&&t.st.some(s=>DEBUFFS.includes(s.k))) m*=1.15; if(x._bl&&x._bl.deal) m*=1+x._bl.deal;
+    if(T('사냥')&&t.hp<=t.max*.3) m*=T('사냥')>=2?1.32:1.15; if(T('선봉')&&now<=6) m*=T('선봉')>=2?1.3:1.12;
+    if(T('속박')&&t.st.some(s=>DEBUFFS.includes(s.k))) m*=T('속박')>=2?1.2:1.08; if(x._bl&&x._bl.deal) m*=1+x._bl.deal;
     return a*m; };
   n.modTake=(x,src,a,l,o)=>{ let v=c0.modTake?c0.modTake(x,src,a,l,o):a; if(src===x||!(a>0)) return v;
     /* 회피 상한: 권능 · 장비의 회피가 상한을 넘으면 넘는 만큼은 맞은 것으로 친다 */
     if(!(v>0)&&x._dg>cap.dodge&&Math.random()>cap.dodge/x._dg) v=a*(1-Math.min(cap.take,x._tk));
     if(!(v>0)) return v; let m=1;
-    if(T('판테온')) m*=.94; if(T('철벽')) m*=1-V('철벽',[.05,.10,.16,.24]); if(T('역경')&&x.hp<=x.max*.35) m*=T('역경')>=2?.8:.9;
-    if(T('질풍')>=3&&Math.hypot(x.mv.x,x.mv.y)>.1) m*=T('질풍')>=4?.8:.9; if(x._dr>now) m*=.7; if(x._bl&&x._bl.take) m*=1-x._bl.take;
+    if(T('판테온')) m*=.92; if(T('철벽')) m*=1-V('철벽',[.04,.08,.13,.20]); if(T('역경')&&x.hp<=x.max*.35) m*=T('역경')>=2?.8:.9;
+    if(T('질풍')>=3&&Math.hypot(x.mv.x,x.mv.y)>.1) m*=T('질풍')>=4?.8:.9; if(x._dr>now) m*=.75; if(x._bl&&x._bl.take) m*=1-x._bl.take;
     v*=m; v=Math.max(v,a*(1-cap.take)*(base.modTake?.6:1));   /* 받는 피해 감소 상한(제 패시브로 줄이는 캐릭터는 조금 더 준다) */
-    if(T('철벽')>=3&&!(o&&o.amp)&&x._blk<=now){ x._blk=now+(T('철벽')>=4?6:10); say(x,'막음','#cfd6ff'); return 0; }
+    if(T('철벽')>=3&&!(o&&o.amp)&&x._blk<=now){ x._blk=now+(T('철벽')>=4?8:12); say(x,'막음','#cfd6ff'); return 0; }
     return v; };
   n.speedMod=x=>(c0.speedMod?c0.speedMod(x):1)*(1+V('질풍',[.06,.12,.18,.25]))*(x._bl&&x._bl.speed?1+x._bl.speed:1);
-  n.modHeal=(x,a)=>{ if(c0.modHeal) a=c0.modHeal(x,a); return T('성광')?a*1.2:a; };
+  n.modHeal=(x,a)=>{ if(c0.modHeal) a=c0.modHeal(x,a); return T('성광')?a*1.3:a; };
   n.onStatus=(x,k,t)=>{ if(c0.onStatus) t=c0.onStatus(x,k,t); if(!(t>0)) return 0; return T('성광')?t*.8:t; };
   n.onDeal=(x,t,a,l,o)=>{ if(c0.onDeal){ x._inDeal=true; try{ c0.onDeal(x,t,a,l,o); }finally{ x._inDeal=false; } } if((o&&o.amp)||x===t) return;
-    if(T('혈')&&a>0) heal(x,a*(T('혈')>=2?.07:.03),true); if(T('심연')>=2&&a>0) heal(x,a*.05,true);
+    if(T('혈')&&a>0) heal(x,a*(T('혈')>=2?.09:.04),true); if(T('심연')>=2&&a>0) heal(x,a*.05,true);
     if(t.dead) return;
     if(T('혈')>=2&&x._ov>0){ const v=x._ov; x._ov=0; damage(x,t,v,'넘친 피',{amp:true}); if(t.dead) return; }
     if(T('서리')){ const c=(t._cold&&t._cold.until>now?t._cold.n:0)+1; t._cold={n:Math.min(5,c),until:now+3}; const s=t.st.find(q=>q.k==='slow'&&q.sy==='cold'); if(s){ s.v=.06*t._cold.n; s.until=now+3; } else add(t,'slow',3,.06*t._cold.n,{by:x,sy:'cold',end:()=>{}});
       if(T('서리')>=2&&t._cold.n>=5&&!(t._frzCd>now)){ t._cold.n=0; t._frzCd=now+5; t._frz=now+1; add(t,'stun',1,0,{by:x}); say(t,'빙결','#8fdcff'); } }
-    if(T('화염')) t._burn={until:now+3,by:x,k:V('화염',[.1,.2,.35,.6]),acc:(t._burn&&t._burn.until>now?t._burn.acc:0)};
+    if(T('화염')) t._burn={until:now+3,by:x,k:V('화염',[.2,.4,.6,1]),acc:(t._burn&&t._burn.until>now?t._burn.acc:0)};
     if(T('선봉')>=2&&!x._vs){ x._vs=true; add(t,'stun',1,0,{by:x}); }
     if(T('강철')>=4&&o&&o.basic) for(const z of zones) if(z.syTur===x) turFire(z,t); };
   n.onHurt=(x,src,a,l,o)=>{ if((o&&o.amp)||!src||src===x){ if(c0.onHurt) c0.onHurt(x,src,a,l,o); return; }
     x._rfC=[]; try{ if(c0.onHurt) c0.onHurt(x,src,a,l,o); }finally{ var L=x._rfC; x._rfC=null; }
-    let th=0,rf=0; for(const [v,lab] of L){ if(lab==='가시') th+=v; else rf+=v; } if(T('응징')) rf+=a*(T('응징')>=2?.12:.05); if(x._vow) rf*=2; rf=Math.min(rf,a*cap.reflect*(x._vow?2:1));
+    let th=0,rf=0; for(const [v,lab] of L){ if(lab==='가시') th+=v; else rf+=v; } if(T('응징')) rf+=a*(T('응징')>=2?.18:.08); if(x._vow) rf*=2; rf=Math.min(rf,a*cap.reflect*(x._vow?2:1));
     if(th+rf>0&&!src.dead&&!x.dead){ damage(x,src,th+rf,'되돌림',{fixed:true,amp:true}); if(T('응징')>=2&&rf>0) heal(x,rf*.3,true); } };
   n.onKill=(x,t)=>{ if(c0.onKill) c0.onKill(x,t); if(!t||t.team===x.team) return;
     if(T('소모라')){ const B=twBagOf(x); if(B){ B.gold=(B.gold|0)+1; say(x,'증표 +1','#e3c377'); } }
-    if(T('명계')){ const two=T('명계')>=2,mine=zones.filter(z=>z.syWr===x); if(mine.length>=(two?2:1)) mine[0].until=now; zone(x,{x:t.x,y:t.y,r:1.2,dur:two?8:4,every:.5,label:'망령',syWr:x,tick:z=>{ const f=foes(x)[0]; if(!f) return; const d=norm(f.x-z.x,f.y-z.y),gap=Math.hypot(f.x-z.x,f.y-z.y); if(gap>1.2){ z.x+=d.x*Math.min(gap,3); z.y+=d.y*Math.min(gap,3); } if(Math.hypot(f.x-z.x,f.y-z.y)<=2) damage(x,f,x.atk*(two?.3:.15),'망령',{amp:true}); }}); }
+    if(T('명계')){ const two=T('명계')>=2,mine=zones.filter(z=>z.syWr===x); if(mine.length>=(two?2:1)) mine[0].until=now; zone(x,{x:t.x,y:t.y,r:1.2,dur:two?8:4,every:.5,label:'망령',syWr:x,tick:z=>{ const f=foes(x)[0]; if(!f) return; const d=norm(f.x-z.x,f.y-z.y),gap=Math.hypot(f.x-z.x,f.y-z.y); if(gap>1.2){ z.x+=d.x*Math.min(gap,3); z.y+=d.y*Math.min(gap,3); } if(Math.hypot(f.x-z.x,f.y-z.y)<=2) damage(x,f,x.atk*(two?.4:.2),'망령',{amp:true}); }}); }
     if(T('맹공')>=3){ const d=T('맹공')>=4?8:4; x._fr=now+d; add(x,'haste',d,.2,{self:true}); proc(x,'광폭',d+'초'); }
     if(T('사냥')>=2) heal(x,(x.max-x.hp)*.08);
-    if(T('화염')>=3&&t._burn){ const again=T('화염')>=4; for(const f of foes(x)) if(Math.hypot(f.x-t.x,f.y-t.y)<=3.5){ damage(x,f,x.atk,'화염 폭발',{amp:true}); if(again&&!f.dead) f._burn={until:now+3,by:x,k:.6,acc:0}; } fx.push({k:'circle',x:t.x,y:t.y,r:3,t0:now,team:x.team,lab:'화염 폭발',src:x,v:'nova',el:'fire'}); }
+    if(T('화염')>=3&&t._burn){ const again=T('화염')>=4; for(const f of foes(x)) if(Math.hypot(f.x-t.x,f.y-t.y)<=3.5){ damage(x,f,x.atk,'화염 폭발',{amp:true}); if(again&&!f.dead) f._burn={until:now+3,by:x,k:1,acc:0}; } fx.push({k:'circle',x:t.x,y:t.y,r:3,t0:now,team:x.team,lab:'화염 폭발',src:x,v:'nova',el:'fire'}); }
     if(T('서리')>=4&&t._frzCd>now-2) for(const f of foes(x)) if(Math.hypot(f.x-t.x,f.y-t.y)<=4.5){ f._cold={n:5,until:now+3}; add(f,'slow',3,.3,{by:x,sy:'cold',end:()=>{}}); } };
   n.basicBonus=(x,t)=>{ if(c0.basicBonus) c0.basicBonus(x,t); if(!t||t.dead) return; const C=x._cnt;
-    if(T('연격')){ const every=T('연격')>=4?3:4; if(++C.b>=every){ C.b=0; damage(x,t,x.atk*V('연격',[.4,.8,1.5,2]),'연격',{amp:true}); if(t.dead) return; } }
-    if(T('바다')&&++C.sea>=4){ C.sea=0; knock(t,x,2); if(T('바다')>=2){ damage(x,t,x.atk*.8,'물결',{amp:true}); if(!t.dead) add(t,'slow',2,.3,{by:x}); } say(t,'물결','#8fd0ff'); if(t.dead) return; }
-    if(T('뇌전')&&++C.bolt>=(T('뇌전')>=2?4:6)){ C.bolt=0; const L=foes(x).filter(f=>Math.hypot(f.x-t.x,f.y-t.y)<=6).slice(0,3); for(const f of L){ fx.push({k:'seg',x0:x.x,y0:x.y,x1:f.x,y1:f.y,w:.5,t0:now,team:x.team,lab:'번개',src:x,v:'bolt',el:'thunder'}); damage(x,f,x.atk*.5,'번개',{amp:true}); } }
+    if(T('연격')){ const every=T('연격')>=4?3:4; if(++C.b>=every){ C.b=0; damage(x,t,x.atk*V('연격',[.35,.7,1.2,1.7]),'연격',{amp:true}); if(t.dead) return; } }
+    if(T('바다')&&++C.sea>=3){ C.sea=0; knock(t,x,2); if(T('바다')>=2){ damage(x,t,x.atk,'물결',{amp:true}); if(!t.dead) add(t,'slow',2,.3,{by:x}); } say(t,'물결','#8fd0ff'); if(t.dead) return; }
+    if(T('뇌전')&&++C.bolt>=(T('뇌전')>=2?3:5)){ C.bolt=0; const L=foes(x).filter(f=>Math.hypot(f.x-t.x,f.y-t.y)<=6).slice(0,3); for(const f of L){ fx.push({k:'seg',x0:x.x,y0:x.y,x1:f.x,y1:f.y,w:.5,t0:now,team:x.team,lab:'번개',src:x,v:'bolt',el:'thunder'}); damage(x,f,x.atk*.8,'번개',{amp:true}); } }
     if(T('용족')>=3&&x._dr>now&&!x._brT){ x._brT=true; try{ S.arc(x,3,x.atk*.5,'용의 숨결',{knock:0,v:'flame',el:'fire'}); }finally{ x._brT=false; } } };
   n.onCast=(x,s)=>{ if(c0.onCast) c0.onCast(x,s); if(s==='b'||s==='crouch'||s==='jump') return; if(T('연마')>=3) x._nb=true;
     if(T('마탑')>=3&&++x._cnt.cast>=(T('마탑')>=4?2:3)){ x._cnt.cast=0; const f=foes(x)[0]; if(f){ fx.push({k:'seg',x0:x.x,y0:x.y,x1:f.x,y1:f.y,w:.6,t0:now,team:x.team,lab:'마력 구체',src:x,v:'tracer',el:'arcane'}); damage(x,f,x.atk*1.5,'마력 구체',{amp:true}); } } };
@@ -175,16 +175,16 @@ function synLayer(e,ids){ const c0=e.c,n=Object.assign({},c0),base=CH[e.key]||{}
     if(T('용족')>=2&&!x._drU&&x.hp<=x.max*.5){ x._drU=true; x._dr=now+8; proc(x,'용의 각성','8초'); }
     if(x._dream){ for(const k of ['pk_star_hope','pk_star_despair','pk_star_grief']){ const cur=+x.r[k]||0,pv=x._dream[k]||0; if(cur>pv&&cur<100) x.r[k]=Math.min(100,cur+(cur-pv)*.5); x._dream[k]=+x.r[k]||0; } }
     x._sec+=dt; if(x._sec<1) return; x._sec-=1; x._t10++;
-    let rg=0; if(T('자연')) rg+=.006; if(T('생명')) rg+=T('생명')>=2?.01:.005; if(x._bl&&x._bl.regen) rg+=x._bl.regen; if(rg>0) heal(x,x.max*rg,true);
+    let rg=0; if(T('자연')) rg+=.008; if(T('생명')) rg+=T('생명')>=2?.01:.005; if(x._bl&&x._bl.regen) rg+=x._bl.regen; if(rg>0) heal(x,x.max*rg,true);
     if(T('심연')&&x.hp>1) x.hp=Math.max(1,x.hp-x.max*(T('심연')>=2?.006:.003));
     if(x._t10%10===0){ if(T('기사단')>=2) shield(x,Math.round(x.max*.06),10);
-      if(T('성광')>=2){ const a=twMates(x).sort((p,q)=>p.hp/p.max-q.hp/q.max)[0]; if(a){ a.st=a.st.filter(s=>!DEBUFFS.includes(s.k)); heal(a,a.max*.08); } } } };
+      if(T('성광')>=2){ const a=twMates(x).sort((p,q)=>p.hp/p.max-q.hp/q.max)[0]; if(a){ a.st=a.st.filter(s=>!DEBUFFS.includes(s.k)); heal(a,a.max*.1); } } } };
   /* 상태 줄: 캐릭터 + 무기 · 권능 꾸러미 + 시너지 */
   n.hud=x=>{ const L=[]; try{ const b=c0.hud?c0.hud(x):''; if(b) L.push(b); }catch(z){} for(const id of ids){ const k=POWERS[id]&&POWERS[id].kit; if(k&&CH[k]&&CH[k].hud){ try{ const s=CH[k].hud(x); if(s) L.push(s); }catch(z){} } }
     if(x._dr>now) L.push('용의 각성'); if(x._fr>now) L.push('광폭'); if(x._ov>0) L.push('넘친 피 '+Math.round(x._ov)); return L.join(' · '); };
   e.c=n; }
 /* 포탑(강철): 제자리에서 가까운 적을 쏜다 */
-function turFire(z,t){ const x=z.owner; t=t||foes(x).find(f=>Math.hypot(f.x-z.x,f.y-z.y)<=9); if(!t||t.dead) return; fx.push({k:'seg',x0:z.x,y0:z.y,x1:t.x,y1:t.y,w:.3,t0:now,team:x.team,lab:'포탑',src:x,v:'tracer',el:'steel'}); damage(x,t,x.atk*.2,'포탑',{amp:true}); }
+function turFire(z,t){ const x=z.owner; t=t||foes(x).find(f=>Math.hypot(f.x-z.x,f.y-z.y)<=9); if(!t||t.dead) return; fx.push({k:'seg',x0:z.x,y0:z.y,x1:t.x,y1:t.y,w:.3,t0:now,team:x.team,lab:'포탑',src:x,v:'tracer',el:'steel'}); damage(x,t,x.atk*.15,'포탑',{amp:true}); }
 /* 화상은 판 전체에서 한 번에 센다 */
 on('step',dt=>{ if(!twLive()) return; for(const t of ents){ const b=t._burn; if(!b||t.dead) continue; if(b.until<=now||!b.by||b.by.dead){ t._burn=null; continue; } b.acc+=dt; if(b.acc>=1){ b.acc-=1; damage(b.by,t,b.by.atk*b.k,'화상',{amp:true}); } } });
 
